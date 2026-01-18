@@ -1,16 +1,18 @@
-﻿using System;
+﻿using ComposableUi;
+
+using FastFileUnpacker;
+
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-
-using FastFileUnpacker;
-
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 using TankRacerViewer.Core.Views;
 
@@ -40,6 +42,8 @@ namespace TankRacerViewer.Core
         private Vector3 _cameraDefaultPosition = new(0, 5, 30);
         private Vector3 _cameraDefaultRotation = new(0, 0, 0);
 
+        private UiManager _uiManager;
+
         private readonly StringBuilder _info = new();
 
         public MainWindow()
@@ -48,9 +52,12 @@ namespace TankRacerViewer.Core
             {
                 GraphicsProfile = GraphicsProfile.HiDef
             };
+
             Content.RootDirectory = "Content";
             IsFixedTimeStep = false;
             IsMouseVisible = true;
+
+            Window.AllowUserResizing = true;
         }
 
         protected override void Initialize()
@@ -66,6 +73,68 @@ namespace TankRacerViewer.Core
 
             // TODO: use this.Content to load your game content here
             _mainFont = Content.Load<SpriteFont>("Fonts\\MainFont");
+
+            _uiManager = new UiManager(Content, _spriteBatch);
+            _uiManager.Root.AddChild(new CanvasElement(Window,
+                children: [
+                    new PanelElement(new Vector2(200, 50), Color.Orange)
+                    {
+                        Position = new Vector2(100, 200),
+                        Pivot = Alignment.MiddleLeft
+                    },
+                    new ExpandedElement(
+                        innerElement: new AlignmentElement(new PanelElement(new Vector2(100, 100), Color.Wheat))
+                        {
+                            AlignmentFactor = Alignment.MiddleRight,
+                            Offset = new Vector2(-20, 0),
+                            Pivot = Alignment.MiddleRight
+                        },
+                        leftPadding: 5,
+                        topPadding: 20,
+                        bottomPadding: 20,
+                        expandWidth: false,
+                        expandHeight: true
+                    ),
+                    new AlignmentElement(new PanelElement(new Vector2(100, 100), Color.Gold))
+                    {
+                        AlignmentFactor = Alignment.MiddleRight,
+                        Offset = new Vector2(-20, 0),
+                        Pivot = Alignment.MiddleRight
+                    },
+                ]));
+
+            var row = new RowLayout(
+                alignmentFactor: Alignment.BottomCenter,
+                spacing: 10,
+                expandChildrenMainAxisSize: true
+                );
+            row.Size = new Vector2(500, 80);
+            row.Position = new Vector2(300, 50);
+            row.Pivot = new Vector2(0.2f);
+            for (var i = 0; i < 10; i++)
+            {
+                var panel = new PanelElement(new Vector2(Random.Shared.Next(10, 100), Random.Shared.Next(10, 100)),
+                    new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle()));
+                panel.Pivot = new Vector2(Random.Shared.NextSingle(), Random.Shared.NextSingle());
+                row.AddChild(panel);
+            }
+            _uiManager.Root.AddChild(row);
+
+            var column = new ColumnLayout(
+                alignmentFactor: Alignment.TopCenter,
+                spacing: 5
+                );
+            column.Size = new Vector2(80, 500);
+            column.Position = new Vector2(0, 50);
+            column.Pivot = Alignment.TopLeft;
+            for (var i = 0; i < 10; i++)
+            {
+                var panel = new PanelElement(new Vector2(Random.Shared.Next(10, 100), Random.Shared.Next(10, 100)),
+                    new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle()));
+                panel.Pivot = new Vector2(Random.Shared.NextSingle(), Random.Shared.NextSingle());
+                column.AddChild(panel);
+            }
+            _uiManager.Root.AddChild(column);
 
             _renderer = new WorldRenderer(GraphicsDevice, _spriteBatch, Content);
 
@@ -105,6 +174,7 @@ namespace TankRacerViewer.Core
 
             // TODO: Add your update logic here
             Input.Update();
+            _uiManager.Update(gameTime);
 
             _cameraController.Update(gameTime);
 
@@ -167,7 +237,7 @@ namespace TankRacerViewer.Core
             //}
 
             _info.AppendLine($"Draw Calls: {GraphicsDevice.Metrics.DrawCount}");
-            _info.Append($"Fps: {gameTime.ElapsedGameTime.TotalSeconds}");
+            _info.Append($"Fps: {1 / gameTime.ElapsedGameTime.TotalSeconds:00.0}");
 
             var infoString = _info.ToString();
             var infoSize = _mainFont.MeasureString(infoString);
@@ -176,6 +246,8 @@ namespace TankRacerViewer.Core
             _spriteBatch.Begin();
             _spriteBatch.DrawString(_mainFont, infoString, infoPosition, Color.Black);
             _spriteBatch.End();
+
+            _uiManager.Draw(gameTime);
 
             base.Draw(gameTime);
         }

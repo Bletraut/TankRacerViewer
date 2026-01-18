@@ -155,8 +155,10 @@ namespace TankRacerViewer.Core
 
         public void Draw(LevelObjectContainer levelObjectContainer, Camera camera)
         {
-            foreach (var levelObject in levelObjectContainer.LevelObjects)
+            for (int i = 0; i < levelObjectContainer.LevelObjects.Count; i++)
             {
+                var levelObject = levelObjectContainer.LevelObjects[i];
+
                 if (!levelObject.IsEnabled)
                     continue;
 
@@ -265,8 +267,9 @@ namespace TankRacerViewer.Core
             _graphicsDevice.RasterizerState = rasterizerState;
             _graphicsDevice.BlendState = blendState;
 
-            foreach (var meshPart in meshParts)
+            for (int i = 0; i < meshParts.Count; i++)
             {
+                var meshPart = meshParts[i];
                 var alphaThreshold = meshPart.BlendMode switch
                 {
                     BlendMode.Opaque => 0f,

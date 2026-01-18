@@ -19,6 +19,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ComposableUi\ComposableUi.csproj" />
     <ProjectReference Include="..\FastFileUpacker\FastFileUnpacker.csproj" />
   </ItemGroup>
   <ItemGroup>
