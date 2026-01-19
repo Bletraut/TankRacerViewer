@@ -33,7 +33,7 @@ namespace ComposableUi
         void IDrawableElement.Draw(IUiRenderer renderer)
         {
             var rectangle = new Rectangle((Position - Size * Pivot).ToPoint(), Size.ToPoint());
-            renderer.DrawRectangle(rectangle, new Color(Color.Blue, 0.2f));
+            renderer.DrawRectangle(rectangle, ClipMask, new Color(Color.Blue, 0.2f));
         }
 
         private void OnGameWindowClientSizeChanged(object sender, EventArgs eventArgs)

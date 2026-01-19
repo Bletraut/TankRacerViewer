@@ -48,10 +48,11 @@ namespace ComposableUi
             set => SetAndChangeState(ref _expandChildrenCrossAxisSize, value);
         }
 
-        protected abstract Vector2 MainAxis { get; }
-        protected abstract Vector2 CrossAxis { get; }
+        public Vector2 MainAxis { get; }
+        public Vector2 CrossAxis { get; }
 
-        public LineLayout(IReadOnlyList<Element> children = default,
+        public LineLayout(Vector2 mainAxis, Vector2 crossAxis,
+            IReadOnlyList<Element> children = default,
             Vector2 alignmentFactor = default,
             float spacing = default,
             bool sizeMainAxisToContent = default,
@@ -60,6 +61,9 @@ namespace ComposableUi
             bool expandChildrenCrossAxisSize = default)
             : base(children)
         {
+            MainAxis = mainAxis;
+            CrossAxis = crossAxis;
+
             AlignmentFactor = alignmentFactor;
             Spacing = spacing;
             SizeMainAxisToContent = sizeMainAxisToContent;

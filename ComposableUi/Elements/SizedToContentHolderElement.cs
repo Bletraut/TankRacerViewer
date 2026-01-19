@@ -2,9 +2,9 @@
 
 namespace ComposableUi
 {
-    public class SizedHolderElement : HolderElement
+    public class SizedToContentHolderElement : HolderElement
     {
-        public SizedHolderElement(Element innerElement = default)
+        public SizedToContentHolderElement(Element innerElement = default)
             : base(innerElement) { }
 
         public override Vector2 CalculatePreferredSize()

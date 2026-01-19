@@ -4,6 +4,7 @@ namespace ComposableUi
 {
     public interface IUiRenderer
     {
-        public void DrawRectangle(Rectangle rectangle, Color color);
+        public void DrawRectangle(Rectangle boundingRectangle,
+            Rectangle? clipMask, Color color);
     }
 }

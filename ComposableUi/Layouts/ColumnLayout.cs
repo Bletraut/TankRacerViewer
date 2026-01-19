@@ -6,9 +6,6 @@ namespace ComposableUi
 {
     public sealed class ColumnLayout : LineLayout
     {
-        protected override Vector2 MainAxis => Vector2.UnitY;
-        protected override Vector2 CrossAxis => Vector2.UnitX;
-
         public ColumnLayout(IReadOnlyList<Element> children = default,
             Vector2 alignmentFactor = default,
             float spacing = default,
@@ -16,7 +13,8 @@ namespace ComposableUi
             bool sizeCrossAxisToContent = default,
             bool expandChildrenMainAxisSize = default,
             bool expandChildrenCrossAxisSize = default)
-            : base(children,
+            : base(Vector2.UnitY, Vector2.UnitX,
+                  children,
                   alignmentFactor,
                   spacing,
                   sizeMainAxisToContent,

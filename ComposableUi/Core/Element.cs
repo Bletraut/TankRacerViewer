@@ -90,11 +90,36 @@ namespace ComposableUi
             }
         }
 
-        public Vector2 _pivot = Vector2.One / 2;
+        private Vector2 _pivot = Vector2.One / 2;
         public Vector2 Pivot
         {
             get => _pivot;
             set => SetAndChangeState(ref _pivot, value);
+        }
+
+        private Rectangle _boundingRectangle;
+        public Rectangle BoundingRectangle
+        {
+            get
+            {
+                RecalculateBoundingRectangleIfDirty();
+                return _boundingRectangle;
+            }
+        }
+
+        private Rectangle? _clipMask;
+        public Rectangle? ClipMask
+        {
+            get
+            {
+                if (_isClipMaskDirty)
+                {
+                    _isClipMaskDirty = false;
+                    _clipMask = CalculateClipMask();
+                }
+
+                return _clipMask;
+            }
         }
 
         private Matrix _localTransformationMatrix;
@@ -131,9 +156,16 @@ namespace ComposableUi
         public event ElementEventHandler TransformChanged;
         public event ElementEventHandler StateChanged;
 
+        private bool _isBoundingRectangleDirty = true;
+
+        private bool _isClipMaskDirty = true;
+
         private bool _isLocalTransformationMatrixDirty = true;
         private bool _isGlobalTransformationMatrixDirty = true;
         private bool _isGlobalInverseTransformationMatrixDirty = true;
+
+        protected internal virtual Rectangle? CalculateClipMask()
+            => Parent?.ClipMask;
 
         public IEnumerable<ParentElement> GetParentsRecursively()
         {
@@ -158,6 +190,15 @@ namespace ComposableUi
             OnStateChanged();
 
             return true;
+        }
+
+        private void RecalculateBoundingRectangleIfDirty()
+        {
+            if (!_isBoundingRectangleDirty)
+                return;
+
+            _isBoundingRectangleDirty = false;
+            _boundingRectangle = new Rectangle((Position - Size * Pivot).ToPoint(), Size.ToPoint());
         }
 
         private void RecalculateLocalTransformationMatrixIfDirty()
@@ -215,6 +256,10 @@ namespace ComposableUi
 
         private void OnParentTransformChanged(Element sender)
         {
+            _isBoundingRectangleDirty = true;
+
+            _isClipMaskDirty = true;
+
             _isGlobalTransformationMatrixDirty = true;
             _isGlobalInverseTransformationMatrixDirty = true;
 

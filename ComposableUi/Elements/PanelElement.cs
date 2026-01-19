@@ -16,8 +16,7 @@ namespace ComposableUi
 
         void IDrawableElement.Draw(IUiRenderer renderer)
         {
-            var rectangle = new Rectangle((Position - Size * Pivot).ToPoint(), Size.ToPoint());
-            renderer.DrawRectangle(rectangle, Color);
+            renderer.DrawRectangle(BoundingRectangle, ClipMask, Color);
         }
     }
 }

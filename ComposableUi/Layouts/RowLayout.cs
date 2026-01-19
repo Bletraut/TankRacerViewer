@@ -6,9 +6,6 @@ namespace ComposableUi
 {
     public sealed class RowLayout : LineLayout
     {
-        protected override Vector2 MainAxis => Vector2.UnitX;
-        protected override Vector2 CrossAxis => Vector2.UnitY;
-
         public RowLayout(IReadOnlyList<Element> children = default,
             Vector2 alignmentFactor = default,
             float spacing = default,
@@ -16,7 +13,8 @@ namespace ComposableUi
             bool sizeCrossAxisToContent = default,
             bool expandChildrenMainAxisSize = default,
             bool expandChildrenCrossAxisSize = default)
-            : base(children,
+            : base(Vector2.UnitX, Vector2.UnitY,
+                  children,
                   alignmentFactor,
                   spacing,
                   sizeMainAxisToContent,

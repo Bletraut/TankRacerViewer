@@ -74,7 +74,7 @@ namespace TankRacerViewer.Core
             // TODO: use this.Content to load your game content here
             _mainFont = Content.Load<SpriteFont>("Fonts\\MainFont");
 
-            _uiManager = new UiManager(Content, _spriteBatch);
+            _uiManager = new UiManager(GraphicsDevice, Content, _spriteBatch);
             _uiManager.Root.AddChild(new CanvasElement(Window,
                 children: [
                     new PanelElement(new Vector2(200, 50), Color.Orange)
@@ -104,12 +104,13 @@ namespace TankRacerViewer.Core
                 ]));
 
             var row = new RowLayout(
-                alignmentFactor: Alignment.BottomCenter,
-                spacing: 10,
-                expandChildrenMainAxisSize: true
+                alignmentFactor: Alignment.Center,
+                spacing: 10
+                //expandChildrenMainAxisSize: true
+                //expandChildrenCrossAxisSize: true
                 );
-            row.Size = new Vector2(500, 80);
-            row.Position = new Vector2(300, 50);
+            row.Size = new Vector2(200, 80);
+            //row.Position = new Vector2(300, 50);
             row.Pivot = new Vector2(0.2f);
             for (var i = 0; i < 10; i++)
             {
@@ -118,7 +119,11 @@ namespace TankRacerViewer.Core
                 panel.Pivot = new Vector2(Random.Shared.NextSingle(), Random.Shared.NextSingle());
                 row.AddChild(panel);
             }
-            _uiManager.Root.AddChild(row);
+            _uiManager.Root.AddChild(new ClipMaskElement(row)
+            {
+                Position = new Vector2(300, 50),
+                Pivot = new Vector2(0.2f)
+            });
 
             var column = new ColumnLayout(
                 alignmentFactor: Alignment.TopCenter,
