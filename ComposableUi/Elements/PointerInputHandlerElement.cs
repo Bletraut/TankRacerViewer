@@ -14,16 +14,23 @@ namespace ComposableUi.Elements
             set => SetAndChangeState(ref _blockInput, value);
         }
 
-        public event ElementEventHandler<Vector2> PointerOver;
-        public event ElementEventHandler<Vector2> PointerMove;
-        public event ElementEventHandler<Vector2> PointerOut;
+        public event ElementEventHandler<int> ScrollWheel;
+        public event ElementEventHandler<int> HorizontalScrollWheel;
 
-        public event ElementEventHandler<Vector2> PointerDrag;
+        public event ElementEventHandler<Point> PointerEnter;
+        public event ElementEventHandler<Point> PointerMove;
+        public event ElementEventHandler<Point> PointerLeave;
 
-        public event ElementEventHandler<Vector2> PointerDown;
-        public event ElementEventHandler<Vector2> PointerUp;
+        public event ElementEventHandler<Point> PointerDown;
+        public event ElementEventHandler<Point> PointerUp;
 
-        public event ElementEventHandler<Vector2> PointerClick;
+        public event ElementEventHandler<Point> PointerSecondaryDown;
+        public event ElementEventHandler<Point> PointerSecondaryUp;
+
+        public event ElementEventHandler<Point> PointerDrag;
+
+        public event ElementEventHandler<Point> PointerClick;
+        public event ElementEventHandler<Point> PointerSecondaryClick;
 
         public PointerInputHandlerElement(bool blockInput = true,
             Element innerElement = default)
@@ -32,22 +39,34 @@ namespace ComposableUi.Elements
             _blockInput = blockInput;
         }
 
-        protected virtual void OnPointerOver(Vector2 position)
-            => PointerOver?.Invoke(this, position);
-        protected virtual void OnPointerMove(Vector2 position)
+        public virtual void OnScrollWheel(int delta)
+            => ScrollWheel?.Invoke(this, delta);
+        public virtual void OnHorizontalScrollWheel(int delta)
+            => HorizontalScrollWheel?.Invoke(this, delta);
+
+        public virtual void OnPointerEnter(Point position)
+            => PointerEnter?.Invoke(this, position);
+        public virtual void OnPointerMove(Point position)
             => PointerMove?.Invoke(this, position);
-        protected virtual void OnPointerOut(Vector2 position)
-            => PointerOut?.Invoke(this, position);
+        public virtual void OnPointerLeave(Point position)
+            => PointerLeave?.Invoke(this, position);
 
-        protected virtual void OnPointerDrag(Vector2 position)
-            => PointerDrag?.Invoke(this, position);
-
-        protected virtual void OnPointerDown(Vector2 position)
+        public virtual void OnPointerDown(Point position)
             => PointerDown?.Invoke(this, position);
-        protected virtual void OnPointerUp(Vector2 position)
+        public virtual void OnPointerUp(Point position)
             => PointerUp?.Invoke(this, position);
 
-        protected virtual void OnPointerClick(Vector2 position)
+        public virtual void OnPointerSecondaryDown(Point position)
+            => PointerSecondaryDown?.Invoke(this, position);
+        public virtual void OnPointerSecondaryUp(Point position)
+            => PointerSecondaryUp?.Invoke(this, position);
+
+        public virtual void OnPointerDrag(Point position)
+            => PointerDrag?.Invoke(this, position);
+
+        public virtual void OnPointerClick(Point position)
             => PointerClick?.Invoke(this, position);
+        public virtual void OnPointerSecondaryClick(Point position)
+            => PointerSecondaryClick?.Invoke(this, position);
     }
 }

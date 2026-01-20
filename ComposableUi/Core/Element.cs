@@ -53,7 +53,7 @@ namespace ComposableUi
                 _size = value;
 
                 SizeChanged?.Invoke(this);
-                OnStateChanged();
+                OnTransformChanged();
             }
         }
 
@@ -247,7 +247,7 @@ namespace ComposableUi
             Parent?.OnStateChanged();
         }
 
-        private void OnTransformChanged()
+        protected void OnTransformChanged()
         {
             _isLocalTransformationMatrixDirty = true;
 

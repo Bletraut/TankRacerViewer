@@ -75,7 +75,7 @@ namespace ComposableUi
         public override Vector2 CalculatePreferredSize()
         {
             var size = base.CalculatePreferredSize();
-            if (Children.Count == 0)
+            if (ChildCount == 0)
                 return size;
 
             var isSizeToContentEnabled = SizeMainAxisToContent || SizeCrossAxisToContent;
@@ -101,9 +101,9 @@ namespace ComposableUi
                 : Size);
             var totalMainAxisLayoutOffset = MainAxis * (Size * Pivot - AlignmentFactor * (Size - mainAxisPreferredChildrenSize));
 
-            for (var i = 0; i < Children.Count; i++)
+            for (var i = 0; i < ChildCount; i++)
             {
-                var child = Children[i];
+                var child = GetChildAt(i);
                 if (!child.IsEnabled)
                     continue;
 
@@ -156,9 +156,9 @@ namespace ComposableUi
             var maxChildSize = Vector2.Zero;
             var preferredChildrenSize = Vector2.Zero;
 
-            for (var i = 0; i < Children.Count; i++)
+            for (var i = 0; i < ChildCount; i++)
             {
-                var child = Children[i];
+                var child = GetChildAt(i);
                 if (!child.IsEnabled)
                     continue;
 
@@ -190,9 +190,9 @@ namespace ComposableUi
             var totalFlexFactor = 0f;
             var activeChildCount = 0;
 
-            for (var i = 0; i < Children.Count; i++)
+            for (var i = 0; i < ChildCount; i++)
             {
-                var child = Children[i];
+                var child = GetChildAt(i);
                 if (!child.IsEnabled)
                     continue;
 

@@ -4,6 +4,17 @@ namespace ComposableUi
 {
     public interface IPointerInputProvider
     {
-        Vector2 PointerPosition { get; }
+        public Point PointerPosition { get; }
+
+        public int ScrollWheelValue { get; }
+        public int HorizontalScrollWheelValue { get; }
+
+        public bool IsPrimaryButtonDown { get; }
+        public bool IsPrimaryButtonPressed { get; }
+        public bool IsPrimaryButtonUp { get; }
+
+        public bool IsSecondaryButtonDown { get; }
+        public bool IsSecondaryButtonPressed { get; }
+        public bool IsSecondaryButtonUp { get; }
     }
 }

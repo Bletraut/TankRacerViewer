@@ -6,15 +6,22 @@ namespace ComposableUi.Core
     {
         public bool BlockInput { get; set; }
 
-        public void OnPointerOver(Vector2 position) { }
-        public void OnPointerMove(Vector2 position) { }
-        public void OnPointerOut(Vector2 position) { }
+        public void OnScrollWheel(int delta) { }
+        public void OnHorizontalScrollWheel(int delta) { }
 
-        public void OnPointerDrag(Vector2 delta) { }
+        public void OnPointerEnter(Point position) { }
+        public void OnPointerMove(Point position) { }
+        public void OnPointerLeave(Point position) { }
 
-        public void OnPointerDown(Vector2 position) { }
-        public void OnPointerUp(Vector2 position) { }
+        public void OnPointerDown(Point position) { }
+        public void OnPointerUp(Point position) { }
 
-        public void OnPointerClick(Vector2 position) { }
+        public void OnPointerSecondaryDown(Point position) { }
+        public void OnPointerSecondaryUp(Point position) { }
+
+        public void OnPointerDrag(Point delta) { }
+
+        public void OnPointerClick(Point position) { }
+        public void OnPointerSecondaryClick(Point position) { }
     }
 }

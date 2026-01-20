@@ -4,17 +4,19 @@ using Microsoft.Xna.Framework;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ComposableUi
 {
     public class ContainerElement : ParentElement, IDrawableElement
     {
+        public override int ChildCount => _children.Count;
+
         private readonly List<Element> _children = [];
 
         public ContainerElement(IReadOnlyList<Element> children = null)
         {
             _children = new List<Element>(children?.Count ?? 0);
-            Children = _children.AsReadOnly();
 
             if (children == null)
                 return;
@@ -22,6 +24,9 @@ namespace ComposableUi
             foreach (var child in children)
                 AddChild(child);
         }
+
+        public override Element GetChildAt(int index)
+            => _children[index];
 
         public override void ApplySize(Vector2 size)
         {

@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
+
+using System;
 
 namespace ComposableUi
 {
@@ -26,19 +27,16 @@ namespace ComposableUi
                 {
                     OnStateChanged();
                 }
-
-                _children[0] = _innerElement;
             }
         }
 
         public bool HasActiveInnerElement => InnerElement != null && InnerElement.IsEnabled;
 
-        private readonly Element[] _children = new Element[1];
+        public override int ChildCount => InnerElement != null ? 1 : 0;
 
         public HolderElement(Element innerElement = null)
         {
             InnerElement = innerElement;
-            Children = _children.AsReadOnly();
         }
 
         public override void ApplySize(Vector2 size)
@@ -50,6 +48,17 @@ namespace ComposableUi
 
             var childSize = InnerElement.CalculatePreferredSize();
             InnerElement.ApplySize(childSize);
+        }
+
+        public override Element GetChildAt(int index)
+        {
+            if (InnerElement == null)
+                throw new IndexOutOfRangeException();
+
+            if (index != 0)
+                throw new IndexOutOfRangeException();
+
+            return InnerElement;
         }
 
         public override void AddChild(Element child)

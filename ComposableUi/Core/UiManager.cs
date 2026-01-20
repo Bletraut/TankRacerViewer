@@ -23,6 +23,12 @@ namespace ComposableUi
         private readonly List<(Rectangle InputArea, IPointerInputHandler handler)> _pointerInputHandlers = [];
         private readonly List<IDrawableElement> _renderQueue = [];
 
+        private readonly HashSet<IPointerInputHandler> _activeHandlers = [];
+        private readonly HashSet<IPointerInputHandler> _primaryButtonPressedHandlers = [];
+        private readonly HashSet<IPointerInputHandler> _secondaryButtonPressedHandlers = [];
+
+        private readonly List<IUpdateable> _updateableList = new();
+
         private bool _isRootDirty = true;
 
         public UiManager(GraphicsDevice graphicsDevice,
@@ -30,7 +36,10 @@ namespace ComposableUi
             SpriteBatch spriteBatch)
             : this(graphicsDevice,
                   new DefaultPointerInputProvider(),
-                  new DefaultUiRenderer(contentManager, spriteBatch)) { }
+                  new DefaultUiRenderer(contentManager, spriteBatch)) 
+        {
+            _updateableList.Add((IUpdateable)PointerInputProvider);
+        }
 
         public UiManager(GraphicsDevice graphicsDevice,
             IPointerInputProvider pointerInputProvider,
@@ -47,8 +56,11 @@ namespace ComposableUi
 
         public void Update(GameTime gameTime)
         {
-            RebuildIfDirty();
+            foreach (var updateable in _updateableList)
+                updateable.Update(gameTime);
+
             HandlePointerInput();
+            RebuildIfDirty();
         }
 
         public void Draw(GameTime gameTime)
@@ -66,16 +78,72 @@ namespace ComposableUi
                 return;
 
             var pointerPosition = PointerInputProvider.PointerPosition;
+            var scrollWheelValue = PointerInputProvider.ScrollWheelValue;
+            var horizontalScrollWheelValue = PointerInputProvider.HorizontalScrollWheelValue;
 
+            var isInputBlocked = false;
             for (var i = _pointerInputHandlers.Count - 1; i >= 0; i--)
             {
                 var (inputArea, handler) = _pointerInputHandlers[i];
 
-                if (inputArea.Contains(pointerPosition))
-                    handler.OnPointerOver(pointerPosition);
+                if (!isInputBlocked && inputArea.Contains(pointerPosition))
+                {
+                    isInputBlocked |= handler.BlockInput;
 
-                if (handler.BlockInput)
-                    break;
+                    handler.OnScrollWheel(scrollWheelValue);
+                    handler.OnHorizontalScrollWheel(horizontalScrollWheelValue);
+
+                    if (_activeHandlers.Add(handler))
+                        handler.OnPointerEnter(pointerPosition);
+
+                    handler.OnPointerMove(pointerPosition);
+
+                    if (PointerInputProvider.IsPrimaryButtonDown)
+                    {
+                        if (_primaryButtonPressedHandlers.Add(handler))
+                            handler.OnPointerDown(pointerPosition);
+                    }
+                    else if (PointerInputProvider.IsPrimaryButtonUp)
+                    {
+                        if (_primaryButtonPressedHandlers.Remove(handler))
+                        {
+                            handler.OnPointerUp(pointerPosition);
+                            handler.OnPointerClick(pointerPosition);
+                        }
+                    }    
+
+                    if (PointerInputProvider.IsSecondaryButtonDown)
+                    {
+                        if (_secondaryButtonPressedHandlers.Add(handler))
+                            handler.OnPointerSecondaryDown(pointerPosition);
+                    }
+                    else if (PointerInputProvider.IsSecondaryButtonUp)
+                    {
+                        if (_secondaryButtonPressedHandlers.Remove(handler))
+                        {
+                            handler.OnPointerSecondaryUp(pointerPosition);
+                            handler.OnPointerSecondaryClick(pointerPosition);
+                        }
+                    }
+
+                    continue;
+                }
+                else if (_activeHandlers.Remove(handler))
+                {
+                    handler.OnPointerLeave(pointerPosition);
+                }
+
+                if (PointerInputProvider.IsPrimaryButtonUp)
+                {
+                    if (_primaryButtonPressedHandlers.Remove(handler))
+                        handler.OnPointerUp(pointerPosition);
+                }
+
+                if (PointerInputProvider.IsSecondaryButtonUp)
+                {
+                    if (_secondaryButtonPressedHandlers.Remove(handler))
+                        handler.OnPointerSecondaryUp(pointerPosition);
+                }
             }
         }
 
@@ -110,8 +178,8 @@ namespace ComposableUi
 
                 if (element is ParentElement parentElement)
                 {
-                    for (var i = parentElement.Children.Count - 1; i >= 0; i--)
-                        _stack.Push(parentElement.Children[i]);
+                    for (var i = parentElement.ChildCount - 1; i >= 0; i--)
+                        _stack.Push(parentElement.GetChildAt(i));
                 }
 
                 var clipMask = element.ClipMask;
