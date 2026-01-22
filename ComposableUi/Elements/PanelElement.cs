@@ -67,7 +67,6 @@ namespace ComposableUi
             base.OnPointerClick(position);
 
             ApplySize(Size * 1.2f);
-            Debug.WriteLine($"Click: {DefaultColor} {Size}");
         }
 
         public override void OnPointerSecondaryClick(Point position)
@@ -75,7 +74,13 @@ namespace ComposableUi
             base.OnPointerSecondaryClick(position);
 
             ApplySize(Size * 0.8f);
-            Debug.WriteLine($"Right Click: {DefaultColor} {Size}");
+        }
+
+        public override void OnPointerDrag(Point delta)
+        {
+            base.OnPointerDrag(delta);
+
+            LocalPosition += delta.ToVector2();
         }
     }
 }

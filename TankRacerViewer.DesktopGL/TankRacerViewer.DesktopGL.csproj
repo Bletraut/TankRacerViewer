@@ -31,6 +31,11 @@
 			<Link>Content\Content.mgcb</Link>
 		</MonoGameContentReference>
 	</ItemGroup>
+	<ItemGroup>
+		<MonoGameContentReference Include="..\ComposableUi\Content\Content.mgcb">
+			<Link>Content\ContentUi.mgcb</Link>
+		</MonoGameContentReference>
+	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TankRacerViewer.Core\TankRacerViewer.Core.csproj" />
   </ItemGroup>

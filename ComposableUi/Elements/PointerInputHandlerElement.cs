@@ -61,8 +61,8 @@ namespace ComposableUi.Elements
         public virtual void OnPointerSecondaryUp(Point position)
             => PointerSecondaryUp?.Invoke(this, position);
 
-        public virtual void OnPointerDrag(Point position)
-            => PointerDrag?.Invoke(this, position);
+        public virtual void OnPointerDrag(Point delta)
+            => PointerDrag?.Invoke(this, delta);
 
         public virtual void OnPointerClick(Point position)
             => PointerClick?.Invoke(this, position);

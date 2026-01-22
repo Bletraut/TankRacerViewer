@@ -27,7 +27,10 @@ namespace ComposableUi
         private readonly HashSet<IPointerInputHandler> _primaryButtonPressedHandlers = [];
         private readonly HashSet<IPointerInputHandler> _secondaryButtonPressedHandlers = [];
 
-        private readonly List<IUpdateable> _updateableList = new();
+        private readonly List<IUpdateable> _updateableList = [];
+
+        private Point _currentPointerPosition;
+        private Point _lastPointerPosition;
 
         private bool _isRootDirty = true;
 
@@ -77,7 +80,10 @@ namespace ComposableUi
             if (PointerInputProvider == null)
                 return;
 
-            var pointerPosition = PointerInputProvider.PointerPosition;
+            _lastPointerPosition = _currentPointerPosition;
+            _currentPointerPosition = PointerInputProvider.PointerPosition;
+            var pointerPositionDelta = _currentPointerPosition - _lastPointerPosition;
+
             var scrollWheelValue = PointerInputProvider.ScrollWheelValue;
             var horizontalScrollWheelValue = PointerInputProvider.HorizontalScrollWheelValue;
 
@@ -86,7 +92,7 @@ namespace ComposableUi
             {
                 var (inputArea, handler) = _pointerInputHandlers[i];
 
-                if (!isInputBlocked && inputArea.Contains(pointerPosition))
+                if (!isInputBlocked && inputArea.Contains(_currentPointerPosition))
                 {
                     isInputBlocked |= handler.BlockInput;
 
@@ -94,35 +100,40 @@ namespace ComposableUi
                     handler.OnHorizontalScrollWheel(horizontalScrollWheelValue);
 
                     if (_activeHandlers.Add(handler))
-                        handler.OnPointerEnter(pointerPosition);
+                        handler.OnPointerEnter(_currentPointerPosition);
 
-                    handler.OnPointerMove(pointerPosition);
+                    handler.OnPointerMove(_currentPointerPosition);
 
                     if (PointerInputProvider.IsPrimaryButtonDown)
                     {
                         if (_primaryButtonPressedHandlers.Add(handler))
-                            handler.OnPointerDown(pointerPosition);
+                            handler.OnPointerDown(_currentPointerPosition);
                     }
                     else if (PointerInputProvider.IsPrimaryButtonUp)
                     {
                         if (_primaryButtonPressedHandlers.Remove(handler))
                         {
-                            handler.OnPointerUp(pointerPosition);
-                            handler.OnPointerClick(pointerPosition);
+                            handler.OnPointerUp(_currentPointerPosition);
+                            handler.OnPointerClick(_currentPointerPosition);
                         }
-                    }    
+                    }
+                    if (PointerInputProvider.IsPrimaryButtonPressed)
+                    {
+                        if (_primaryButtonPressedHandlers.Contains(handler))
+                            handler.OnPointerDrag(pointerPositionDelta);
+                    }
 
                     if (PointerInputProvider.IsSecondaryButtonDown)
                     {
                         if (_secondaryButtonPressedHandlers.Add(handler))
-                            handler.OnPointerSecondaryDown(pointerPosition);
+                            handler.OnPointerSecondaryDown(_currentPointerPosition);
                     }
                     else if (PointerInputProvider.IsSecondaryButtonUp)
                     {
                         if (_secondaryButtonPressedHandlers.Remove(handler))
                         {
-                            handler.OnPointerSecondaryUp(pointerPosition);
-                            handler.OnPointerSecondaryClick(pointerPosition);
+                            handler.OnPointerSecondaryUp(_currentPointerPosition);
+                            handler.OnPointerSecondaryClick(_currentPointerPosition);
                         }
                     }
 
@@ -130,19 +141,25 @@ namespace ComposableUi
                 }
                 else if (_activeHandlers.Remove(handler))
                 {
-                    handler.OnPointerLeave(pointerPosition);
+                    handler.OnPointerLeave(_currentPointerPosition);
+                }
+
+                if (PointerInputProvider.IsPrimaryButtonPressed)
+                {
+                    if (_primaryButtonPressedHandlers.Contains(handler))
+                        handler.OnPointerDrag(pointerPositionDelta);
                 }
 
                 if (PointerInputProvider.IsPrimaryButtonUp)
                 {
                     if (_primaryButtonPressedHandlers.Remove(handler))
-                        handler.OnPointerUp(pointerPosition);
+                        handler.OnPointerUp(_currentPointerPosition);
                 }
 
                 if (PointerInputProvider.IsSecondaryButtonUp)
                 {
                     if (_secondaryButtonPressedHandlers.Remove(handler))
-                        handler.OnPointerSecondaryUp(pointerPosition);
+                        handler.OnPointerSecondaryUp(_currentPointerPosition);
                 }
             }
         }

@@ -2,11 +2,17 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+
 namespace ComposableUi.Core
 {
     public sealed class DefaultUiRenderer : IUiRenderer
     {
         private static Texture2D WhitePixelTexture;
+
+        public SpriteFont MainFont { get; set; }
 
         private readonly ContentManager _contentManager;
         private readonly SpriteBatch _spriteBatch;
@@ -28,7 +34,17 @@ namespace ComposableUi.Core
             {
                 ScissorTestEnable = true
             };
+
+            MainFont = _contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
+            var data = File.ReadAllText(Path.Combine(_contentManager.RootDirectory, "ComposableUi\\UiElementsAtlas.json"));
+            Debug.WriteLine(data);
         }
+
+        Vector2 IUiRenderer.MeasureString(string text)
+            => MainFont.MeasureString(text);
+
+        Vector2 IUiRenderer.MeasureString(StringBuilder text)
+            => MainFont.MeasureString(text);
 
         void IUiRenderer.DrawRectangle(Rectangle boundingRectangle,
             Rectangle? clipMask, Color color)
@@ -55,6 +71,16 @@ namespace ComposableUi.Core
                 null, Color.Green, 0, Vector2.Zero, new Vector2(2, boundingRectangle.Height - 8), SpriteEffects.None, 0);
 
             _spriteBatch.End();
+        }
+
+        void IUiRenderer.DrawSprite(Sprite sprite, DrawMode drawMode, Rectangle boundingRectangle, Rectangle? clipMask, Color color)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        void IUiRenderer.DrawSkinnedRectangle(StandardSkin sprite, DrawMode drawMode, Rectangle boundingRectangle, Rectangle? clipMask, Color color)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

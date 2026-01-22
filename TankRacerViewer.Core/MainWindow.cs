@@ -105,7 +105,8 @@ namespace TankRacerViewer.Core
 
             var row = new RowLayout(
                 alignmentFactor: Alignment.Center,
-                spacing: 10
+                spacing: 10,
+                sizeMainAxisToContent: true
                 //expandChildrenMainAxisSize: true
                 //expandChildrenCrossAxisSize: true
                 );
