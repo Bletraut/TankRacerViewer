@@ -7,6 +7,8 @@ namespace ComposableUi
 {
     public class ButtonElement : PointerInputHandlerElement, IDrawableElement
     {
+        public static Vector2 DefaultSize => new(200, 50);
+
         public Sprite NormalSprite { get; set; }
         public Sprite HoverSprite { get; set; }
         public Sprite PressedSprite { get; set; }
@@ -27,7 +29,7 @@ namespace ComposableUi
 
         private (Sprite Sprite, StandardSkin Skin, Color Color) _currentState;
 
-        public ButtonElement(Vector2 size,
+        public ButtonElement(Vector2? size,
             Sprite normalSprite = default,
             Sprite hoverSprite = default,
             Sprite pressedSprite = default,
@@ -42,7 +44,7 @@ namespace ComposableUi
             Color? disabledColor = default,
             bool isInteractable = true)
         {
-            ApplySize(size);
+            ApplySize(size ?? DefaultSize);
 
             NormalSprite = normalSprite;
             HoverSprite = hoverSprite;

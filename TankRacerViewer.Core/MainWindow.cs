@@ -101,6 +101,11 @@ namespace TankRacerViewer.Core
                         Offset = new Vector2(-20, 0),
                         Pivot = Alignment.MiddleRight
                     },
+                    new ScrollViewElement()
+                    {
+                        Position = new Vector2(100, 100),
+                        Pivot = Alignment.TopLeft
+                    },
                 ]));
 
             _renderer = new WorldRenderer(GraphicsDevice, _spriteBatch, Content);
