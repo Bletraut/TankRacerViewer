@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
-    public sealed class AlignmentElement : SizedToContentHolderElement, IDrawableElement
+    public sealed class AlignmentElement : SizedToContentHolderElement
     {
         private Vector2 _alignmentFactor;
         public Vector2 AlignmentFactor
@@ -35,11 +35,6 @@ namespace ComposableUi
 
             if (Parent != null)
                 LocalPosition = Parent.Size * AlignmentFactor + Offset - Parent.Size * Parent.Pivot;
-        }
-
-        void IDrawableElement.Draw(IUiRenderer renderer)
-        {
-            renderer.DrawRectangle(BoundingRectangle, ClipMask, new Color(Color.Red, 0.2f));
         }
     }
 }

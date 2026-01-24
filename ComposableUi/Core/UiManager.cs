@@ -95,6 +95,14 @@ namespace ComposableUi
                 if (!isInputBlocked && inputArea.Contains(_currentPointerPosition))
                 {
                     isInputBlocked |= handler.BlockInput;
+                    if (!handler.IsInteractable)
+                    {
+                        _activeHandlers.Remove(handler);
+                        _primaryButtonPressedHandlers.Remove(handler);
+                        _secondaryButtonPressedHandlers.Remove(handler);
+
+                        continue;
+                    }
 
                     handler.OnScrollWheel(scrollWheelValue);
                     handler.OnHorizontalScrollWheel(horizontalScrollWheelValue);

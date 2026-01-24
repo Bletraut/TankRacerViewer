@@ -1,7 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ComposableUi.Utilities;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -10,44 +14,58 @@ namespace ComposableUi.Core
 {
     public sealed class DefaultUiRenderer : IUiRenderer
     {
-        private static Texture2D WhitePixelTexture;
+        public const int DefaultNineSlicedScale = 2;
+
+        private static Texture2D _fallbackTexture;
+        private static Sprite _fallbackSprite;
 
         public SpriteFont MainFont { get; set; }
+
+        public int NineSlicedScale = DefaultNineSlicedScale;
 
         private readonly ContentManager _contentManager;
         private readonly SpriteBatch _spriteBatch;
 
-        private readonly RasterizerState _scissorRasterizerState;
+        private readonly RasterizerState _scissorRasterizerState = new()
+        {
+            ScissorTestEnable = true,
+        };
+        private readonly Dictionary<StandardSkin, Sprite> _standardSkinSprites = [];
+
+        private readonly Texture2D _standardSkinAtlasTexture;
 
         public DefaultUiRenderer(ContentManager contentManager, SpriteBatch spriteBatch)
         {
             _contentManager = contentManager;
             _spriteBatch = spriteBatch;
 
-            if (WhitePixelTexture == null)
+            if (_fallbackTexture == null)
             {
-                WhitePixelTexture = new Texture2D(spriteBatch.GraphicsDevice, 1, 1);
-                WhitePixelTexture.SetData([Color.White]);
+                _fallbackTexture = new Texture2D(spriteBatch.GraphicsDevice, 2, 2);
+                _fallbackTexture.SetData([Color.Pink, Color.DeepPink, Color.DeepPink, Color.Pink]);
+
+                _fallbackSprite = new Sprite()
+                {
+                    Texture = _fallbackTexture,
+                    SourceRectangle = new Rectangle(0, 0, _fallbackTexture.Width, _fallbackTexture.Height)
+                };
             }
 
-            _scissorRasterizerState = new RasterizerState()
-            {
-                ScissorTestEnable = true
-            };
+            _standardSkinAtlasTexture ??= _contentManager.Load<Texture2D>("ComposableUi\\UiElementsAtlas");
 
             MainFont = _contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
-            var data = File.ReadAllText(Path.Combine(_contentManager.RootDirectory, "ComposableUi\\UiElementsAtlas.json"));
-            Debug.WriteLine(data);
+
+            PrepareStandardSkinSprites();
         }
 
-        Vector2 IUiRenderer.MeasureString(string text)
+        public Vector2 MeasureString(string text)
             => MainFont.MeasureString(text);
 
-        Vector2 IUiRenderer.MeasureString(StringBuilder text)
+        public Vector2 MeasureString(StringBuilder text)
             => MainFont.MeasureString(text);
 
-        void IUiRenderer.DrawRectangle(Rectangle boundingRectangle,
-            Rectangle? clipMask, Color color)
+        public void DrawSprite(Sprite sprite, DrawMode drawMode,
+            Rectangle destinationRectangle, Rectangle? clipMask, Color color)
         {
             RasterizerState rasterizerState = null;
             if (clipMask.HasValue)
@@ -56,31 +74,183 @@ namespace ComposableUi.Core
                 _spriteBatch.GraphicsDevice.ScissorRectangle = clipMask.Value;
             }
 
-            _spriteBatch.Begin(rasterizerState: rasterizerState);
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp,
+                rasterizerState: rasterizerState);
 
-            _spriteBatch.Draw(WhitePixelTexture, boundingRectangle, color);
-
-            // Debug.
-            var center = new Vector2(boundingRectangle.Left, boundingRectangle.Top) 
-                + boundingRectangle.Size.ToVector2() / 2;
-            _spriteBatch.Draw(WhitePixelTexture, center - Vector2.One * 3f,
-                null, Color.Red, 0, Vector2.Zero, Vector2.One * 8, SpriteEffects.None, 0);
-            _spriteBatch.Draw(WhitePixelTexture, new Vector2(boundingRectangle.Left + 4, boundingRectangle.Center.Y),
-                null, Color.Blue, 0, Vector2.Zero, new Vector2(boundingRectangle.Width - 8, 2), SpriteEffects.None, 0);
-            _spriteBatch.Draw(WhitePixelTexture, new Vector2(center.X, boundingRectangle.Top + 4),
-                null, Color.Green, 0, Vector2.Zero, new Vector2(2, boundingRectangle.Height - 8), SpriteEffects.None, 0);
+            switch (drawMode)
+            {
+                case DrawMode.Simple:
+                    DrawSimpleSprite(sprite, destinationRectangle, color);
+                    break;
+                case DrawMode.Sliced:
+                    DrawSlicedSprite(sprite, destinationRectangle, color);
+                    break;
+                default:
+                    DrawSimpleSprite(sprite, destinationRectangle, color);
+                    break;
+            }
 
             _spriteBatch.End();
         }
 
-        void IUiRenderer.DrawSprite(Sprite sprite, DrawMode drawMode, Rectangle boundingRectangle, Rectangle? clipMask, Color color)
+        public void DrawSkinnedRectangle(StandardSkin skin, DrawMode drawMode,
+            Rectangle destinationRectangle, Rectangle? clipMask, Color color)
         {
-            throw new System.NotImplementedException();
+            if (skin is StandardSkin.None)
+                return;
+
+            if (_standardSkinSprites.TryGetValue(skin, out var sprite))
+            {
+                sprite.Texture = _standardSkinAtlasTexture;
+            }
+            else
+            {
+                sprite = _fallbackSprite;
+            }
+
+            DrawSprite(sprite, drawMode, destinationRectangle, clipMask, color);
         }
 
-        void IUiRenderer.DrawSkinnedRectangle(StandardSkin sprite, DrawMode drawMode, Rectangle boundingRectangle, Rectangle? clipMask, Color color)
+        private void PrepareStandardSkinSprites()
         {
-            throw new System.NotImplementedException();
+            var atlasPath = Path.Combine(_contentManager.RootDirectory, "ComposableUi\\UiElementsAtlas.json");
+            if (!File.Exists(atlasPath))
+                return;
+
+            var atlasJson = File.ReadAllText(atlasPath);
+            if (AsepriteUtilities.TryGetSlices(atlasJson, out var slices))
+            {
+                foreach (var slice in slices)
+                {
+                    if (Enum.TryParse<StandardSkin>(slice.Name, out var standardSkin))
+                        _standardSkinSprites[standardSkin] = slice.ToSprite();
+                }    
+            }
+        }
+
+        private void DrawSimpleSprite(Sprite sprite,
+            Rectangle destinationRectangle, Color color)
+        {
+            _spriteBatch.Draw(sprite.Texture, destinationRectangle,
+                sprite.SourceRectangle, color);
+        }
+
+        private void DrawSlicedSprite(Sprite sprite,
+            Rectangle destinationRectangle, Color color)
+        {
+            if (!sprite.IsSliced)
+            {
+                DrawSimpleSprite(sprite, destinationRectangle, color);
+                return;
+            }
+
+            // Top left.
+            var sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Left,
+                sprite.SourceRectangle.Top,
+                sprite.LeftBorder,
+                sprite.TopBorder);
+            var sliceDestinationRectangle = new Rectangle(destinationRectangle.Left,
+                destinationRectangle.Top,
+                sliceSourceRectangle.Width * NineSlicedScale,
+                sliceSourceRectangle.Height * NineSlicedScale);
+            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+                sliceSourceRectangle, color);
+
+            // Top right.
+            sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Right - sprite.RightBorder,
+                sprite.SourceRectangle.Top,
+                sprite.RightBorder,
+                sprite.TopBorder);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Right - sliceSourceRectangle.Width * NineSlicedScale,
+                destinationRectangle.Top,
+                sliceSourceRectangle.Width * NineSlicedScale,
+                sliceSourceRectangle.Height * NineSlicedScale);
+            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+                sliceSourceRectangle, color);
+
+            // Bottom left.
+            sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Left,
+                sprite.SourceRectangle.Bottom - sprite.BottomBorder,
+                sprite.LeftBorder,
+                sprite.BottomBorder);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left,
+                destinationRectangle.Bottom - sliceSourceRectangle.Height * NineSlicedScale,
+                sliceSourceRectangle.Width * NineSlicedScale,
+                sliceSourceRectangle.Height * NineSlicedScale);
+            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+                sliceSourceRectangle, color);
+
+            // Bottom right.
+            sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Right - sprite.RightBorder,
+                sprite.SourceRectangle.Bottom - sprite.BottomBorder,
+                sprite.RightBorder,
+                sprite.BottomBorder);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Right - sliceSourceRectangle.Width * NineSlicedScale,
+                destinationRectangle.Bottom - sliceSourceRectangle.Height * NineSlicedScale,
+                sliceSourceRectangle.Width * NineSlicedScale,
+                sliceSourceRectangle.Height * NineSlicedScale);
+            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+                sliceSourceRectangle, color);
+
+            // Left.
+            sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Left,
+                sprite.SourceRectangle.Top + sprite.TopBorder,
+                sprite.LeftBorder,
+                sprite.SourceRectangle.Height - sprite.TopBorder - sprite.BottomBorder);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left,
+                destinationRectangle.Top + sprite.TopBorder * NineSlicedScale,
+                sliceSourceRectangle.Width * NineSlicedScale,
+                destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * NineSlicedScale);
+            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+                sliceSourceRectangle, color);
+
+            // Right.
+            sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Right - sprite.RightBorder,
+                sprite.SourceRectangle.Top + sprite.TopBorder,
+                sprite.RightBorder,
+                sprite.SourceRectangle.Height - sprite.TopBorder - sprite.BottomBorder);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Right - sliceSourceRectangle.Width * NineSlicedScale,
+                destinationRectangle.Top + sprite.TopBorder * NineSlicedScale,
+                sliceSourceRectangle.Width * NineSlicedScale,
+                destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * NineSlicedScale);
+            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+                sliceSourceRectangle, color);
+
+            // Top.
+            sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Left + sprite.LeftBorder,
+                sprite.SourceRectangle.Top,
+                sprite.SourceRectangle.Width - sprite.LeftBorder - sprite.RightBorder,
+                sprite.TopBorder);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left + sprite.LeftBorder * NineSlicedScale,
+                destinationRectangle.Top,
+                destinationRectangle.Width - (sprite.LeftBorder + sprite.RightBorder) * NineSlicedScale,
+                sprite.TopBorder * NineSlicedScale);
+            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+                sliceSourceRectangle, color);
+
+            // Bottom.
+            sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Left + sprite.LeftBorder,
+                sprite.SourceRectangle.Bottom - sprite.BottomBorder,
+                sprite.SourceRectangle.Width - sprite.LeftBorder - sprite.RightBorder,
+                sprite.BottomBorder);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left + sprite.LeftBorder * NineSlicedScale,
+                destinationRectangle.Bottom - sprite.BottomBorder * NineSlicedScale,
+                destinationRectangle.Width - (sprite.LeftBorder + sprite.RightBorder) * NineSlicedScale,
+                sprite.BottomBorder * NineSlicedScale);
+            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+                sliceSourceRectangle, color);
+
+            // Center.
+            sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Left + sprite.LeftBorder,
+                sprite.SourceRectangle.Top + sprite.TopBorder,
+                sprite.SourceRectangle.Width - sprite.LeftBorder - sprite.RightBorder,
+                sprite.SourceRectangle.Height - sprite.TopBorder - sprite.BottomBorder);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left + sprite.LeftBorder * NineSlicedScale,
+                destinationRectangle.Top + sprite.TopBorder * NineSlicedScale,
+                destinationRectangle.Width - (sprite.LeftBorder + sprite.RightBorder) * NineSlicedScale,
+                destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * NineSlicedScale);
+            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+                sliceSourceRectangle, color);
         }
     }
 }

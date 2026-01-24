@@ -5,6 +5,7 @@ namespace ComposableUi.Core
     public interface IPointerInputHandler
     {
         public bool BlockInput { get; set; }
+        public bool IsInteractable { get; set; }
 
         public void OnScrollWheel(int delta) { }
         public void OnHorizontalScrollWheel(int delta) { }

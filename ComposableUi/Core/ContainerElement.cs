@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace ComposableUi
 {
-    public class ContainerElement : ParentElement, IDrawableElement
+    public class ContainerElement : ParentElement
     {
         public override int ChildCount => _children.Count;
 
@@ -71,11 +71,6 @@ namespace ComposableUi
                 child.Parent = null;
                 OnStateChanged();
             }
-        }
-
-        void IDrawableElement.Draw(IUiRenderer renderer)
-        {
-            renderer.DrawRectangle(BoundingRectangle, ClipMask, new Color(Color.Green, 0.2f));
         }
     }
 }

@@ -14,6 +14,22 @@ namespace ComposableUi.Elements
             set => SetAndChangeState(ref _blockInput, value);
         }
 
+        private bool _isInteractable = true;
+        public bool IsInteractable
+        {
+            get => _isInteractable;
+            set
+            {
+                if (_isInteractable == value)
+                    return;
+
+                _isInteractable = value;
+                OnInteractionChanged(_isInteractable);
+            }
+        }
+
+        public event ElementEventHandler<bool> InteractionChanged;
+
         public event ElementEventHandler<int> ScrollWheel;
         public event ElementEventHandler<int> HorizontalScrollWheel;
 
@@ -33,11 +49,16 @@ namespace ComposableUi.Elements
         public event ElementEventHandler<Point> PointerSecondaryClick;
 
         public PointerInputHandlerElement(bool blockInput = true,
-            Element innerElement = default)
+            Element innerElement = default,
+            bool isInteractable = true)
             : base(innerElement)
         {
             _blockInput = blockInput;
+            _isInteractable = isInteractable;
         }
+
+        public virtual void OnInteractionChanged(bool value)
+            => InteractionChanged?.Invoke(this, value);
 
         public virtual void OnScrollWheel(int delta)
             => ScrollWheel?.Invoke(this, delta);

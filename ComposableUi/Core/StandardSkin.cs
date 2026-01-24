@@ -2,6 +2,8 @@
 {
     public enum StandardSkin
     {
+        None,
+
         // Colors.
         SolidDarkPixel,
         SelectionWarmPixel,
@@ -12,18 +14,18 @@
         ContentPanel,
 
         ScrollButton,
-        ScrollButtonSelected,
+        ScrollButtonHover,
 
         TextField,
 
         RoundedButton,
-        RoundedButtonSelected,
-        RoundedButtonClicked,
+        RoundedButtonHover,
+        RoundedButtonPressed,
         RoundedButtonDisabled,
 
         RectangleButton,
-        RectangleButtonSelected,
-        RectangleButtonClicked,
+        RectangleButtonHover,
+        RectangleButtonPressed,
         RectangleButtonDisabled,
 
         WindowHeader,

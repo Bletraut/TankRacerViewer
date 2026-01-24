@@ -4,6 +4,5 @@
     {
         Simple,
         Sliced,
-        Tiled
     }
 }

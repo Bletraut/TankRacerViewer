@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
-    public sealed class ExpandedElement : HolderElement, IDrawableElement
+    public sealed class ExpandedElement : HolderElement
     {
         private float _leftPadding;
         public float LeftPadding
@@ -113,11 +113,6 @@ namespace ComposableUi
                 var topPadding = ExpandHeight ? TopPadding : 0;
                 LocalPosition = new Vector2(leftPadding, topPadding) + Size * Pivot;
             }
-        }
-
-        void IDrawableElement.Draw(IUiRenderer renderer)
-        {
-            renderer.DrawRectangle(BoundingRectangle, ClipMask, new Color(Color.Green, 0.2f));
         }
     }
 }

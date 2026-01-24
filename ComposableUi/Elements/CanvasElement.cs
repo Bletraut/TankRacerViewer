@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace ComposableUi
 {
-    public sealed class CanvasElement : ContainerElement, IDrawableElement
+    public sealed class CanvasElement : ContainerElement
     {
         private readonly GameWindow _gameWindow;
 
@@ -28,12 +28,6 @@ namespace ComposableUi
         {
             Pivot = Vector2.Zero;
             base.AddChild(child);
-        }
-
-        void IDrawableElement.Draw(IUiRenderer renderer)
-        {
-            var rectangle = new Rectangle((Position - Size * Pivot).ToPoint(), Size.ToPoint());
-            renderer.DrawRectangle(rectangle, ClipMask, new Color(Color.Blue, 0.2f));
         }
 
         private void OnGameWindowClientSizeChanged(object sender, EventArgs eventArgs)

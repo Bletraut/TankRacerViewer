@@ -77,13 +77,13 @@ namespace TankRacerViewer.Core
             _uiManager = new UiManager(GraphicsDevice, Content, _spriteBatch);
             _uiManager.Root.AddChild(new CanvasElement(Window,
                 children: [
-                    new PanelElement(new Vector2(200, 50), Color.Orange)
+                    new ButtonElement(new Vector2(200, 50))
                     {
                         Position = new Vector2(100, 200),
                         Pivot = Alignment.MiddleLeft
                     },
                     new ExpandedElement(
-                        innerElement: new AlignmentElement(new PanelElement(new Vector2(100, 100), Color.Wheat))
+                        innerElement: new AlignmentElement(new ButtonElement(new Vector2(100, 100)))
                         {
                             AlignmentFactor = Alignment.MiddleRight,
                             Offset = new Vector2(-20, 0),
@@ -95,52 +95,13 @@ namespace TankRacerViewer.Core
                         expandWidth: false,
                         expandHeight: true
                     ),
-                    new AlignmentElement(new PanelElement(new Vector2(100, 100), Color.Gold))
+                    new AlignmentElement(new ButtonElement(new Vector2(100, 100)))
                     {
                         AlignmentFactor = Alignment.MiddleRight,
                         Offset = new Vector2(-20, 0),
                         Pivot = Alignment.MiddleRight
                     },
                 ]));
-
-            var row = new RowLayout(
-                alignmentFactor: Alignment.Center,
-                spacing: 10,
-                sizeMainAxisToContent: true
-                //expandChildrenMainAxisSize: true
-                //expandChildrenCrossAxisSize: true
-                );
-            row.Size = new Vector2(200, 80);
-            //row.Position = new Vector2(300, 50);
-            row.Pivot = new Vector2(0.2f);
-            for (var i = 0; i < 10; i++)
-            {
-                var panel = new PanelElement(new Vector2(Random.Shared.Next(10, 100), Random.Shared.Next(10, 100)),
-                    new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle()));
-                panel.Pivot = new Vector2(Random.Shared.NextSingle(), Random.Shared.NextSingle());
-                row.AddChild(panel);
-            }
-            _uiManager.Root.AddChild(new ClipMaskElement(row)
-            {
-                Position = new Vector2(300, 50),
-                Pivot = new Vector2(0.2f)
-            });
-
-            var column = new ColumnLayout(
-                alignmentFactor: Alignment.TopCenter,
-                spacing: 5
-                );
-            column.Size = new Vector2(80, 500);
-            column.Position = new Vector2(0, 50);
-            column.Pivot = Alignment.TopLeft;
-            for (var i = 0; i < 10; i++)
-            {
-                var panel = new PanelElement(new Vector2(Random.Shared.Next(10, 100), Random.Shared.Next(10, 100)),
-                    new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle()));
-                panel.Pivot = new Vector2(Random.Shared.NextSingle(), Random.Shared.NextSingle());
-                column.AddChild(panel);
-            }
-            _uiManager.Root.AddChild(column);
 
             _renderer = new WorldRenderer(GraphicsDevice, _spriteBatch, Content);
 
