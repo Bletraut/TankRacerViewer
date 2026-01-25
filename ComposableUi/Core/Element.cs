@@ -52,7 +52,7 @@ namespace ComposableUi
 
                 _size = value;
 
-                SizeChanged?.Invoke(this);
+                OnSizeChanged();
                 OnTransformChanged();
             }
         }
@@ -267,6 +267,10 @@ namespace ComposableUi
             OnStateChanged();
         }
 
+        protected virtual void OnSizeChanged() 
+        {
+            SizeChanged?.Invoke(this);
+        }
         protected virtual void OnParentSizeChanged(Element sender) { }
     }
 

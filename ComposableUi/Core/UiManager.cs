@@ -195,7 +195,7 @@ namespace ComposableUi
             {
                 var element = _stack.Pop();
                 if (!element.IsEnabled)
-                    break;
+                    continue;
 
                 if (element is ParentElement parentElement)
                 {

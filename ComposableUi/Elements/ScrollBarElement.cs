@@ -26,13 +26,16 @@ namespace ComposableUi
             }
         }
 
+        public float MainAxisSize => Vector2.Dot(Size, MainAxis);
+        public float CrossAxisSize => Vector2.Dot(Size, CrossAxis);
+
         public Vector2 MainAxis { get; }
         public Vector2 CrossAxis { get; }
 
         public SpriteElement Background { get; }
         public ButtonElement Button { get; }
 
-        public ElementEventHandler<float> ProgressValueChanged;
+        public event ElementEventHandler<float> ProgressValueChanged;
 
         public ScrollBarElement(Vector2 mainAxis, Vector2 crossAxis,
             Vector2? size = default)
