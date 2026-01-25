@@ -6,11 +6,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace ComposableUi.Core
+namespace ComposableUi
 {
     public sealed class DefaultUiRenderer : IUiRenderer
     {

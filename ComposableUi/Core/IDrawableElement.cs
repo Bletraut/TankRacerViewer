@@ -1,4 +1,4 @@
-﻿namespace ComposableUi.Core
+﻿namespace ComposableUi
 {
     public interface IDrawableElement
     {

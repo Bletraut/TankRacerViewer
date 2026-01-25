@@ -1,8 +1,6 @@
-﻿using ComposableUi.Core;
+﻿using Microsoft.Xna.Framework;
 
-using Microsoft.Xna.Framework;
-
-namespace ComposableUi.Elements
+namespace ComposableUi
 {
     public class PointerInputHandlerElement : SizedToContentHolderElement,
         IPointerInputHandler

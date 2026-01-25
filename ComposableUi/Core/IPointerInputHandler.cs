@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace ComposableUi.Core
+namespace ComposableUi
 {
     public interface IPointerInputHandler
     {

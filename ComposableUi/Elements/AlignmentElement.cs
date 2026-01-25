@@ -21,12 +21,14 @@ namespace ComposableUi
         }
 
         public AlignmentElement(Element innerElement = default,
-            Vector2 alignmentFactor = default,
-            Vector2 offset = default) 
+            Vector2? alignmentFactor = default,
+            Vector2? offset = default,
+            Vector2? pivot = default) 
             : base(innerElement) 
         { 
-            AlignmentFactor = alignmentFactor;
-            Offset = offset;
+            AlignmentFactor = alignmentFactor ?? Alignment.Center;
+            Offset = offset ?? Vector2.Zero;
+            Pivot = pivot ?? Alignment.Center;
         }
 
         public override void ApplySize(Vector2 size)

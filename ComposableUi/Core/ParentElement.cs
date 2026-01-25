@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ComposableUi
+﻿namespace ComposableUi
 {
     public abstract class ParentElement : Element
     {

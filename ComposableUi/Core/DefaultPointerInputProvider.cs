@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace ComposableUi.Core
+namespace ComposableUi
 {
     public sealed class DefaultPointerInputProvider : IPointerInputProvider, IUpdateable
     {

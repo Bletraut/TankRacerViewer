@@ -1,5 +1,4 @@
-﻿using ComposableUi.Core;
-using ComposableUi.Elements;
+﻿using ComposableUi.Elements;
 
 using Microsoft.Xna.Framework;
 
@@ -7,7 +6,7 @@ namespace ComposableUi
 {
     public class ButtonElement : PointerInputHandlerElement, IDrawableElement
     {
-        public static Vector2 DefaultSize => new(200, 50);
+        public static readonly Vector2 DefaultSize = new(200, 50);
 
         public Sprite NormalSprite { get; set; }
         public Sprite HoverSprite { get; set; }

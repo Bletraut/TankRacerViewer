@@ -111,7 +111,7 @@ namespace ComposableUi
             {
                 var leftPadding = ExpandWidth ? LeftPadding : 0;
                 var topPadding = ExpandHeight ? TopPadding : 0;
-                LocalPosition = new Vector2(leftPadding, topPadding) + Size * Pivot;
+                LocalPosition = new Vector2(leftPadding, topPadding) + Size * Pivot - Parent.Size * Parent.Pivot;
             }
         }
     }
