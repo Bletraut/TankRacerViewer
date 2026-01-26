@@ -38,15 +38,15 @@ namespace ComposableUi
             Sprite sprite = default,
             StandardSkin skin = StandardSkin.None,
             Color? color = default,
-            bool sizeToContent = false,
+            bool sizeToSource = false,
             DrawMode drawMode = DrawMode.Sliced)
         {
-            ApplySize(size ?? Vector2.Zero);
+            Size = size ?? Vector2.Zero;
 
             Sprite = sprite;
             Skin = skin;
             Color = color ?? Color.White;
-            SizeToSource = sizeToContent;
+            SizeToSource = sizeToSource;
             DrawMode = drawMode;
         }
 

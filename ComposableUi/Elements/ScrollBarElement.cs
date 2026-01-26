@@ -45,7 +45,7 @@ namespace ComposableUi
 
             var defaultSize = new Vector2(DefaultMainAxisSize) * mainAxis
                 + new Vector2(DefaultCrossAxisSize) * crossAxis;
-            ApplySize(size ?? defaultSize);
+            Size = size ?? defaultSize;
 
             var defaultPadding = new Vector2(DefaultMainAxisPadding) * mainAxis
                 + new Vector2(DefaultCrossAxisPadding) * crossAxis;

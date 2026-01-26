@@ -74,6 +74,11 @@ namespace TankRacerViewer.Core
             // TODO: use this.Content to load your game content here
             _mainFont = Content.Load<SpriteFont>("Fonts\\MainFont");
 
+            var row = new ColumnLayout(
+                spacing: 10,
+                sizeMainAxisToContent: true,
+                sizeCrossAxisToContent: true);
+
             _uiManager = new UiManager(GraphicsDevice, Content, _spriteBatch);
             _uiManager.Root.AddChild(new CanvasElement(Window,
                 children: [
@@ -101,7 +106,10 @@ namespace TankRacerViewer.Core
                         Offset = new Vector2(-20, 0),
                         Pivot = Alignment.MiddleRight
                     },
-                    new ScrollViewElement()
+                    new ScrollViewElement(
+                        //content: new SpriteElement(size: new Vector2(200, 300), skin: StandardSkin.ContentPanel
+                        content: row
+                        )
                     {
                         Position = new Vector2(100, 100),
                         Pivot = Alignment.TopLeft
@@ -126,6 +134,19 @@ namespace TankRacerViewer.Core
             //using var levelFileStream = File.OpenRead("Content\\FastFiles\\THEME.DAT");
             var levelFastFile = new FastFile(levelFileStream);
             _levelAssetViewContainer = new AssetViewContainer(GraphicsDevice, levelFastFile);
+
+            foreach (var (key, textureAssetView) in _levelAssetViewContainer.TextureAssetViews)
+            {
+                var sprite = new SpriteElement(
+                    sprite: new Sprite()
+                    {
+                        Texture = textureAssetView.Texture,
+                        SourceRectangle = new Rectangle(0,0,textureAssetView.Texture.Width, textureAssetView.Texture.Height)
+                    },
+                    drawMode: DrawMode.Simple,
+                    sizeToSource: true);
+                row.AddChild(sprite);
+            }
 
             var levelViewName = levelFastFile.Assets.FirstOrDefault(asset => asset is MapAsset)?.FullName ?? string.Empty;
             _levelView = new LevelView(levelViewName, _commonAssetViewContainer, _levelAssetViewContainer);
@@ -208,6 +229,8 @@ namespace TankRacerViewer.Core
             //    _tankView.Draw(_renderer, _camera);
             //}
 
+            _uiManager.Draw(gameTime);
+
             _info.AppendLine($"Draw Calls: {GraphicsDevice.Metrics.DrawCount}");
             _info.Append($"Fps: {1 / gameTime.ElapsedGameTime.TotalSeconds:00.0}");
 
@@ -218,8 +241,6 @@ namespace TankRacerViewer.Core
             _spriteBatch.Begin();
             _spriteBatch.DrawString(_mainFont, infoString, infoPosition, Color.Black);
             _spriteBatch.End();
-
-            _uiManager.Draw(gameTime);
 
             base.Draw(gameTime);
         }

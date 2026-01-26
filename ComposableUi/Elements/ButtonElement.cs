@@ -43,7 +43,7 @@ namespace ComposableUi
             Color? disabledColor = default,
             bool isInteractable = true)
         {
-            ApplySize(size ?? DefaultSize);
+            Size = size ?? DefaultSize;
 
             NormalSprite = normalSprite;
             HoverSprite = hoverSprite;
