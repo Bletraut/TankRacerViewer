@@ -1,5 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 
+using System;
+using System.Diagnostics;
+
 namespace ComposableUi
 {
     public class ScrollBarElement : ContainerElement
@@ -37,6 +40,8 @@ namespace ComposableUi
 
         public event ElementEventHandler<float> ProgressValueChanged;
 
+        private Vector2 _pointerDownNormalizedPosition = Vector2.Zero;
+
         public ScrollBarElement(Vector2 mainAxis, Vector2 crossAxis,
             Vector2? size = default)
         {
@@ -66,6 +71,7 @@ namespace ComposableUi
                 topPadding: defaultPadding.Y,
                 bottomPadding: defaultPadding.Y));
 
+            Button.PointerDown += OnButtonPointerDown;
             Button.PointerDrag += OnButtonPointerDrag;
         }
 
@@ -100,9 +106,31 @@ namespace ComposableUi
             ProgressValueChanged?.Invoke(this, _progressValue);
         }
 
-        private void OnButtonPointerDrag(Element sender, Point delta)
+        private void OnButtonPointerDown(Element sender, Point position)
         {
-            ApplyButtonPosition(Button.LocalPosition + delta.ToVector2() * MainAxis);
+            var boundingBox = Button.BoundingRectangle;
+            var localPointerPosition = position - new Point(boundingBox.Left, boundingBox.Top);
+
+            _pointerDownNormalizedPosition = localPointerPosition.ToVector2() / Button.Size;
+        }
+
+        private void OnButtonPointerDrag(Element sender, (Point Position, Point Delta) arguments)
+        {
+            var boundingBox = Button.BoundingRectangle;
+            var pointerDownPosition = new Vector2(boundingBox.Left, boundingBox.Top)
+                + Button.Size * _pointerDownNormalizedPosition;
+
+            var mainAxisPointerPosition = Vector2.Dot(MainAxis, arguments.Position.ToVector2() * MainAxis);
+            var mainAxisPointerDownPosition = Vector2.Dot(MainAxis, pointerDownPosition * MainAxis);
+
+            var delta = arguments.Delta.ToVector2() * MainAxis;
+            var mainAxisDelta = Vector2.Dot(MainAxis, delta);
+
+            var canDrag = MathF.Sign(mainAxisPointerPosition - mainAxisPointerDownPosition) == MathF.Sign(mainAxisDelta);
+            if (!canDrag)
+                return;
+
+            ApplyButtonPosition(Button.LocalPosition + delta);
         }
     }
 }

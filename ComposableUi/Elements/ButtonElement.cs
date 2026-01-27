@@ -23,8 +23,8 @@ namespace ComposableUi
         public Color PressedColor { get; set; }
         public Color DisabledColor { get; set; }
 
-        private bool _isHover;
-        private bool _isPressed;
+        public bool IsHover { get; private set; }
+        public bool IsPressed { get; private set; }
 
         private (Sprite Sprite, StandardSkin Skin, Color Color) _currentState;
 
@@ -79,46 +79,6 @@ namespace ComposableUi
             }
         }
 
-        public override void OnInteractionChanged(bool value)
-        {
-            base.OnInteractionChanged(value);
-
-            _isHover = _isPressed = false;
-            OnInteractionStateChanged(value ? InteractionState.Normal : InteractionState.Disabled);
-        }
-
-        public override void OnPointerEnter(Point position)
-        {
-            base.OnPointerEnter(position);
-
-            _isHover = true;
-            OnInteractionStateChanged(_isPressed ? InteractionState.Pressed : InteractionState.Hover);
-        }
-
-        public override void OnPointerLeave(Point position)
-        {
-            base.OnPointerLeave(position);
-
-            _isHover = false;
-            OnInteractionStateChanged(InteractionState.Normal);
-        }
-
-        public override void OnPointerDown(Point position)
-        {
-            base.OnPointerDown(position);
-
-            _isPressed = true;
-            OnInteractionStateChanged(InteractionState.Pressed);
-        }
-
-        public override void OnPointerUp(Point position)
-        {
-            base.OnPointerUp(position);
-
-            _isPressed = false;
-            OnInteractionStateChanged(_isHover ? InteractionState.Hover : InteractionState.Normal);
-        }
-
         protected virtual void OnInteractionStateChanged(InteractionState state)
         {
             _currentState = state switch
@@ -129,6 +89,46 @@ namespace ComposableUi
                 InteractionState.Disabled => (DisabledSprite, DisabledSkin, DisabledColor),
                 _ => (NormalSprite, NormalSkin, NormalColor)
             };
+        }
+
+        protected override void OnInteractionChanged(bool value)
+        {
+            base.OnInteractionChanged(value);
+
+            IsHover = IsPressed = false;
+            OnInteractionStateChanged(value ? InteractionState.Normal : InteractionState.Disabled);
+        }
+
+        protected override void OnPointerEnter(Point position)
+        {
+            base.OnPointerEnter(position);
+
+            IsHover = true;
+            OnInteractionStateChanged(IsPressed ? InteractionState.Pressed : InteractionState.Hover);
+        }
+
+        protected override void OnPointerLeave(Point position)
+        {
+            base.OnPointerLeave(position);
+
+            IsHover = false;
+            OnInteractionStateChanged(InteractionState.Normal);
+        }
+
+        protected override void OnPointerDown(Point position)
+        {
+            base.OnPointerDown(position);
+
+            IsPressed = true;
+            OnInteractionStateChanged(InteractionState.Pressed);
+        }
+
+        protected override void OnPointerUp(Point position)
+        {
+            base.OnPointerUp(position);
+
+            IsPressed = false;
+            OnInteractionStateChanged(IsHover ? InteractionState.Hover : InteractionState.Normal);
         }
 
         protected enum InteractionState

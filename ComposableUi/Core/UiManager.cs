@@ -80,8 +80,8 @@ namespace ComposableUi
             _currentPointerPosition = PointerInputProvider.PointerPosition;
             var pointerPositionDelta = _currentPointerPosition - _lastPointerPosition;
 
-            var scrollWheelValue = PointerInputProvider.ScrollWheelValue;
-            var horizontalScrollWheelValue = PointerInputProvider.HorizontalScrollWheelValue;
+            var scrollWheelValueDelta = PointerInputProvider.ScrollWheelValueDelta;
+            var horizontalScrollWheelValueDelta = PointerInputProvider.HorizontalScrollWheelValueDelta;
 
             var isInputBlocked = false;
             for (var i = _pointerInputHandlers.Count - 1; i >= 0; i--)
@@ -100,8 +100,10 @@ namespace ComposableUi
                         continue;
                     }
 
-                    handler.OnScrollWheel(scrollWheelValue);
-                    handler.OnHorizontalScrollWheel(horizontalScrollWheelValue);
+                    if (scrollWheelValueDelta != 0)
+                        handler.OnScrollWheel(_currentPointerPosition, scrollWheelValueDelta);
+                    if (horizontalScrollWheelValueDelta != 0)
+                        handler.OnHorizontalScrollWheel(_currentPointerPosition, horizontalScrollWheelValueDelta);
 
                     if (_activeHandlers.Add(handler))
                         handler.OnPointerEnter(_currentPointerPosition);
@@ -124,7 +126,7 @@ namespace ComposableUi
                     if (PointerInputProvider.IsPrimaryButtonPressed)
                     {
                         if (_primaryButtonPressedHandlers.Contains(handler))
-                            handler.OnPointerDrag(pointerPositionDelta);
+                            handler.OnPointerDrag(_currentPointerPosition, pointerPositionDelta);
                     }
 
                     if (PointerInputProvider.IsSecondaryButtonDown)
@@ -151,7 +153,7 @@ namespace ComposableUi
                 if (PointerInputProvider.IsPrimaryButtonPressed)
                 {
                     if (_primaryButtonPressedHandlers.Contains(handler))
-                        handler.OnPointerDrag(pointerPositionDelta);
+                        handler.OnPointerDrag(_currentPointerPosition, pointerPositionDelta);
                 }
 
                 if (PointerInputProvider.IsPrimaryButtonUp)

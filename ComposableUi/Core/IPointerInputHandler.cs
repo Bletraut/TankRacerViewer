@@ -7,8 +7,8 @@ namespace ComposableUi
         public bool BlockInput { get; set; }
         public bool IsInteractable { get; set; }
 
-        public void OnScrollWheel(int delta) { }
-        public void OnHorizontalScrollWheel(int delta) { }
+        public void OnScrollWheel(Point position, int delta) { }
+        public void OnHorizontalScrollWheel(Point position, int delta) { }
 
         public void OnPointerEnter(Point position) { }
         public void OnPointerMove(Point position) { }
@@ -20,7 +20,7 @@ namespace ComposableUi
         public void OnPointerSecondaryDown(Point position) { }
         public void OnPointerSecondaryUp(Point position) { }
 
-        public void OnPointerDrag(Point delta) { }
+        public void OnPointerDrag(Point position, Point delta) { }
 
         public void OnPointerClick(Point position) { }
         public void OnPointerSecondaryClick(Point position) { }

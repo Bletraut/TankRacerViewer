@@ -7,8 +7,10 @@ namespace ComposableUi
     {
         Point IPointerInputProvider.PointerPosition => _currentMouseState.Position;
 
-        int IPointerInputProvider.ScrollWheelValue => _currentMouseState.ScrollWheelValue;
-        int IPointerInputProvider.HorizontalScrollWheelValue => _currentMouseState.HorizontalScrollWheelValue;
+        int IPointerInputProvider.ScrollWheelValueDelta 
+            => _currentMouseState.ScrollWheelValue - _lastMouseState.ScrollWheelValue;
+        int IPointerInputProvider.HorizontalScrollWheelValueDelta 
+            => _currentMouseState.HorizontalScrollWheelValue - _lastMouseState.HorizontalScrollWheelValue;
 
         bool IPointerInputProvider.IsPrimaryButtonDown
             => _lastMouseState.LeftButton == ButtonState.Released && _currentMouseState.LeftButton == ButtonState.Pressed;

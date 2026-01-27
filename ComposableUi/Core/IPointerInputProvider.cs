@@ -6,8 +6,8 @@ namespace ComposableUi
     {
         public Point PointerPosition { get; }
 
-        public int ScrollWheelValue { get; }
-        public int HorizontalScrollWheelValue { get; }
+        public int ScrollWheelValueDelta { get; }
+        public int HorizontalScrollWheelValueDelta { get; }
 
         public bool IsPrimaryButtonDown { get; }
         public bool IsPrimaryButtonPressed { get; }

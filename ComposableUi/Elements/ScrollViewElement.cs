@@ -9,26 +9,43 @@ namespace ComposableUi
     {
         public static readonly Vector2 DefaultSize = new(300, 300);
 
-        private Element _content;
         public Element Content
         {
-            get => _content;
-            set
-            {
-                if (_content == value) 
-                    return;
-
-                _contentParent.RemoveChild(_content);
-
-                _content = value;
-
-                if (_content != null)
-                    _contentParent.AddChild(_content);
-
-                OnStateChanged();
-            }
+            get => _contentParent.InnerElement;
+            set => _contentParent.InnerElement = value;
         }
 
+        private bool _sizeToContentWidth;
+        public bool SizeToContentWidth
+        {
+            get => _sizeToContentWidth;
+            set => SetAndChangeState(ref _sizeToContentWidth, value);
+        }
+
+        private bool _sizeToContentHeight;
+        public bool SizeToContentHeight
+        {
+            get => _sizeToContentHeight;
+            set => SetAndChangeState(ref _sizeToContentHeight, value);
+        }
+
+        private bool _expandContentWidth;
+        public bool ExpandContentWidth
+        {
+            get => _expandContentWidth;
+            set => SetAndChangeState(ref _expandContentWidth, value);
+        }
+
+        private bool _expandContentHeight;
+        public bool ExpandContentHeight
+        {
+            get => _expandContentHeight;
+            set => SetAndChangeState(ref _expandContentHeight, value);
+        }
+
+        public float ScrollWheelMultiplier { get; set; }
+
+        public SpriteElement Background { get; }
         public ScrollBarElement HorizontalScrollBar { get; }
         public ScrollBarElement VerticalScrollBar { get; }
 
@@ -40,27 +57,28 @@ namespace ComposableUi
 
         private readonly Element _bottomRightPlug;
 
+        private readonly PointerInputHandlerElement _scrollInputHandler;
+
         private Vector2 _minContentPosition;
         private Vector2 _progressValue;
 
         public ScrollViewElement(Vector2? size = default,
-            Element content = default)
+            Element content = default,
+            bool sizeToContentWidth = default,
+            bool sizeToContentHeight = default,
+            bool expandContentWidth = default,
+            bool expandContentHeight = default,
+            float scrollWheelMultiplier = 0.5f)
         {
             Size = size ?? DefaultSize;
+            SizeToContentWidth = sizeToContentWidth;
+            SizeToContentHeight = sizeToContentHeight;
+            ExpandContentWidth = expandContentWidth;
+            ExpandContentHeight = expandContentHeight;
+            ScrollWheelMultiplier = scrollWheelMultiplier;
 
-            var inputHandler = new PointerInputHandlerElement(
-                innerElement: new SpriteElement(
-                    skin: StandardSkin.RectanglePanel));
-            inputHandler.PointerClick += (_, _) =>
-            {
-                Size = Size + new Vector2(50);
-            };
-            inputHandler.PointerSecondaryClick += (_, _) =>
-            {
-                Size = Size - new Vector2(50);
-            };
-            AddChild(new ExpandedElement(
-                innerElement: inputHandler));
+            Background = new SpriteElement(skin: StandardSkin.RectanglePanel);
+            AddChild(new ExpandedElement(Background));
 
             _contentParent = new AlignmentElement(
                 alignmentFactor: Alignment.TopLeft,
@@ -114,6 +132,11 @@ namespace ComposableUi
                 );
             AddChild(_bottomRightPlug);
 
+            _scrollInputHandler = new PointerInputHandlerElement(blockInput: false);
+            _scrollInputHandler.ScrollWheel += OnScrollWheel;
+            _scrollInputHandler.HorizontalScrollWheel += OnHorizontalScrollWheel;
+            AddChild(new ExpandedElement(_scrollInputHandler));
+
             Content = content;
         }
 
@@ -145,29 +168,25 @@ namespace ComposableUi
                 Y = HorizontalScrollBar.IsEnabled ? extraDeltaSize.Y : deltaSize.Y
             };
             _minContentPosition = -Vector2.Max(_minContentPosition, Vector2.Zero);
-            _contentParent.Offset = Vector2.Clamp(_contentParent.Offset, _minContentPosition, Vector2.Zero);
+            ApplyContentOffset(_contentParent.Offset);
 
-            if (HorizontalScrollBar.IsEnabled)
-            {
-                _verticalScrollBarParent.BottomPadding = HorizontalScrollBar.CrossAxisSize;
-                _progressValue.X = _contentParent.Offset.X / _minContentPosition.X;
-            }
-            else
-            {
-                _verticalScrollBarParent.BottomPadding = 0;
-                _progressValue.X = 0;
-            }
+            _verticalScrollBarParent.BottomPadding = HorizontalScrollBar.IsEnabled
+                ? HorizontalScrollBar.CrossAxisSize
+                : 0;
+            _horizontalScrollBarParent.RightPadding = VerticalScrollBar.IsEnabled
+                ? VerticalScrollBar.CrossAxisSize
+                : 0;
+        }
 
-            if (VerticalScrollBar.IsEnabled)
-            {
-                _horizontalScrollBarParent.RightPadding = VerticalScrollBar.CrossAxisSize;
-                _progressValue.Y = _contentParent.Offset.Y / _minContentPosition.Y;
-            }
-            else
-            {
-                _horizontalScrollBarParent.RightPadding = 0;
-                _progressValue.Y = 0;
-            }
+        private void ApplyContentOffset(Vector2 offset)
+        {
+            _contentParent.Offset = Vector2.Clamp(offset, _minContentPosition, Vector2.Zero);
+            _progressValue.X = HorizontalScrollBar.IsEnabled
+                ? _contentParent.Offset.X / _minContentPosition.X
+                : 0;
+            _progressValue.Y = VerticalScrollBar.IsEnabled
+                ? _contentParent.Offset.Y / _minContentPosition.Y
+                : 0;
         }
 
         private void RefreshScrollBarsButtons()
@@ -192,6 +211,17 @@ namespace ComposableUi
 
             scrollBar.Button.Size = targetButtonMainAxisSize * scrollBar.MainAxis + maxButtonSize * scrollBar.CrossAxis;
             scrollBar.ProgressValue = Vector2.Dot(scrollBar.MainAxis, _progressValue * scrollBar.MainAxis);
+        }
+
+        private void ScrollContentIfPossible(Vector2 axis, int delta)
+        {
+            var isAnyScrollButtonPressed = HorizontalScrollBar.Button.IsPressed
+                || VerticalScrollBar.Button.IsPressed;
+            if (isAnyScrollButtonPressed)
+                return;
+
+            ApplyContentOffset(_contentParent.Offset + axis * delta);
+            RefreshScrollBarsButtons();
         }
 
         public override void ApplySize(Vector2 size)
@@ -228,6 +258,18 @@ namespace ComposableUi
             {
                 Y = _minContentPosition.Y * value
             };
+        }
+
+        private void OnScrollWheel(Element sender, (Point Position, int Delta) arguments)
+        {
+            ScrollContentIfPossible(Vector2.UnitY,
+                (int)(arguments.Delta * ScrollWheelMultiplier));
+        }
+
+        private void OnHorizontalScrollWheel(Element sender, (Point Position, int Delta) arguments)
+        {
+            ScrollContentIfPossible(Vector2.UnitX,
+                (int)(arguments.Delta * ScrollWheelMultiplier));
         }
     }
 }
