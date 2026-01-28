@@ -50,6 +50,7 @@ namespace ComposableUi
         public ScrollBarElement VerticalScrollBar { get; }
 
         private readonly Element _view;
+        private ExpandedElement _contentExpanded;
         private readonly AlignmentElement _contentParent;
 
         private readonly ExpandedElement _horizontalScrollBarParent;
@@ -77,20 +78,21 @@ namespace ComposableUi
             ExpandContentHeight = expandContentHeight;
             ScrollWheelMultiplier = scrollWheelMultiplier;
 
-            Background = new SpriteElement(skin: StandardSkin.RectanglePanel);
+            Background = new SpriteElement();
             AddChild(new ExpandedElement(Background));
 
             _contentParent = new AlignmentElement(
                 alignmentFactor: Alignment.TopLeft,
                 pivot: Alignment.TopLeft);
 
+            _contentExpanded = new ExpandedElement(
+                expandWidth: ExpandContentWidth,
+                expandHeight: ExpandContentHeight,
+                innerElement: _contentParent);
+
             _view = new ClipMaskElement(
                 innerElement: new HolderElement(
-                    innerElement: new ExpandedElement(
-                        expandWidth: false,
-                        expandHeight: false,
-                        innerElement: _contentParent)
-                    )
+                    innerElement: _contentExpanded)
                 );
             AddChild(new ExpandedElement(_view));
 
@@ -151,13 +153,23 @@ namespace ComposableUi
             }
 
             var deltaSize = Content.Size - _view.Size;
-            var extraDeltaSize = deltaSize + new Vector2(VerticalScrollBar.CrossAxisSize,
-                HorizontalScrollBar.CrossAxisSize);
+            var extraDeltaSize = deltaSize + new Vector2()
+            {
+                X = ExpandContentWidth ? 0 : VerticalScrollBar.CrossAxisSize,
+                Y = ExpandContentHeight ? 0 : HorizontalScrollBar.CrossAxisSize
+            };
 
             HorizontalScrollBar.IsEnabled = deltaSize.X > 0
                 || (extraDeltaSize.X > 0 && deltaSize.Y > 0);
             VerticalScrollBar.IsEnabled = deltaSize.Y > 0
                 || (extraDeltaSize.Y > 0 && deltaSize.X > 0);
+
+            _contentExpanded.RightPadding = ExpandContentWidth && VerticalScrollBar.IsEnabled
+                ? VerticalScrollBar.CrossAxisSize
+                : 0;
+            _contentExpanded.BottomPadding = ExpandContentHeight && HorizontalScrollBar.IsEnabled
+                ? HorizontalScrollBar.CrossAxisSize
+                : 0;
 
             _bottomRightPlug.IsEnabled = HorizontalScrollBar.IsEnabled
                 && VerticalScrollBar.IsEnabled;

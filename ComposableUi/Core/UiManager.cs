@@ -222,13 +222,13 @@ namespace ComposableUi
         {
             if (element is IPointerInputHandler pointerInputHandler)
             {
-                var inputArea = element.BoundingRectangle;
+                var interactionRectangle = pointerInputHandler.InteractionRectangle;
 
                 var clipMask = element.ClipMask;
                 if (clipMask.HasValue)
-                    inputArea = Rectangle.Intersect(inputArea, clipMask.Value);
+                    interactionRectangle = Rectangle.Intersect(interactionRectangle, clipMask.Value);
 
-                _pointerInputHandlers.Add((inputArea, pointerInputHandler));
+                _pointerInputHandlers.Add((interactionRectangle, pointerInputHandler));
             }
 
             if (element is IDrawableElement drawableElement)

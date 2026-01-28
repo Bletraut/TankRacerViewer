@@ -4,6 +4,8 @@ namespace ComposableUi
 {
     public interface IPointerInputHandler
     {
+        public Rectangle InteractionRectangle { get; }
+
         public bool BlockInput { get; set; }
         public bool IsInteractable { get; set; }
 

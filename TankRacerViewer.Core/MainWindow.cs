@@ -74,7 +74,7 @@ namespace TankRacerViewer.Core
             // TODO: use this.Content to load your game content here
             _mainFont = Content.Load<SpriteFont>("Fonts\\MainFont");
 
-            var row = new ColumnLayout(
+            var column = new ColumnLayout(
                 spacing: 10,
                 sizeMainAxisToContent: true,
                 sizeCrossAxisToContent: true);
@@ -82,11 +82,11 @@ namespace TankRacerViewer.Core
             _uiManager = new UiManager(GraphicsDevice, Content, _spriteBatch);
             _uiManager.Root.AddChild(new CanvasElement(Window,
                 children: [
-                    new ButtonElement(new Vector2(200, 50))
-                    {
-                        Position = new Vector2(100, 200),
-                        Pivot = Alignment.MiddleLeft
-                    },
+                    //new ButtonElement(new Vector2(200, 50))
+                    //{
+                    //    Position = new Vector2(100, 200),
+                    //    Pivot = Alignment.MiddleLeft
+                    //},
                     new ExpandedElement(
                         innerElement: new AlignmentElement(new ButtonElement(new Vector2(100, 100)))
                         {
@@ -106,13 +106,14 @@ namespace TankRacerViewer.Core
                         Offset = new Vector2(-20, 0),
                         Pivot = Alignment.MiddleRight
                     },
-                    new ScrollViewElement(
-                        //content: new SpriteElement(size: new Vector2(200, 300), skin: StandardSkin.ContentPanel
-                        content: row
+                    new WindowElement(
+                        content: new ExpandedElement(
+                            innerElement: new ScrollViewElement(
+                                content: column)
+                            )
                         )
                     {
-                        Position = new Vector2(100, 100),
-                        Pivot = Alignment.TopLeft
+                        Position = new Vector2(200, 300)
                     },
                 ]));
 
@@ -145,7 +146,7 @@ namespace TankRacerViewer.Core
                     },
                     drawMode: DrawMode.Simple,
                     sizeToSource: true);
-                row.AddChild(sprite);
+                column.AddChild(sprite);
             }
 
             var levelViewName = levelFastFile.Assets.FirstOrDefault(asset => asset is MapAsset)?.FullName ?? string.Empty;

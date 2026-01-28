@@ -1,10 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 
+using System;
+
 namespace ComposableUi
 {
     public class PointerInputHandlerElement : SizedToContentHolderElement,
         IPointerInputHandler
     {
+        public virtual Rectangle InteractionRectangle => BoundingRectangle;
+
         private bool _blockInput;
         public bool BlockInput
         {
@@ -42,12 +46,15 @@ namespace ComposableUi
         public event ElementEventHandler<Point> PointerSecondaryUp;
 
         public event ElementEventHandler<(Point Position, Point Delta)> PointerDrag;
+        public event ElementEventHandler<(Point Position, Point Delta)> PointerFixedDrag;
 
         public event ElementEventHandler<Point> PointerClick;
         public event ElementEventHandler<Point> PointerSecondaryClick;
 
-        public PointerInputHandlerElement(bool blockInput = true,
-            Element innerElement = default,
+        private Vector2 _pointerDownNormalizedPosition = Vector2.Zero;
+
+        public PointerInputHandlerElement(Element innerElement = default,
+            bool blockInput = true,
             bool isInteractable = true)
             : base(innerElement)
         {
@@ -102,7 +109,14 @@ namespace ComposableUi
             => PointerLeave?.Invoke(this, position);
 
         protected virtual void OnPointerDown(Point position)
-            => PointerDown?.Invoke(this, position);
+        {
+            PointerDown?.Invoke(this, position);
+
+            var boundingBox = BoundingRectangle;
+            var localPointerPosition = position - new Point(boundingBox.Left, boundingBox.Top);
+
+            _pointerDownNormalizedPosition = localPointerPosition.ToVector2() / Size;
+        }
         protected virtual void OnPointerUp(Point position)
             => PointerUp?.Invoke(this, position);
 
@@ -112,7 +126,38 @@ namespace ComposableUi
             => PointerSecondaryUp?.Invoke(this, position);
 
         protected virtual void OnPointerDrag(Point position, Point delta)
-            => PointerDrag?.Invoke(this, (position, delta));
+        {
+            PointerDrag?.Invoke(this, (position, delta));
+
+            var boundingBox = BoundingRectangle;
+            var pointerDownPosition = new Vector2(boundingBox.Left, boundingBox.Top)
+                + Size * _pointerDownNormalizedPosition;
+
+            var vectorPosition = position.ToVector2();
+            var axisXPointerPosition = Vector2.Dot(Vector2.UnitX, vectorPosition * Vector2.UnitX);
+            var axisXPointerDownPosition = Vector2.Dot(Vector2.UnitX, pointerDownPosition * Vector2.UnitX);
+            var axisYPointerPosition = Vector2.Dot(Vector2.UnitY, vectorPosition * Vector2.UnitY);
+            var axisYPointerDownPosition = Vector2.Dot(Vector2.UnitY, pointerDownPosition * Vector2.UnitY);
+
+            var vectorDelta = delta.ToVector2();
+            var axisXDelta = Vector2.Dot(Vector2.UnitX, vectorDelta);
+            var axisYDelta = Vector2.Dot(Vector2.UnitY, vectorDelta);
+
+            var canDragX = MathF.Sign(axisXPointerPosition - axisXPointerDownPosition) == MathF.Sign(axisXDelta);
+            var canDragY = MathF.Sign(axisYPointerPosition - axisYPointerDownPosition) == MathF.Sign(axisYDelta);
+
+            if (!canDragX && !canDragY)
+                return;
+
+            delta = new Point()
+            {
+                X = canDragX ? delta.X : 0,
+                Y = canDragY ? delta.Y : 0
+            };
+            OnPointerFixedDrag(position, delta);
+        }
+        protected virtual void OnPointerFixedDrag(Point position, Point delta)
+            => PointerFixedDrag?.Invoke(this, (position, delta));
 
         protected virtual void OnPointerClick(Point position)
             => PointerClick?.Invoke(this, position);

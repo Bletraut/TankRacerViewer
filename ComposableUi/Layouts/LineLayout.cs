@@ -83,12 +83,10 @@ namespace ComposableUi
                 return size;
 
             var preferredChildrenSize = CalculatePreferredChildrenSize();
+            var preferredSize = (SizeMainAxisToContent ? preferredChildrenSize : size) * MainAxis
+                + (SizeCrossAxisToContent ? preferredChildrenSize : size) * CrossAxis;
 
-            return new Vector2()
-            {
-                X = SizeMainAxisToContent ? preferredChildrenSize.X : size.X,
-                Y = SizeCrossAxisToContent ? preferredChildrenSize.Y : size.Y
-            };
+            return preferredSize;
         }
 
         public override void ApplySize(Vector2 size)
