@@ -80,9 +80,9 @@ namespace ComposableUi
             return Size;
         }
 
-        public override void ApplySize(Vector2 size)
+        public override void Rebuild(Vector2 size)
         {
-            base.ApplySize(size);
+            Size = size;
 
             if (HasActiveInnerElement)
             {
@@ -93,7 +93,7 @@ namespace ComposableUi
                     X = ExpandWidth ? size.X : elementSize.X,
                     Y = ExpandHeight ? size.Y : elementSize.Y
                 };
-                InnerElement.ApplySize(size);
+                InnerElement.Rebuild(size);
 
                 var elementPosition = InnerElement.LocalPosition;
                 var preferredPosition = InnerElement.Size * InnerElement.Pivot - Size * Pivot;

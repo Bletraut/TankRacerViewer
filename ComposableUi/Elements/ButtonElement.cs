@@ -1,6 +1,4 @@
-﻿using ComposableUi.Elements;
-
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {

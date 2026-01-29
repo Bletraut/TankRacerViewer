@@ -116,9 +116,9 @@ namespace ComposableUi
             }
         }
 
-        protected override void OnPointerDrag(Point position, Point delta)
+        protected override void OnPointerFixedDrag(Point position, Point delta)
         {
-            base.OnPointerDrag(position, delta);
+            base.OnPointerFixedDrag(position, delta);
 
             var deltaVector = delta.ToVector2();
             if (HasActiveInnerElement)

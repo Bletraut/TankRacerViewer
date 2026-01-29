@@ -89,9 +89,9 @@ namespace ComposableUi
             return preferredSize;
         }
 
-        public override void ApplySize(Vector2 size)
+        public override void Rebuild(Vector2 size)
         {
-            base.ApplySize(size);
+            Size = size;
 
             var (totalSpacing, totalFlexFactor) = CalculateMainAxisSpacingAndFlexFactor();
             var mainAxisPreferredChildrenSize = MainAxis * (!ExpandChildrenMainAxisSize
@@ -111,13 +111,13 @@ namespace ComposableUi
                     if (!layoutElement.HasActiveInnerElement)
                         continue;
 
-                    layoutElement.ApplySize(size);
+                    layoutElement.Rebuild(size);
                     layoutElement.LocalPosition = layoutElement.Size * layoutElement.Pivot - Size * Pivot;
 
                     if (layoutElement.IgnoreLayout)
                     {
                         var innerElementSize = layoutElement.InnerElement.CalculatePreferredSize();
-                        layoutElement.InnerElement.ApplySize(innerElementSize);
+                        layoutElement.InnerElement.Rebuild(innerElementSize);
 
                         continue;
                     }
@@ -138,7 +138,7 @@ namespace ComposableUi
 
                     childSize = mainAxisSize + crossAxisSize;
                 }
-                child.ApplySize(childSize);
+                child.Rebuild(childSize);
 
                 var crossAxisLayoutOffset = CrossAxis * (Size * Pivot - AlignmentFactor * (Size - childSize));
                 child.LocalPosition = child.Size * child.Pivot 

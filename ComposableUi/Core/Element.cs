@@ -236,7 +236,7 @@ namespace ComposableUi
 
         public virtual Vector2 CalculatePreferredSize() => Size;
 
-        public virtual void ApplySize(Vector2 size)
+        public virtual void Rebuild(Vector2 size)
         {
             Size = size;
         }

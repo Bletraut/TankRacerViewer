@@ -79,6 +79,33 @@ namespace TankRacerViewer.Core
                 sizeMainAxisToContent: true,
                 sizeCrossAxisToContent: true);
 
+            // FOR TEST
+            var innerColumn = new ColumnLayout(
+                spacing: 5,
+                sizeMainAxisToContent: true,
+                sizeCrossAxisToContent: true);
+            for (var i = 0; i < 5; i++)
+            {
+                var color = new Color(Random.Shared.NextSingle(),
+                    Random.Shared.NextSingle(), Random.Shared.NextSingle());
+                var button = new SpriteElement(
+                    size: new Vector2(Random.Shared.Next(500, 800), Random.Shared.Next(50, 200)),
+                    skin: StandardSkin.RectangleButton,
+                    drawMode: DrawMode.Simple,
+                    color: color);
+                innerColumn.AddChild(button);
+            }
+            var innerScroll = new ScrollViewElement(
+                size: new Vector2(300, 500),
+                content: innerColumn);
+            innerScroll.Background.Skin = StandardSkin.RectanglePanel;
+            column.AddChild(innerScroll);
+            //column.AddChild(new SpriteElement(
+            //    size: new Vector2(Random.Shared.Next(500, 800), Random.Shared.Next(50, 200)),
+            //    skin: StandardSkin.RectangleButton,
+            //    drawMode: DrawMode.Simple));
+            // end;
+
             _uiManager = new UiManager(GraphicsDevice, Content, _spriteBatch);
             _uiManager.Root.AddChild(new CanvasElement(Window,
                 children: [
@@ -110,6 +137,7 @@ namespace TankRacerViewer.Core
                         content: new ExpandedElement(
                             innerElement: new ScrollViewElement(
                                 content: column)
+                                //content: innerScroll)
                             )
                         )
                     {
@@ -142,7 +170,7 @@ namespace TankRacerViewer.Core
                     sprite: new Sprite()
                     {
                         Texture = textureAssetView.Texture,
-                        SourceRectangle = new Rectangle(0,0,textureAssetView.Texture.Width, textureAssetView.Texture.Height)
+                        SourceRectangle = new Rectangle(0, 0, textureAssetView.Texture.Width, textureAssetView.Texture.Height)
                     },
                     drawMode: DrawMode.Simple,
                     sizeToSource: true);
@@ -240,7 +268,7 @@ namespace TankRacerViewer.Core
             var infoPosition = new Vector2(0, GraphicsDevice.Viewport.Height - infoSize.Y);
 
             _spriteBatch.Begin();
-            _spriteBatch.DrawString(_mainFont, infoString, infoPosition, Color.Black);
+            _spriteBatch.DrawString(_mainFont, infoString, infoPosition, Color.White);
             _spriteBatch.End();
 
             base.Draw(gameTime);

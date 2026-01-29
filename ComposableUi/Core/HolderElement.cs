@@ -43,15 +43,15 @@ namespace ComposableUi
                 Pivot = pivot.Value;
         }
 
-        public override void ApplySize(Vector2 size)
+        public override void Rebuild(Vector2 size)
         {
-            base.ApplySize(size);
+            Size = size;
 
             if (!HasActiveInnerElement)
                 return;
 
             var childSize = InnerElement.CalculatePreferredSize();
-            InnerElement.ApplySize(childSize);
+            InnerElement.Rebuild(childSize);
         }
 
         public override Element GetChildAt(int index)

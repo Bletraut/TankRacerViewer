@@ -15,13 +15,13 @@ namespace ComposableUi
             return base.CalculatePreferredSize();
         }
 
-        public override void ApplySize(Vector2 size)
+        public override void Rebuild(Vector2 size)
         {
-            base.ApplySize(size);
+            Size = size;
 
             if (HasActiveInnerElement)
             {
-                InnerElement.ApplySize(size);
+                InnerElement.Rebuild(size);
                 InnerElement.LocalPosition = InnerElement.Size * InnerElement.Pivot - Size * Pivot;
             }
         }

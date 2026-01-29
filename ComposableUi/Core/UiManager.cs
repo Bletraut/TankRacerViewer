@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ComposableUi
 {
@@ -176,7 +177,7 @@ namespace ComposableUi
                 return;
 
             var size = Root.CalculatePreferredSize();
-            Root.ApplySize(size);
+            Root.Rebuild(size);
 
             RefreshVisibleElementLists();
 
@@ -199,6 +200,17 @@ namespace ComposableUi
                 if (!element.IsEnabled)
                     continue;
 
+                if (element is SpriteElement spriteElement)
+                {
+                    if (spriteElement.DrawMode is DrawMode.Simple 
+                        && spriteElement.Skin is not StandardSkin.None 
+                        && spriteElement.RebuildCount > 0)
+                    {
+                        Debug.WriteLine($"{spriteElement.Skin} {spriteElement.RebuildCount}");
+                        spriteElement.RebuildCount = 0;
+                    }
+                }    
+
                 if (element is ParentElement parentElement)
                 {
                     for (var i = parentElement.ChildCount - 1; i >= 0; i--)
@@ -206,10 +218,16 @@ namespace ComposableUi
                 }
 
                 var clipMask = element.ClipMask;
-                var isClipped = clipMask.HasValue
-                    && clipMask.Value.Width <= 0 && clipMask.Value.Height <= 0;
-                if (isClipped)
-                    continue;
+                if (clipMask.HasValue)
+                {
+                    var isClipped = clipMask.Value.Width <= 0 
+                        && clipMask.Value.Height <= 0;
+                    if (isClipped)
+                        continue;
+
+                    if (!clipMask.Value.Intersects(element.BoundingRectangle))
+                        continue;
+                }
 
                 if (!viewportBounds.Intersects(element.BoundingRectangle))
                     continue;

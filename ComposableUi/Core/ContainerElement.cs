@@ -25,9 +25,9 @@ namespace ComposableUi
         public override Element GetChildAt(int index)
             => _children[index];
 
-        public override void ApplySize(Vector2 size)
+        public override void Rebuild(Vector2 size)
         {
-            base.ApplySize(size);
+            Size = size;
 
             foreach (var child in _children)
             {
@@ -35,7 +35,7 @@ namespace ComposableUi
                     continue;
 
                 var childSize = child.CalculatePreferredSize();
-                child.ApplySize(childSize);
+                child.Rebuild(childSize);
             }
         }
 
