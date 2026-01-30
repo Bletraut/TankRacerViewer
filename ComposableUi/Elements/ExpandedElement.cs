@@ -70,11 +70,7 @@ namespace ComposableUi
                 var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
                 var preferredSize = Parent.Size - paddings;
 
-                return new Vector2()
-                {
-                    X = ExpandWidth ? preferredSize.X : Parent.Size.X,
-                    Y = ExpandHeight ? preferredSize.Y : Parent.Size.Y
-                };
+                return preferredSize;
             }
 
             return Size;
@@ -106,11 +102,7 @@ namespace ComposableUi
             }
 
             if (Parent != null)
-            {
-                var leftPadding = ExpandWidth ? LeftPadding : 0;
-                var topPadding = ExpandHeight ? TopPadding : 0;
-                LocalPosition = new Vector2(leftPadding, topPadding) + Size * Pivot - Parent.Size * Parent.Pivot;
-            }
+                LocalPosition = new Vector2(LeftPadding, TopPadding) + Size * Pivot - Parent.Size * Parent.Pivot;
         }
     }
 }

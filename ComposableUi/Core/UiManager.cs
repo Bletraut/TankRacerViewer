@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace ComposableUi
 {
@@ -25,6 +24,8 @@ namespace ComposableUi
         private readonly HashSet<IPointerInputHandler> _secondaryButtonPressedHandlers = [];
 
         private readonly List<IUpdateable> _updateableList = [];
+
+        private readonly List<IElementSolver> _elementSolvers = [];
 
         private Point _currentPointerPosition;
         private Point _lastPointerPosition;
@@ -52,6 +53,21 @@ namespace ComposableUi
 
             Root = new ContainerElement();
             Root.StateChanged += OnRootStateChanged;
+
+            AddElementSolver(new HierarchyWheelScrollSolver());
+        }
+
+        public void AddElementSolver(IElementSolver elementSolver)
+        {
+            if (_elementSolvers.Contains(elementSolver))
+                return;
+
+            _elementSolvers.Add(elementSolver);
+        }
+
+        public void RemoveElementSolver(IElementSolver elementSolver)
+        {
+            _elementSolvers.Remove(elementSolver);
         }
 
         public void Update(GameTime gameTime)
@@ -61,6 +77,9 @@ namespace ComposableUi
 
             HandlePointerInput();
             RebuildIfDirty();
+
+            foreach (var elementSolver in _elementSolvers)
+                elementSolver.Resolve();
         }
 
         public void Draw(GameTime gameTime)
@@ -198,18 +217,7 @@ namespace ComposableUi
             {
                 var element = _stack.Pop();
                 if (!element.IsEnabled)
-                    continue;
-
-                if (element is SpriteElement spriteElement)
-                {
-                    if (spriteElement.DrawMode is DrawMode.Simple 
-                        && spriteElement.Skin is not StandardSkin.None 
-                        && spriteElement.RebuildCount > 0)
-                    {
-                        Debug.WriteLine($"{spriteElement.Skin} {spriteElement.RebuildCount}");
-                        spriteElement.RebuildCount = 0;
-                    }
-                }    
+                    continue;   
 
                 if (element is ParentElement parentElement)
                 {
@@ -238,6 +246,9 @@ namespace ComposableUi
 
         private void HandleElement(Element element)
         {
+            foreach (var elementSolver in _elementSolvers)
+                elementSolver.Handle(element);
+
             if (element is IPointerInputHandler pointerInputHandler)
             {
                 var interactionRectangle = pointerInputHandler.InteractionRectangle;

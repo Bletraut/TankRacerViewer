@@ -1,11 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 
 using System;
-using System.Diagnostics;
 
 namespace ComposableUi
 {
-    public class ScrollViewElement : ContainerElement
+    public class ScrollViewElement : ContainerElement, IHierarchyWheelScrollable
     {
         public static readonly Vector2 DefaultSize = new(300, 300);
 
@@ -50,8 +49,9 @@ namespace ComposableUi
         public ScrollBarElement VerticalScrollBar { get; }
 
         private readonly Element _view;
-        private ExpandedElement _contentExpanded;
+        private readonly ExpandedElement _viewExpanded;
         private readonly AlignmentElement _contentParent;
+        private readonly ExpandedElement _contentExpanded;
 
         private readonly ExpandedElement _horizontalScrollBarParent;
         private readonly ExpandedElement _verticalScrollBarParent;
@@ -62,6 +62,9 @@ namespace ComposableUi
 
         private Vector2 _minContentPosition;
         private Vector2 _progressValue;
+
+        private HierarchyWheelScrollSolver _hierarchyWheelScrollSolver;
+        private readonly Action<Vector2, int> _wheelScrollAction;
 
         public ScrollViewElement(Vector2? size = default,
             Element content = default,
@@ -94,7 +97,8 @@ namespace ComposableUi
                 innerElement: new HolderElement(
                     innerElement: _contentExpanded)
                 );
-            AddChild(new ExpandedElement(_view));
+            _viewExpanded = new ExpandedElement(_view);
+            AddChild(_viewExpanded);
 
             HorizontalScrollBar = new HorizontalScrollBarElement();
             HorizontalScrollBar.ProgressValueChanged += OnHorizontalScrollValueChanged;
@@ -140,6 +144,8 @@ namespace ComposableUi
             AddChild(new ExpandedElement(_scrollInputHandler));
 
             Content = content;
+
+            _wheelScrollAction = ScrollContent;
         }
 
         private void RefreshContentAndScrollBarsVisibility()
@@ -148,11 +154,22 @@ namespace ComposableUi
             {
                 HorizontalScrollBar.IsEnabled = false;
                 VerticalScrollBar.IsEnabled = false;
+                _bottomRightPlug.IsEnabled = false;
+
+                _viewExpanded.RightPadding = 0;
+                _viewExpanded.BottomPadding = 0;
 
                 return;
             }
 
-            var deltaSize = Content.Size - _view.Size;
+            var preferredContentSize = Content.CalculatePreferredSize();
+            var contentSize = new Vector2()
+            {
+                X = ExpandContentWidth ? Size.X : preferredContentSize.X,
+                Y = ExpandContentHeight ? Size.Y : preferredContentSize.Y
+            };
+
+            var deltaSize = contentSize - Size;
             var extraDeltaSize = deltaSize + new Vector2()
             {
                 X = ExpandContentWidth ? 0 : VerticalScrollBar.CrossAxisSize,
@@ -164,30 +181,24 @@ namespace ComposableUi
             VerticalScrollBar.IsEnabled = deltaSize.Y > 0
                 || (extraDeltaSize.Y > 0 && deltaSize.X > 0);
 
-            _contentExpanded.RightPadding = ExpandContentWidth && VerticalScrollBar.IsEnabled
-                ? VerticalScrollBar.CrossAxisSize
-                : 0;
-            _contentExpanded.BottomPadding = ExpandContentHeight && HorizontalScrollBar.IsEnabled
-                ? HorizontalScrollBar.CrossAxisSize
-                : 0;
-
             _bottomRightPlug.IsEnabled = HorizontalScrollBar.IsEnabled
                 && VerticalScrollBar.IsEnabled;
 
-            _minContentPosition = new Vector2()
-            {
-                X = VerticalScrollBar.IsEnabled ? extraDeltaSize.X : deltaSize.X,
-                Y = HorizontalScrollBar.IsEnabled ? extraDeltaSize.Y : deltaSize.Y
-            };
-            _minContentPosition = -Vector2.Max(_minContentPosition, Vector2.Zero);
-            ApplyContentOffset(_contentParent.Offset);
-
-            _verticalScrollBarParent.BottomPadding = HorizontalScrollBar.IsEnabled
-                ? HorizontalScrollBar.CrossAxisSize
-                : 0;
-            _horizontalScrollBarParent.RightPadding = VerticalScrollBar.IsEnabled
+            var rightPadding = VerticalScrollBar.IsEnabled
                 ? VerticalScrollBar.CrossAxisSize
                 : 0;
+            var bottomPadding = HorizontalScrollBar.IsEnabled
+                ? HorizontalScrollBar.CrossAxisSize
+                : 0;
+
+            _viewExpanded.RightPadding = rightPadding;
+            _viewExpanded.BottomPadding = bottomPadding;
+            _horizontalScrollBarParent.RightPadding = rightPadding;
+            _verticalScrollBarParent.BottomPadding = bottomPadding;
+
+            _minContentPosition = deltaSize + new Vector2(rightPadding, bottomPadding);
+            _minContentPosition = -Vector2.Max(_minContentPosition, Vector2.Zero);
+            ApplyContentOffset(_contentParent.Offset);
         }
 
         private void ApplyContentOffset(Vector2 offset)
@@ -225,6 +236,12 @@ namespace ComposableUi
             scrollBar.ProgressValue = Vector2.Dot(scrollBar.MainAxis, _progressValue * scrollBar.MainAxis);
         }
 
+        private void ScrollContent(Vector2 axis, int delta)
+        {
+            ApplyContentOffset(_contentParent.Offset + axis * delta);
+            RefreshScrollBarsButtons();
+        }
+
         private void ScrollContentIfPossible(Vector2 axis, int delta)
         {
             var isAnyScrollButtonPressed = HorizontalScrollBar.Button.IsPressed
@@ -232,22 +249,36 @@ namespace ComposableUi
             if (isAnyScrollButtonPressed)
                 return;
 
-            ApplyContentOffset(_contentParent.Offset + axis * delta);
-            RefreshScrollBarsButtons();
+            var axisProgress = Vector2.Dot(_progressValue, _progressValue * axis);
+            var limit = delta < 0 ? 1 : 0;
+            if (axisProgress == limit)
+                return;
+
+            var multipliedDelta = (int)(delta * ScrollWheelMultiplier);
+            if (_hierarchyWheelScrollSolver != null)
+            {
+                _hierarchyWheelScrollSolver.AddScrollIntent(axis, multipliedDelta, _wheelScrollAction);
+            }
+            else
+            {
+                ScrollContent(axis, multipliedDelta);
+            }
         }
 
         public override void Rebuild(Vector2 size)
         {
-            base.Rebuild(size);
-
+            Size = size;
             RefreshContentAndScrollBarsVisibility();
+
             base.Rebuild(size);
 
             if (HorizontalScrollBar.IsEnabled || VerticalScrollBar.IsEnabled)
-            {
                 RefreshScrollBarsButtons();
-                base.Rebuild(size);
-            }
+        }
+
+        void IHierarchyWheelScrollable.AttachSolver(HierarchyWheelScrollSolver solver)
+        {
+            _hierarchyWheelScrollSolver = solver;
         }
 
         private void OnHorizontalScrollValueChanged(Element sender, float value)
@@ -274,14 +305,12 @@ namespace ComposableUi
 
         private void OnScrollWheel(Element sender, (Point Position, int Delta) arguments)
         {
-            ScrollContentIfPossible(Vector2.UnitY,
-                (int)(arguments.Delta * ScrollWheelMultiplier));
+            ScrollContentIfPossible(Vector2.UnitY, arguments.Delta);
         }
 
         private void OnHorizontalScrollWheel(Element sender, (Point Position, int Delta) arguments)
         {
-            ScrollContentIfPossible(Vector2.UnitX,
-                (int)(arguments.Delta * ScrollWheelMultiplier));
+            ScrollContentIfPossible(Vector2.UnitX, arguments.Delta);
         }
     }
 }

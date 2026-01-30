@@ -1,7 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 
-using System.Diagnostics;
-
 namespace ComposableUi
 {
     public sealed class SpriteElement : Element, IDrawableElement
@@ -61,13 +59,6 @@ namespace ComposableUi
                 return base.CalculatePreferredSize();
 
             return Sprite.SourceRectangle.Size.ToVector2();
-        }
-
-        public int RebuildCount;
-        public override void Rebuild(Vector2 size)
-        {
-            base.Rebuild(size);
-            RebuildCount++;
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)

@@ -77,19 +77,20 @@ namespace TankRacerViewer.Core
             var column = new ColumnLayout(
                 spacing: 10,
                 sizeMainAxisToContent: true,
-                sizeCrossAxisToContent: true);
+                sizeCrossAxisToContent: true
+                );
 
             // FOR TEST
             var innerColumn = new ColumnLayout(
                 spacing: 5,
                 sizeMainAxisToContent: true,
                 sizeCrossAxisToContent: true);
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < 30; i++)
             {
                 var color = new Color(Random.Shared.NextSingle(),
                     Random.Shared.NextSingle(), Random.Shared.NextSingle());
                 var button = new SpriteElement(
-                    size: new Vector2(Random.Shared.Next(500, 800), Random.Shared.Next(50, 200)),
+                    size: new Vector2(Random.Shared.Next(50, 400), Random.Shared.Next(50, 200)),
                     skin: StandardSkin.RectangleButton,
                     drawMode: DrawMode.Simple,
                     color: color);
@@ -98,8 +99,7 @@ namespace TankRacerViewer.Core
             var innerScroll = new ScrollViewElement(
                 size: new Vector2(300, 500),
                 content: innerColumn);
-            innerScroll.Background.Skin = StandardSkin.RectanglePanel;
-            column.AddChild(innerScroll);
+            innerScroll.Background.Skin = StandardSkin.WindowHeader;
             //column.AddChild(new SpriteElement(
             //    size: new Vector2(Random.Shared.Next(500, 800), Random.Shared.Next(50, 200)),
             //    skin: StandardSkin.RectangleButton,
@@ -136,6 +136,7 @@ namespace TankRacerViewer.Core
                     new WindowElement(
                         content: new ExpandedElement(
                             innerElement: new ScrollViewElement(
+                                //expandContentWidth: true,
                                 content: column)
                                 //content: innerScroll)
                             )
@@ -164,6 +165,7 @@ namespace TankRacerViewer.Core
             var levelFastFile = new FastFile(levelFileStream);
             _levelAssetViewContainer = new AssetViewContainer(GraphicsDevice, levelFastFile);
 
+            var col = 0;
             foreach (var (key, textureAssetView) in _levelAssetViewContainer.TextureAssetViews)
             {
                 var sprite = new SpriteElement(
@@ -175,6 +177,10 @@ namespace TankRacerViewer.Core
                     drawMode: DrawMode.Simple,
                     sizeToSource: true);
                 column.AddChild(sprite);
+
+                col++;
+                if (col == 16)
+                    column.AddChild(innerScroll);
             }
 
             var levelViewName = levelFastFile.Assets.FirstOrDefault(asset => asset is MapAsset)?.FullName ?? string.Empty;

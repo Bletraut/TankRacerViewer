@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 
+using System.Diagnostics;
+
 namespace ComposableUi
 {
     public class ScrollBarElement : ContainerElement
@@ -37,6 +39,8 @@ namespace ComposableUi
 
         public event ElementEventHandler<float> ProgressValueChanged;
 
+        private readonly ExpandedElement _buttonExpanded;
+
         public ScrollBarElement(Vector2 mainAxis, Vector2 crossAxis,
             Vector2? size = default)
         {
@@ -58,13 +62,14 @@ namespace ComposableUi
                 hoverSkin: StandardSkin.ScrollButtonHover,
                 pressedSkin: StandardSkin.ScrollButtonHover,
                 disabledSkin: StandardSkin.ScrollButtonHover);
-            AddChild(new ExpandedElement(Button,
+            _buttonExpanded = new ExpandedElement(Button,
                 expandWidth: mainAxis.Y > 0,
                 expandHeight: mainAxis.X > 0,
                 leftPadding: defaultPadding.X,
                 rightPadding: defaultPadding.X,
                 topPadding: defaultPadding.Y,
-                bottomPadding: defaultPadding.Y));
+                bottomPadding: defaultPadding.Y);
+            AddChild(_buttonExpanded);
 
             Button.PointerFixedDrag += OnButtonPointerFixedDrag;
         }
@@ -86,11 +91,11 @@ namespace ComposableUi
             var buttonTopLeft = -Button.Size * Button.Pivot;
             var buttonBottomRight = buttonTopLeft + Button.Size;
 
-            var parentTopLeft = -Parent.Size * Parent.Pivot;
-            var parentBottomRight = parentTopLeft + Parent.Size;
+            var parentTopLeft = -_buttonExpanded.Size * _buttonExpanded.Pivot;
+            var parentBottomRight = parentTopLeft + _buttonExpanded.Size;
 
-            var min = parentTopLeft - buttonTopLeft + new Vector2(DefaultMainAxisPadding);
-            var max = parentBottomRight - buttonBottomRight - new Vector2(DefaultMainAxisPadding);
+            var min = parentTopLeft - buttonTopLeft;
+            var max = parentBottomRight - buttonBottomRight;
 
             return (min, max);
         }
