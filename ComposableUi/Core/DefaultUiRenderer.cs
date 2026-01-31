@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -17,8 +18,6 @@ namespace ComposableUi
 
         private static Texture2D _fallbackTexture;
         private static Sprite _fallbackSprite;
-
-        public SpriteFont MainFont { get; set; }
 
         public int NineSlicedScale = DefaultNineSlicedScale;
 
@@ -52,16 +51,8 @@ namespace ComposableUi
 
             _standardSkinAtlasTexture ??= _contentManager.Load<Texture2D>("ComposableUi\\UiElementsAtlas");
 
-            MainFont = _contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
-
             PrepareStandardSkinSprites();
         }
-
-        public Vector2 MeasureString(string text)
-            => MainFont.MeasureString(text);
-
-        public Vector2 MeasureString(StringBuilder text)
-            => MainFont.MeasureString(text);
 
         public void DrawSprite(Sprite sprite, DrawMode drawMode,
             Rectangle destinationRectangle, Rectangle? clipMask, Color color)

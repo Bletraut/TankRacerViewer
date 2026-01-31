@@ -1,14 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 
-using System.Text;
-
 namespace ComposableUi
 {
     public interface IUiRenderer
     {
-        public Vector2 MeasureString(string text);
-        public Vector2 MeasureString(StringBuilder text);
-
         public void DrawSprite(Sprite sprite, DrawMode drawMode,
             Rectangle destinationRectangle, Rectangle? clipMask, Color color);
 
