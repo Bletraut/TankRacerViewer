@@ -1,14 +1,12 @@
-﻿using ComposableUi.Utilities;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+
+using ComposableUi.Utilities;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
 
 namespace ComposableUi
 {
@@ -52,53 +50,6 @@ namespace ComposableUi
             _standardSkinAtlasTexture ??= _contentManager.Load<Texture2D>("ComposableUi\\UiElementsAtlas");
 
             PrepareStandardSkinSprites();
-        }
-
-        public void DrawSprite(Sprite sprite, DrawMode drawMode,
-            Rectangle destinationRectangle, Rectangle? clipMask, Color color)
-        {
-            RasterizerState rasterizerState = null;
-            if (clipMask.HasValue)
-            {
-                rasterizerState = _scissorRasterizerState;
-                _spriteBatch.GraphicsDevice.ScissorRectangle = clipMask.Value;
-            }
-
-            _spriteBatch.Begin(samplerState: SamplerState.PointClamp,
-                rasterizerState: rasterizerState);
-
-            switch (drawMode)
-            {
-                case DrawMode.Simple:
-                    DrawSimpleSprite(sprite, destinationRectangle, color);
-                    break;
-                case DrawMode.Sliced:
-                    DrawSlicedSprite(sprite, destinationRectangle, color);
-                    break;
-                default:
-                    DrawSimpleSprite(sprite, destinationRectangle, color);
-                    break;
-            }
-
-            _spriteBatch.End();
-        }
-
-        public void DrawSkinnedRectangle(StandardSkin skin, DrawMode drawMode,
-            Rectangle destinationRectangle, Rectangle? clipMask, Color color)
-        {
-            if (skin is StandardSkin.None)
-                return;
-
-            if (_standardSkinSprites.TryGetValue(skin, out var sprite))
-            {
-                sprite.Texture = _standardSkinAtlasTexture;
-            }
-            else
-            {
-                sprite = _fallbackSprite;
-            }
-
-            DrawSprite(sprite, drawMode, destinationRectangle, clipMask, color);
         }
 
         private void PrepareStandardSkinSprites()
@@ -241,6 +192,83 @@ namespace ComposableUi
                 destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * NineSlicedScale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
+        }
+
+        // Implicit interfaces.
+        // IUiRenderer.
+        public void Begin()
+        {
+
+        }
+
+        public void End()
+        {
+
+        }
+
+        public void DrawSprite(Sprite sprite, DrawMode drawMode,
+            Rectangle destinationRectangle, Rectangle? clipMask, Color color)
+        {
+            RasterizerState rasterizerState = null;
+            if (clipMask.HasValue)
+            {
+                rasterizerState = _scissorRasterizerState;
+                _spriteBatch.GraphicsDevice.ScissorRectangle = clipMask.Value;
+            }
+
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp,
+                rasterizerState: rasterizerState);
+
+            switch (drawMode)
+            {
+                case DrawMode.Simple:
+                    DrawSimpleSprite(sprite, destinationRectangle, color);
+                    break;
+                case DrawMode.Sliced:
+                    DrawSlicedSprite(sprite, destinationRectangle, color);
+                    break;
+                default:
+                    DrawSimpleSprite(sprite, destinationRectangle, color);
+                    break;
+            }
+
+            _spriteBatch.End();
+        }
+
+        public void DrawSkinnedRectangle(StandardSkin skin, DrawMode drawMode,
+            Rectangle destinationRectangle, Rectangle? clipMask, Color color)
+        {
+            if (skin is StandardSkin.None)
+                return;
+
+            if (_standardSkinSprites.TryGetValue(skin, out var sprite))
+            {
+                sprite.Texture = _standardSkinAtlasTexture;
+            }
+            else
+            {
+                sprite = _fallbackSprite;
+            }
+
+            DrawSprite(sprite, drawMode, destinationRectangle, clipMask, color);
+        }
+
+        public void DrawString(SpriteFont spriteFont, string text,
+            Vector2 position, Rectangle? clipMask, Color color)
+        {
+            RasterizerState rasterizerState = null;
+            if (clipMask.HasValue)
+            {
+                rasterizerState = _scissorRasterizerState;
+                _spriteBatch.GraphicsDevice.ScissorRectangle = clipMask.Value;
+            }
+
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp,
+                rasterizerState: rasterizerState);
+
+            _spriteBatch.DrawString(spriteFont, text, position, color);
+
+            _spriteBatch.End();
         }
     }
 }

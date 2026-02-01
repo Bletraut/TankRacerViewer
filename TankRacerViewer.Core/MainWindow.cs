@@ -1,4 +1,5 @@
 ﻿using ComposableUi;
+using ComposableUi.Elements;
 
 using FastFileUnpacker;
 
@@ -114,6 +115,16 @@ namespace TankRacerViewer.Core
                     //    Position = new Vector2(100, 200),
                     //    Pivot = Alignment.MiddleLeft
                     //},
+                    new TextElement(
+                        spriteFont: _mainFont,
+                        text: "Text Element SUPER BIG..gq.?",
+                        textAlignmentFactor: Alignment.Center,
+                        pivot: Alignment.TopLeft,
+                        color: Color.Yellow
+                    )
+                    {
+                        Position = new Vector2(100, 100)
+                    },
                     new ExpandedElement(
                         innerElement: new AlignmentElement(new ButtonElement(new Vector2(100, 100)))
                         {
@@ -137,10 +148,10 @@ namespace TankRacerViewer.Core
                         content: new ExpandedElement(
                             innerElement: new ScrollViewElement(
                                 //expandContentWidth: true,
-                                content: column)
-                                //content: innerScroll)
+                                content: column
                             )
                         )
+                    )
                     {
                         Position = new Vector2(200, 300)
                     },

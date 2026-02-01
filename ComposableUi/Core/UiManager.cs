@@ -87,8 +87,12 @@ namespace ComposableUi
             if (UiRenderer == null)
                 return;
 
+            UiRenderer.Begin();
+
             foreach (var element in _renderQueue)
                 element.Draw(UiRenderer);
+
+            UiRenderer.End();
         }
 
         private void HandlePointerInput()

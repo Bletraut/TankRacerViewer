@@ -72,6 +72,73 @@ namespace ComposableUi
             ExpandChildrenCrossAxisSize = expandChildrenCrossAxisSize;
         }
 
+        private Vector2 CalculatePreferredChildrenSize()
+        {
+            var activeChildCount = 0;
+            var maxChildSize = Vector2.Zero;
+            var preferredChildrenSize = Vector2.Zero;
+
+            for (var i = 0; i < ChildCount; i++)
+            {
+                var child = GetChildAt(i);
+                if (!child.IsEnabled)
+                    continue;
+
+                if (child is LayoutElement layoutElement)
+                {
+                    if (!layoutElement.HasActiveInnerElement)
+                        continue;
+
+                    if (layoutElement.IgnoreLayout)
+                        continue;
+
+                    child = layoutElement.InnerElement;
+                }
+
+                var childSize = child.CalculatePreferredSize();
+                preferredChildrenSize += MainAxis * childSize;
+                maxChildSize = Vector2.Max(maxChildSize, childSize);
+
+                activeChildCount++;
+            }
+            preferredChildrenSize += MainAxis * (activeChildCount - 1) * Spacing;
+            preferredChildrenSize += CrossAxis * maxChildSize;
+
+            return preferredChildrenSize;
+        }
+
+        private (Vector2 Spacing, float FlexFactor) CalculateMainAxisSpacingAndFlexFactor()
+        {
+            var totalFlexFactor = 0f;
+            var activeChildCount = 0;
+
+            for (var i = 0; i < ChildCount; i++)
+            {
+                var child = GetChildAt(i);
+                if (!child.IsEnabled)
+                    continue;
+
+                if (child is LayoutElement layoutElement)
+                {
+                    if (layoutElement.IgnoreLayout)
+                        continue;
+
+                    if (!layoutElement.HasActiveInnerElement)
+                        continue;
+
+                    totalFlexFactor += layoutElement.FlexFactor;
+                }
+                else
+                {
+                    totalFlexFactor += 1;
+                }
+
+                activeChildCount++;
+            }
+
+            return (MainAxis * (activeChildCount - 1) * Spacing, totalFlexFactor);
+        }
+
         public override Vector2 CalculatePreferredSize()
         {
             var size = base.CalculatePreferredSize();
@@ -146,73 +213,6 @@ namespace ComposableUi
 
                 totalMainAxisLayoutOffset -= MainAxis * (childSize + new Vector2(Spacing));
             }
-        }
-
-        private Vector2 CalculatePreferredChildrenSize()
-        {
-            var activeChildCount = 0;
-            var maxChildSize = Vector2.Zero;
-            var preferredChildrenSize = Vector2.Zero;
-
-            for (var i = 0; i < ChildCount; i++)
-            {
-                var child = GetChildAt(i);
-                if (!child.IsEnabled)
-                    continue;
-
-                if (child is LayoutElement layoutElement)
-                {
-                    if (!layoutElement.HasActiveInnerElement)
-                        continue;
-
-                    if (layoutElement.IgnoreLayout)
-                        continue;
-
-                    child = layoutElement.InnerElement;
-                }
-
-                var childSize = child.CalculatePreferredSize();
-                preferredChildrenSize += MainAxis * childSize;
-                maxChildSize = Vector2.Max(maxChildSize, childSize);
-
-                activeChildCount++;
-            }
-            preferredChildrenSize += MainAxis * (activeChildCount - 1) * Spacing;
-            preferredChildrenSize += CrossAxis * maxChildSize;
-
-            return preferredChildrenSize;
-        }
-
-        private (Vector2 Spacing, float FlexFactor) CalculateMainAxisSpacingAndFlexFactor()
-        {
-            var totalFlexFactor = 0f;
-            var activeChildCount = 0;
-
-            for (var i = 0; i < ChildCount; i++)
-            {
-                var child = GetChildAt(i);
-                if (!child.IsEnabled)
-                    continue;
-
-                if (child is LayoutElement layoutElement)
-                {
-                    if (layoutElement.IgnoreLayout)
-                        continue;
-
-                    if (!layoutElement.HasActiveInnerElement)
-                        continue;
-
-                    totalFlexFactor += layoutElement.FlexFactor;
-                }
-                else
-                {
-                    totalFlexFactor += 1;
-                }
-
-                activeChildCount++;
-            }
-
-            return (MainAxis * (activeChildCount - 1) * Spacing, totalFlexFactor);
         }
     }
 }

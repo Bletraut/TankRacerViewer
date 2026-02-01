@@ -1,7 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 
-using System.Diagnostics;
-
 namespace ComposableUi
 {
     public class ScrollBarElement : ContainerElement
