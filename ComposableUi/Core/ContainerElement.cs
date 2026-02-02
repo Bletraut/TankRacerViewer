@@ -11,7 +11,7 @@ namespace ComposableUi
 
         private readonly List<Element> _children = [];
 
-        public ContainerElement(IReadOnlyList<Element> children = null)
+        public ContainerElement(IReadOnlyList<Element> children = default)
         {
             _children = new List<Element>(children?.Count ?? 0);
 

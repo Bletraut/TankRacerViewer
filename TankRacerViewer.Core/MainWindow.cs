@@ -115,14 +115,19 @@ namespace TankRacerViewer.Core
                     //    Position = new Vector2(100, 200),
                     //    Pivot = Alignment.MiddleLeft
                     //},
-                    new TextElement(
-                        spriteFont: _mainFont,
-                        text: "Text Element SUPER BIG..gq.?",
-                        textAlignmentFactor: Alignment.Center,
-                        pivot: Alignment.TopLeft,
-                        color: Color.Yellow
-                    )
+                    //new TextElement(
+                    //    //spriteFont: _mainFont,
+                    //    text: "Text Element SUPER BIG..gq.?",
+                    //    textAlignmentFactor: Alignment.Center,
+                    //    pivot: Alignment.TopLeft,
+                    //    color: Color.Yellow
+                    //)
+                    //{
+                    //    Position = new Vector2(100, 100)
+                    //},
+                    new ContextMenu()
                     {
+                        Pivot = Alignment.TopLeft,
                         Position = new Vector2(100, 100)
                     },
                     new ExpandedElement(

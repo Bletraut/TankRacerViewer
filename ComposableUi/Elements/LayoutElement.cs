@@ -9,16 +9,20 @@
             set => SetAndChangeState(ref _ignoreLayout, value);
         }
 
-        public float _flexFactor = 1f;
+        public float _flexFactor;
         public float FlexFactor
         {
             get => _flexFactor;
             set => SetAndChangeState(ref _flexFactor, value);
         }
 
-        public LayoutElement(Element innerElement = default) 
+        public LayoutElement(Element innerElement = default,
+            bool ignoreLayout = default,
+            float flexFactor = 1) 
             : base(innerElement)
         {
+            IgnoreLayout = ignoreLayout;
+            FlexFactor = flexFactor;
         }
     }
 }

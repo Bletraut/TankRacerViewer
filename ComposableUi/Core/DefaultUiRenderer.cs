@@ -47,7 +47,7 @@ namespace ComposableUi
                 };
             }
 
-            _standardSkinAtlasTexture ??= _contentManager.Load<Texture2D>("ComposableUi\\UiElementsAtlas");
+            _standardSkinAtlasTexture = _contentManager.Load<Texture2D>("ComposableUi\\UiElementsAtlas");
 
             PrepareStandardSkinSprites();
         }

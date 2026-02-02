@@ -20,6 +20,34 @@ namespace ComposableUi
             set => SetAndChangeState(ref _spacing, value);
         }
 
+        private float _leftPadding;
+        public float LeftPadding
+        {
+            get => _leftPadding;
+            set => SetAndChangeState(ref _leftPadding, value);
+        }
+
+        private float _rightPadding;
+        public float RightPadding
+        {
+            get => _rightPadding;
+            set => SetAndChangeState(ref _rightPadding, value);
+        }
+
+        private float _topPadding;
+        public float TopPadding
+        {
+            get => _topPadding;
+            set => SetAndChangeState(ref _topPadding, value);
+        }
+
+        private float _bottomPadding;
+        public float BottomPadding
+        {
+            get => _bottomPadding;
+            set => SetAndChangeState(ref _bottomPadding, value);
+        }
+
         private bool _sizeMainAxisToContent;
         public bool SizeMainAxisToContent
         {
@@ -55,6 +83,10 @@ namespace ComposableUi
             IReadOnlyList<Element> children = default,
             Vector2 alignmentFactor = default,
             float spacing = default,
+            float leftPadding = default,
+            float rightPadding = default,
+            float topPadding = default,
+            float bottomPadding = default,
             bool sizeMainAxisToContent = default,
             bool sizeCrossAxisToContent = default,
             bool expandChildrenMainAxisSize = default,
@@ -65,7 +97,13 @@ namespace ComposableUi
             CrossAxis = crossAxis;
 
             AlignmentFactor = alignmentFactor;
+
             Spacing = spacing;
+            LeftPadding = leftPadding;
+            RightPadding = rightPadding;
+            TopPadding = topPadding;
+            BottomPadding = bottomPadding;
+
             SizeMainAxisToContent = sizeMainAxisToContent;
             SizeCrossAxisToContent = sizeCrossAxisToContent;
             ExpandChildrenMainAxisSize = expandChildrenMainAxisSize;
@@ -141,17 +179,19 @@ namespace ComposableUi
 
         public override Vector2 CalculatePreferredSize()
         {
+            var isSizeToContentEnabled = SizeMainAxisToContent || SizeCrossAxisToContent;
+
             var size = base.CalculatePreferredSize();
             if (ChildCount == 0)
-                return size;
+                return isSizeToContentEnabled ? Vector2.Zero : size;
 
-            var isSizeToContentEnabled = SizeMainAxisToContent || SizeCrossAxisToContent;
             if (!isSizeToContentEnabled)
                 return size;
 
             var preferredChildrenSize = CalculatePreferredChildrenSize();
             var preferredSize = (SizeMainAxisToContent ? preferredChildrenSize : size) * MainAxis
-                + (SizeCrossAxisToContent ? preferredChildrenSize : size) * CrossAxis;
+                + (SizeCrossAxisToContent ? preferredChildrenSize : size) * CrossAxis
+                + new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
 
             return preferredSize;
         }
@@ -203,12 +243,14 @@ namespace ComposableUi
                         ? Size 
                         : childSize);
 
-                    childSize = mainAxisSize + crossAxisSize;
+                    var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
+                    childSize = mainAxisSize + crossAxisSize - paddings;
                 }
                 child.Rebuild(childSize);
 
                 var crossAxisLayoutOffset = CrossAxis * (Size * Pivot - AlignmentFactor * (Size - childSize));
-                child.LocalPosition = child.Size * child.Pivot 
+                child.LocalPosition = new Vector2(LeftPadding, TopPadding)
+                    + child.Size * child.Pivot
                     - (totalMainAxisLayoutOffset + crossAxisLayoutOffset);
 
                 totalMainAxisLayoutOffset -= MainAxis * (childSize + new Vector2(Spacing));

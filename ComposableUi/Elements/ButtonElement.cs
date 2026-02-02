@@ -26,7 +26,7 @@ namespace ComposableUi
 
         private (Sprite Sprite, StandardSkin Skin, Color Color) _currentState;
 
-        public ButtonElement(Vector2? size,
+        public ButtonElement(Vector2? size = default,
             Sprite normalSprite = default,
             Sprite hoverSprite = default,
             Sprite pressedSprite = default,

@@ -5,6 +5,7 @@
         None,
 
         // Colors.
+        WhitePixel,
         SolidDarkPixel,
         SelectionWarmPixel,
 

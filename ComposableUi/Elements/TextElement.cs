@@ -5,6 +5,8 @@ namespace ComposableUi.Elements
 {
     public sealed class TextElement : Element, IDrawableElement
     {
+        internal static SpriteFont DefaultSpriteFont { get; set; }
+
         public static readonly Vector2 DefaultSize = new(200, 50);
 
         private string _text;
@@ -13,7 +15,7 @@ namespace ComposableUi.Elements
             get => _text;
             set
             {
-                if (SetAndChangeState(ref _text, value))
+                if (SetAndChangeState(ref _text, value ?? string.Empty))
                     OnTextChanged();
             }
         }
@@ -24,7 +26,7 @@ namespace ComposableUi.Elements
             get => _spriteFont;
             set
             {
-                if (SetAndChangeState(ref _spriteFont, value))
+                if (SetAndChangeState(ref _spriteFont, value ?? DefaultSpriteFont))
                     OnTextChanged();
             }
         }
@@ -81,8 +83,8 @@ namespace ComposableUi.Elements
             bool sizeToTextHeight = default,
             Color? color = default)
         {
-            Text = text;
-            SpriteFont = spriteFont;
+            Text = text ?? string.Empty;
+            SpriteFont = spriteFont ?? DefaultSpriteFont;
             Size = size ?? DefaultSize;
             TextAlignmentFactor = textAlignmentFactor ?? Alignment.TopLeft;
             Pivot = pivot ?? Alignment.Center;
@@ -135,12 +137,8 @@ namespace ComposableUi.Elements
             if (SpriteFont is null)
                 return;
 
-            if (Text.Length <= 0)
+            if (string.IsNullOrEmpty(Text))
                 return;
-
-            // For debug.
-            renderer.DrawSkinnedRectangle(StandardSkin.SelectionWarmPixel, DrawMode.Simple,
-                BoundingRectangle, ClipMask, Color);
 
             var localPosition = Size * TextAlignmentFactor - Size * Pivot
                 - TextSize * TextAlignmentFactor;

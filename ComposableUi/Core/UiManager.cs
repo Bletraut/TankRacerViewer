@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ComposableUi.Elements;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -36,6 +38,7 @@ namespace ComposableUi
             ContentManager contentManager,
             SpriteBatch spriteBatch)
             : this(graphicsDevice,
+                  contentManager,
                   new DefaultPointerInputProvider(),
                   new DefaultUiRenderer(contentManager, spriteBatch)) 
         {
@@ -43,6 +46,7 @@ namespace ComposableUi
         }
 
         public UiManager(GraphicsDevice graphicsDevice,
+            ContentManager contentManager,
             IPointerInputProvider pointerInputProvider,
             IUiRenderer uiRenderer)
         {
@@ -53,6 +57,8 @@ namespace ComposableUi
 
             Root = new ContainerElement();
             Root.StateChanged += OnRootStateChanged;
+
+            TextElement.DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
 
             AddElementSolver(new HierarchyWheelScrollSolver());
         }
