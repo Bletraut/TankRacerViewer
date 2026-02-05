@@ -44,6 +44,7 @@ namespace TankRacerViewer.Core
         private Vector3 _cameraDefaultRotation = new(0, 0, 0);
 
         private UiManager _uiManager;
+        private ContextMenuElement _contextMenu;
 
         private readonly StringBuilder _info = new();
 
@@ -108,6 +109,25 @@ namespace TankRacerViewer.Core
             // end;
 
             _uiManager = new UiManager(GraphicsDevice, Content, _spriteBatch);
+
+            _contextMenu = new ContextMenuElement()
+            {
+                Pivot = Alignment.TopLeft,
+                IsEnabled = false
+            };
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Gaygin?", name: "MAAAAAX"));
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Virgin?", name: "MAAAAAX"));
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAX"));
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAAX"));
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAAAX"));
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Ilusha"));
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Tolya", keyBindings: "Alt+Gay"));
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Hemul", keyBindings: "Alt+Alt"));
+            _contextMenu.AddItem(new ContextMenuItemElement(name: "Epstein Files", isInteractable: false));
+            _contextMenu.AddItem(new ContextMenuItemElement(name: "Item 228", keyBindings: "Alt+F4"));
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Male"));
+            _contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Female"));
+
             _uiManager.Root.AddChild(new CanvasElement(Window,
                 children: [
                     //new ButtonElement(new Vector2(200, 50))
@@ -125,11 +145,6 @@ namespace TankRacerViewer.Core
                     //{
                     //    Position = new Vector2(100, 100)
                     //},
-                    new ContextMenu()
-                    {
-                        Pivot = Alignment.TopLeft,
-                        Position = new Vector2(100, 100)
-                    },
                     new ExpandedElement(
                         innerElement: new AlignmentElement(new ButtonElement(new Vector2(100, 100)))
                         {
@@ -160,6 +175,7 @@ namespace TankRacerViewer.Core
                     {
                         Position = new Vector2(200, 300)
                     },
+                    _contextMenu,
                 ]));
 
             _renderer = new WorldRenderer(GraphicsDevice, _spriteBatch, Content);
@@ -218,9 +234,16 @@ namespace TankRacerViewer.Core
 
             // TODO: Add your update logic here
             Input.Update();
+
+            if (Input.IsMouseButtonUp(MouseButton.Left))
+                _contextMenu.Hide();
+            if (Input.IsMouseButtonDown(MouseButton.Right))
+                _contextMenu.Show(Input.MousePosition.ToVector2());
+
             _uiManager.Update(gameTime);
 
-            _cameraController.Update(gameTime);
+            if (!_uiManager.IsAnyElementPressed)
+                _cameraController.Update(gameTime);
 
             if (Input.IsKeyDown(Keys.R))
             {

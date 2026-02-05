@@ -15,8 +15,8 @@ namespace ComposableUi
             float bottomPadding = default,
             bool sizeMainAxisToContent = default,
             bool sizeCrossAxisToContent = default,
-            bool expandChildrenMainAxisSize = default,
-            bool expandChildrenCrossAxisSize = default)
+            bool expandChildrenMainAxis = default,
+            bool expandChildrenCrossAxis = default)
             : base(Vector2.UnitY, Vector2.UnitX,
                   children,
                   alignmentFactor,
@@ -27,7 +27,7 @@ namespace ComposableUi
                   bottomPadding,
                   sizeMainAxisToContent,
                   sizeCrossAxisToContent,
-                  expandChildrenMainAxisSize,
-                  expandChildrenCrossAxisSize) { }
+                  expandChildrenMainAxis,
+                  expandChildrenCrossAxis) { }
     }
 }

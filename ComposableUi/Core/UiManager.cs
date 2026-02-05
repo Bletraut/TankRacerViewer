@@ -15,6 +15,9 @@ namespace ComposableUi
         public IPointerInputProvider PointerInputProvider { get; set; }
         public IUiRenderer UiRenderer { get; set; }
 
+        public bool IsOverUi => _activeHandlers.Count > 0;
+        public bool IsAnyElementPressed => _primaryButtonPressedHandlers.Count > 0 || _secondaryButtonPressedHandlers.Count > 0;
+
         private readonly GraphicsDevice _graphicsDevice;
 
         private readonly Stack<Element> _stack = new();
@@ -185,18 +188,22 @@ namespace ComposableUi
                     if (_primaryButtonPressedHandlers.Contains(handler))
                         handler.OnPointerDrag(_currentPointerPosition, pointerPositionDelta);
                 }
+            }
 
-                if (PointerInputProvider.IsPrimaryButtonUp)
-                {
-                    if (_primaryButtonPressedHandlers.Remove(handler))
-                        handler.OnPointerUp(_currentPointerPosition);
-                }
+            if (PointerInputProvider.IsPrimaryButtonUp)
+            {
+                foreach (var handler in _primaryButtonPressedHandlers)
+                    handler.OnPointerUp(_currentPointerPosition);
 
-                if (PointerInputProvider.IsSecondaryButtonUp)
-                {
-                    if (_secondaryButtonPressedHandlers.Remove(handler))
-                        handler.OnPointerSecondaryUp(_currentPointerPosition);
-                }
+                _primaryButtonPressedHandlers.Clear();
+            }
+
+            if (PointerInputProvider.IsSecondaryButtonUp)
+            {
+                foreach(var handler in _secondaryButtonPressedHandlers)
+                    handler.OnPointerSecondaryUp(_currentPointerPosition);
+
+                _secondaryButtonPressedHandlers.Clear();
             }
         }
 

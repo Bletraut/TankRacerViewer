@@ -35,7 +35,7 @@ namespace ComposableUi
         }
 
         private bool _isEnabled = true;
-        public bool IsEnabled
+        public virtual bool IsEnabled
         {
             get => _isEnabled;
             set => SetAndChangeState(ref _isEnabled, value);
@@ -276,4 +276,5 @@ namespace ComposableUi
 
     public delegate void ElementEventHandler(Element sender);
     public delegate void ElementEventHandler<TEventArgs>(Element sender, TEventArgs e);
+    public delegate void ElementEventHandler<TElement, TEventArgs>(TElement sender, TEventArgs e);
 }

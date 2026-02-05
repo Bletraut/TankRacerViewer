@@ -62,18 +62,18 @@ namespace ComposableUi
             set => SetAndChangeState(ref _sizeCrossAxisToContent, value);
         }
 
-        private bool _expandChildrenMainAxisSize;
-        public bool ExpandChildrenMainAxisSize
+        private bool _expandChildrenMainAxis;
+        public bool ExpandChildrenMainAxis
         {
-            get => _expandChildrenMainAxisSize;
-            set => SetAndChangeState(ref _expandChildrenMainAxisSize, value);
+            get => _expandChildrenMainAxis;
+            set => SetAndChangeState(ref _expandChildrenMainAxis, value);
         }
 
-        private bool _expandChildrenCrossAxisSize;
-        public bool ExpandChildrenCrossAxisSize
+        private bool _expandChildrenCrossAxis;
+        public bool ExpandChildrenCrossAxis
         {
-            get => _expandChildrenCrossAxisSize;
-            set => SetAndChangeState(ref _expandChildrenCrossAxisSize, value);
+            get => _expandChildrenCrossAxis;
+            set => SetAndChangeState(ref _expandChildrenCrossAxis, value);
         }
 
         public Vector2 MainAxis { get; }
@@ -89,8 +89,8 @@ namespace ComposableUi
             float bottomPadding = default,
             bool sizeMainAxisToContent = default,
             bool sizeCrossAxisToContent = default,
-            bool expandChildrenMainAxisSize = default,
-            bool expandChildrenCrossAxisSize = default)
+            bool expandChildrenMainAxis = default,
+            bool expandChildrenCrossAxis = default)
             : base(children)
         {
             MainAxis = mainAxis;
@@ -106,8 +106,8 @@ namespace ComposableUi
 
             SizeMainAxisToContent = sizeMainAxisToContent;
             SizeCrossAxisToContent = sizeCrossAxisToContent;
-            ExpandChildrenMainAxisSize = expandChildrenMainAxisSize;
-            ExpandChildrenCrossAxisSize = expandChildrenCrossAxisSize;
+            ExpandChildrenMainAxis = expandChildrenMainAxis;
+            ExpandChildrenCrossAxis = expandChildrenCrossAxis;
         }
 
         private Vector2 CalculatePreferredChildrenSize()
@@ -201,7 +201,7 @@ namespace ComposableUi
             Size = size;
 
             var (totalSpacing, totalFlexFactor) = CalculateMainAxisSpacingAndFlexFactor();
-            var mainAxisPreferredChildrenSize = MainAxis * (!ExpandChildrenMainAxisSize
+            var mainAxisPreferredChildrenSize = MainAxis * (!ExpandChildrenMainAxis
                 ? CalculatePreferredChildrenSize()
                 : Size);
             var totalMainAxisLayoutOffset = MainAxis * (Size * Pivot - AlignmentFactor * (Size - mainAxisPreferredChildrenSize));
@@ -234,12 +234,12 @@ namespace ComposableUi
                 }
 
                 var childSize = child.CalculatePreferredSize();
-                if (ExpandChildrenMainAxisSize || ExpandChildrenCrossAxisSize)
+                if (ExpandChildrenMainAxis || ExpandChildrenCrossAxis)
                 {
-                    var mainAxisSize = MainAxis * (ExpandChildrenMainAxisSize
+                    var mainAxisSize = MainAxis * (ExpandChildrenMainAxis
                         ? (mainAxisPreferredChildrenSize - totalSpacing) * (flexFactor / totalFlexFactor)
                         : childSize);
-                    var crossAxisSize = CrossAxis * (ExpandChildrenCrossAxisSize 
+                    var crossAxisSize = CrossAxis * (ExpandChildrenCrossAxis 
                         ? Size 
                         : childSize);
 
