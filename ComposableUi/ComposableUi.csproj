@@ -12,7 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Update="Content\ComposableUi\Outfit-Regular.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="Content\ComposableUi\UiElementsAtlas.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

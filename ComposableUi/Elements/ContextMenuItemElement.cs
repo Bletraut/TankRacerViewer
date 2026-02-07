@@ -68,6 +68,7 @@ namespace ComposableUi
 
         public event ElementEventHandler<ContextMenuItemElement, Point> PointerEnter;
         public event ElementEventHandler<ContextMenuItemElement, Point> PointerLeave;
+        public event ElementEventHandler<ContextMenuItemElement, Point> PointerClick;
 
         private readonly Element _arrowSpaceHolder;
         private readonly SpriteElement _buttonBackground;
@@ -181,7 +182,7 @@ namespace ComposableUi
 
         private void OnButtonClicked(Element sender, Point position)
         {
-            ClickAction?.Invoke(this);
+            PointerClick?.Invoke(this, position);
         }
     }
 }

@@ -46,6 +46,7 @@ namespace ComposableUi
 
         private readonly ElementEventHandler<ContextMenuItemElement, Point> _onItemPointerEnter;
         private readonly ElementEventHandler<ContextMenuItemElement, Point> _onItemPointerLeave;
+        private readonly ElementEventHandler<ContextMenuItemElement, Point> _onItemClicked;
         private ContextMenuItemElement _currentItem;
 
         public ContextMenuElement(IEnumerable<ContextMenuItemElement> items = default,
@@ -109,6 +110,7 @@ namespace ComposableUi
 
             _onItemPointerEnter = OnItemPointerEnter;
             _onItemPointerLeave = OnItemPointerLeave;
+            _onItemClicked = OnItemClicked;
         }
 
         public void AddItem(ContextMenuItemElement item)
@@ -148,6 +150,7 @@ namespace ComposableUi
 
             item.PointerEnter += targetMenu._onItemPointerEnter;
             item.PointerLeave += targetMenu._onItemPointerLeave;
+            item.PointerClick += _onItemClicked;
 
             targetMenu.AppendToView(item);
             targetMenu._items.Add(item);
@@ -172,6 +175,7 @@ namespace ComposableUi
 
                         item.PointerEnter -= menu._onItemPointerEnter;
                         item.PointerLeave -= menu._onItemPointerLeave;
+                        item.PointerClick -= _onItemClicked;
                         menu.RemoveFromView(item);
 
                         break;
@@ -345,9 +349,9 @@ namespace ComposableUi
             item.SetHover(false);
         }
 
-        private void OnItemClicked(ContextMenuItemElement sender)
+        private void OnItemClicked(ContextMenuItemElement item, Point position)
         {
-            Debug.WriteLine($"Click: {sender.Name}");
+            item.ClickAction?.Invoke(item);
         }
     }
 }

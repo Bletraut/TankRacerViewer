@@ -29,8 +29,11 @@
         RectangleButtonPressed,
         RectangleButtonDisabled,
 
-        WindowHeader,
-        WindowBody,
+        TabNormalHeader,
+        TabActiveHeader,
+        TabInactiveHeader,
+        TabHeaderButtonsBody,
+        TabBody,
 
         // Icons.
         LeftArrowIcon,

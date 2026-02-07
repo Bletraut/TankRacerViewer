@@ -101,7 +101,7 @@ namespace TankRacerViewer.Core
             var innerScroll = new ScrollViewElement(
                 size: new Vector2(300, 500),
                 content: innerColumn);
-            innerScroll.Background.Skin = StandardSkin.WindowHeader;
+            innerScroll.Background.Skin = StandardSkin.TabNormalHeader;
             //column.AddChild(new SpriteElement(
             //    size: new Vector2(Random.Shared.Next(500, 800), Random.Shared.Next(50, 200)),
             //    skin: StandardSkin.RectangleButton,
@@ -130,40 +130,6 @@ namespace TankRacerViewer.Core
 
             _uiManager.Root.AddChild(new CanvasElement(Window,
                 children: [
-                    //new ButtonElement(new Vector2(200, 50))
-                    //{
-                    //    Position = new Vector2(100, 200),
-                    //    Pivot = Alignment.MiddleLeft
-                    //},
-                    //new TextElement(
-                    //    //spriteFont: _mainFont,
-                    //    text: "Text Element SUPER BIG..gq.?",
-                    //    textAlignmentFactor: Alignment.Center,
-                    //    pivot: Alignment.TopLeft,
-                    //    color: Color.Yellow
-                    //)
-                    //{
-                    //    Position = new Vector2(100, 100)
-                    //},
-                    new ExpandedElement(
-                        innerElement: new AlignmentElement(new ButtonElement(new Vector2(100, 100)))
-                        {
-                            AlignmentFactor = Alignment.MiddleRight,
-                            Offset = new Vector2(-20, 0),
-                            Pivot = Alignment.MiddleRight
-                        },
-                        leftPadding: 5,
-                        topPadding: 20,
-                        bottomPadding: 20,
-                        expandWidth: false,
-                        expandHeight: true
-                    ),
-                    new AlignmentElement(new ButtonElement(new Vector2(100, 100)))
-                    {
-                        AlignmentFactor = Alignment.MiddleRight,
-                        Offset = new Vector2(-20, 0),
-                        Pivot = Alignment.MiddleRight
-                    },
                     new WindowElement(
                         content: new ExpandedElement(
                             innerElement: new ScrollViewElement(

@@ -33,7 +33,7 @@ namespace ComposableUi
             _headerInputHandler = new PointerInputHandlerElement(
                 innerElement: new SpriteElement(
                     size: new Vector2(0, DefaultHeaderHeight),
-                    skin: StandardSkin.WindowHeader)
+                    skin: StandardSkin.TabNormalHeader)
                 );
             _headerInputHandler.PointerDrag += OnWindowDrag;
 
@@ -51,7 +51,7 @@ namespace ComposableUi
                     alignmentFactor: Alignment.BottomCenter,
                     pivot: Alignment.BottomCenter,
                     innerElement: new SpriteElement(
-                        skin: StandardSkin.WindowBody)
+                        skin: StandardSkin.TabBody)
                     )
                 );
 
