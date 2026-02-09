@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Numerics;
 using System.Text;
 
@@ -101,7 +100,7 @@ namespace FastFileUnpacker
         {
             Sides = _sides.AsReadOnly();
 
-            var text = Encoding.ASCII.GetString(data);
+            var text = Encoding.Latin1.GetString(data);
 
             var rows = text.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1);
             foreach (var row in rows)

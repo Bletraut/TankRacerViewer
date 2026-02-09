@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Buffers;
+using System.Drawing;
 
 namespace FastFileUnpacker
 {
@@ -91,7 +92,9 @@ namespace FastFileUnpacker
             }
             else
             {
-                var colorBytes = new byte[Colors.Length * 4];
+                var length = Colors.Length * 4;
+                var colorBytes = ArrayPool<byte>.Shared.Rent(length);
+
                 Decode(data, DataOffset, isRleEncoded, (index, value) =>
                 {
                     colorBytes[index] = value;
@@ -105,6 +108,8 @@ namespace FastFileUnpacker
                     var alpha = colorBytes[i + Colors.Length * 3];
                     Colors[i] = Color.FromArgb(alpha, red, green, blue);
                 }
+
+                ArrayPool<byte>.Shared.Return(colorBytes);
             }
         }
     }

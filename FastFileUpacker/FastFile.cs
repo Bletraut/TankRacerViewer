@@ -38,7 +38,7 @@ namespace FastFileUnpacker
             using var binaryReader = new BinaryReader(stream);
 
             var header = binaryReader.ReadBytes(HeaderSize);
-            var version = Encoding.ASCII.GetString(header.AsSpan(0,VersionSize));
+            var version = Encoding.Latin1.GetString(header.AsSpan(0, VersionSize));
             var assetCount = BitConverter.ToInt32(header.AsSpan(HeaderSize - AssetCountSize, AssetCountSize));
 
             Debug.WriteLine($"Version: {version}, Assets: {assetCount}");
@@ -48,7 +48,7 @@ namespace FastFileUnpacker
 
             for (var i = 0; i < assetCount; i++)
             {
-                var assetFullName = Encoding.ASCII.GetString(binaryReader.ReadBytes(AssetFullNameSize)).TrimEnd('\0');
+                var assetFullName = Encoding.Latin1.GetString(binaryReader.ReadBytes(AssetFullNameSize)).TrimEnd('\0');
                 var assetOffset = binaryReader.ReadUInt32();
                 var assetSize = binaryReader.ReadUInt32();
                 stream.Seek(AssetPaddingSize, SeekOrigin.Current);

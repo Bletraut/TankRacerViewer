@@ -8,7 +8,7 @@ namespace FastFileUnpacker
 
         public DataAsset(string fullName, byte[] data) : base(fullName, data)
         {
-            Text = Encoding.ASCII.GetString(data);
+            Text = Encoding.Latin1.GetString(data);
         }
     }
 }

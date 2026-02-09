@@ -35,11 +35,11 @@ namespace FastFileUnpacker
             for (var i = 0; i < modelCount; i++)
             {
                 var offset = HeaderSize + ModelHeaderSize * i;
-                var modelName = Encoding.ASCII.GetString(data.AsSpan(offset, ModelNameSize)).Split('\0')[0];
+                var modelName = Encoding.Latin1.GetString(data.AsSpan(offset, ModelNameSize)).Split('\0')[0];
 
                 offset += ModelNameSize;
                 var modelDataOffset = BitConverter.ToInt32(data.AsSpan(offset, ModelDataOffsetSize));
-                var modelData = ExtractModelData(data, modelDataOffset).ToArray();
+                var modelData = ExtractModelData(data, modelDataOffset);
 
                 var modelAsset = new ModelAsset(modelName, modelData);
                 _models[i] = modelAsset;
