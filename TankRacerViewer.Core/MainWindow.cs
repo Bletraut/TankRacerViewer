@@ -1,19 +1,15 @@
-﻿using ComposableUi;
-using ComposableUi.Elements;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+
+using ComposableUi;
 
 using FastFileUnpacker;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 using TankRacerViewer.Core.Views;
 
@@ -128,19 +124,30 @@ namespace TankRacerViewer.Core
             _contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Male"));
             _contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Female"));
 
+            var tabLayout = new TabLayout();
+            tabLayout.AddTab(new TabElement("Game_view")
+            {
+                Position = new Vector2(0, 0)
+            });
+            tabLayout.AddTab(new TabElement("Hierarchy_test")
+            {
+                Position = new Vector2(100, 50)
+            });
+
             _uiManager.Root.AddChild(new CanvasElement(Window,
                 children: [
-                    new WindowElement(
-                        content: new ExpandedElement(
-                            innerElement: new ScrollViewElement(
-                                //expandContentWidth: true,
-                                content: column
-                            )
-                        )
-                    )
-                    {
-                        Position = new Vector2(200, 300)
-                    },
+                    //new WindowElement(
+                    //    content: new ExpandedElement(
+                    //        innerElement: new ScrollViewElement(
+                    //            //expandContentWidth: true,
+                    //            content: column
+                    //        )
+                    //    )
+                    //)
+                    //{
+                    //    Position = new Vector2(200, 300)
+                    //},
+                    new ExpandedElement(tabLayout),
                     _contextMenu,
                 ]));
 

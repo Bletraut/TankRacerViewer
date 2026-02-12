@@ -1,10 +1,8 @@
-﻿using ComposableUi.Elements;
+﻿using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-
-using System.Collections.Generic;
 
 namespace ComposableUi
 {
@@ -64,6 +62,7 @@ namespace ComposableUi
             TextElement.DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
 
             AddElementSolver(new HierarchyWheelScrollSolver());
+            AddElementSolver(new ComposableTabsSolver());
         }
 
         public void AddElementSolver(IElementSolver elementSolver)

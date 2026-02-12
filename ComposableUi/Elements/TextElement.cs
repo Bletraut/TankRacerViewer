@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ComposableUi.Elements
+namespace ComposableUi
 {
     public sealed class TextElement : Element, IDrawableElement
     {

@@ -24,8 +24,8 @@ namespace ComposableUi
         private readonly PointerInputHandlerElement _headerInputHandler;
         private readonly HolderElement _contentHolder;
 
-        public WindowElement(Vector2? size = default,
-            Element content = default,
+        public WindowElement(Element content = default,
+            Vector2? size = default,
             Vector2? minSize = default)
         {
             MinSize = minSize ?? DefaultMinSize;

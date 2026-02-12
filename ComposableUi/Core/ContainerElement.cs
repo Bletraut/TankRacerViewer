@@ -11,8 +11,13 @@ namespace ComposableUi
 
         private readonly List<Element> _children = [];
 
-        public ContainerElement(IReadOnlyList<Element> children = default)
+        public ContainerElement(IReadOnlyList<Element> children = default,
+            Vector2? size = default,
+            Vector2? pivot = default)
         {
+            Size = size ?? Vector2.Zero;
+            Pivot = pivot ?? Alignment.Center;
+
             _children = new List<Element>(children?.Count ?? 0);
 
             if (children == null)

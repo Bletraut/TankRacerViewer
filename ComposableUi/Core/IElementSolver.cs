@@ -2,7 +2,7 @@
 {
     public interface IElementSolver
     {
-        public void Handle(Element pointerInputHandler);
+        public void Handle(Element element);
         public void Resolve();
     }
 }

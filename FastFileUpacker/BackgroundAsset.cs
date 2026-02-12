@@ -8,6 +8,9 @@ namespace FastFileUnpacker
     {
         private const string NullTextureName = "nil";
 
+        private const float GroundScaleY = 0.3f;
+        private const float CloudsScaleY = 0.3f;
+
         // Static.
         private static readonly Vector3 _bottomLeft = new(-1, -1, 0);
         private static readonly Vector3 _topLeft = new(-1, 1, 0);
@@ -47,22 +50,22 @@ namespace FastFileUnpacker
                 color2, color4, color3, string.Empty, false, true));
         }
 
-        private static void AddTopQuad(List<Polygon> polygons,
+        private static void AddCloudsQuad(List<Polygon> polygons,
             Vector2 leftBottomUv, Vector2 rightTopUv,
             string textureName)
         {
-            var scale = new Vector3(1, 0.3f, 1);
-            var offset = new Vector3(0, -scale.Y / 2, 0);
+            var scale = new Vector3(1, CloudsScaleY, 1);
+            var offset = new Vector3(0, CloudsScaleY + (GroundScaleY * 2 - 1), 0);
 
             AddQuad(polygons, scale, offset, leftBottomUv, rightTopUv, textureName);
         }
 
-        private static void AddBottomQuad(List<Polygon> polygons,
+        private static void AddGroundQuad(List<Polygon> polygons,
             Vector2 leftBottomUv, Vector2 rightTopUv,
             string textureName)
         {
-            var scale = new Vector3(1, 0.3f, 1);
-            var offset = new Vector3(0, scale.Y - 1, 0);
+            var scale = new Vector3(1, GroundScaleY, 1);
+            var offset = new Vector3(0, GroundScaleY - 1, 0);
 
             AddQuad(polygons, scale, offset, leftBottomUv, rightTopUv, textureName);
         }
@@ -126,10 +129,10 @@ namespace FastFileUnpacker
                 AddBackgroundQuad(polygons, color1, color2, color3, color4);
 
                 if (textureName1 != NullTextureName)
-                    AddBottomQuad(polygons, bottomUv1, bottomUv2, textureName1);
+                    AddGroundQuad(polygons, bottomUv1, bottomUv2, textureName1);
 
                 if (textureName2 != NullTextureName)
-                    AddTopQuad(polygons, topUv1, topUv2, textureName1);
+                    AddCloudsQuad(polygons, topUv1, topUv2, textureName1);
             }
         }
     }

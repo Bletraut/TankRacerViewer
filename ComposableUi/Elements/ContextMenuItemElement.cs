@@ -1,7 +1,5 @@
 ﻿using System;
 
-using ComposableUi.Elements;
-
 using Microsoft.Xna.Framework;
 
 namespace ComposableUi

@@ -136,8 +136,8 @@ namespace TankRacerViewer.Core.Views
         }
 
         public IReadOnlyDictionary<string, BackgroundAssetView> BackgroundAssetViews { get; }
-
         public BackgroundAssetView BackgroundAssetView { get; set; }
+
         private ModelAssetView MapModelAssetView { get; }
 
         public LevelView(string fullName, AssetViewContainer commonAssetViewContainer,
