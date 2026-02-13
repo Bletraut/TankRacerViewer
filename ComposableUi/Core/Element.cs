@@ -152,9 +152,9 @@ namespace ComposableUi
             }
         }
 
-        public event ElementEventHandler SizeChanged;
-        public event ElementEventHandler TransformChanged;
-        public event ElementEventHandler StateChanged;
+        public event ElementEventHandler<Element> SizeChanged;
+        public event ElementEventHandler<Element> TransformChanged;
+        public event ElementEventHandler<Element> StateChanged;
 
         private bool _isBoundingRectangleDirty = true;
 
@@ -274,7 +274,6 @@ namespace ComposableUi
         protected virtual void OnParentSizeChanged(Element sender) { }
     }
 
-    public delegate void ElementEventHandler(Element sender);
-    public delegate void ElementEventHandler<TEventArgs>(Element sender, TEventArgs e);
+    public delegate void ElementEventHandler<TElement>(TElement sender);
     public delegate void ElementEventHandler<TElement, TEventArgs>(TElement sender, TEventArgs e);
 }

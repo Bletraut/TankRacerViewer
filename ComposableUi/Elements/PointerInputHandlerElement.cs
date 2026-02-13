@@ -30,26 +30,26 @@ namespace ComposableUi
             }
         }
 
-        public event ElementEventHandler<bool> InteractionChanged;
+        public event ElementEventHandler<PointerInputHandlerElement, bool> InteractionChanged;
 
-        public event ElementEventHandler<(Point Position, int Delta)> ScrollWheel;
-        public event ElementEventHandler<(Point Position, int Delta)> HorizontalScrollWheel;
+        public event ElementEventHandler<PointerInputHandlerElement, (Point Position, int Delta)> ScrollWheel;
+        public event ElementEventHandler<PointerInputHandlerElement, (Point Position, int Delta)> HorizontalScrollWheel;
 
-        public event ElementEventHandler<Point> PointerEnter;
-        public event ElementEventHandler<Point> PointerMove;
-        public event ElementEventHandler<Point> PointerLeave;
+        public event ElementEventHandler<PointerInputHandlerElement, Point> PointerEnter;
+        public event ElementEventHandler<PointerInputHandlerElement, Point> PointerMove;
+        public event ElementEventHandler<PointerInputHandlerElement, Point> PointerLeave;
 
-        public event ElementEventHandler<Point> PointerDown;
-        public event ElementEventHandler<Point> PointerUp;
+        public event ElementEventHandler<PointerInputHandlerElement, Point> PointerDown;
+        public event ElementEventHandler<PointerInputHandlerElement, Point> PointerUp;
 
-        public event ElementEventHandler<Point> PointerSecondaryDown;
-        public event ElementEventHandler<Point> PointerSecondaryUp;
+        public event ElementEventHandler<PointerInputHandlerElement, Point> PointerSecondaryDown;
+        public event ElementEventHandler<PointerInputHandlerElement, Point> PointerSecondaryUp;
 
-        public event ElementEventHandler<(Point Position, Point Delta)> PointerDrag;
-        public event ElementEventHandler<(Point Position, Point Delta)> PointerFixedDrag;
+        public event ElementEventHandler<PointerInputHandlerElement, (Point Position, Point Delta)> PointerDrag;
+        public event ElementEventHandler<PointerInputHandlerElement, (Point Position, Point Delta)> PointerFixedDrag;
 
-        public event ElementEventHandler<Point> PointerClick;
-        public event ElementEventHandler<Point> PointerSecondaryClick;
+        public event ElementEventHandler<PointerInputHandlerElement, Point> PointerClick;
+        public event ElementEventHandler<PointerInputHandlerElement, Point> PointerSecondaryClick;
 
         private Vector2 _pointerDownNormalizedPosition = Vector2.Zero;
 

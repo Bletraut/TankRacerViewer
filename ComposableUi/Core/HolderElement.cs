@@ -21,12 +21,11 @@ namespace ComposableUi
                 _innerElement = value;
                 if (_innerElement != null)
                 {
+                    _innerElement.Parent?.RemoveChild(_innerElement);
                     _innerElement.Parent = this;
                 }
-                else
-                {
-                    OnStateChanged();
-                }
+
+                OnStateChanged();
             }
         }
 

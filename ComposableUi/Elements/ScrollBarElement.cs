@@ -35,7 +35,7 @@ namespace ComposableUi
         public SpriteElement Background { get; }
         public ButtonElement Button { get; }
 
-        public event ElementEventHandler<float> ProgressValueChanged;
+        public event ElementEventHandler<ScrollBarElement, float> ProgressValueChanged;
 
         private readonly ExpandedElement _buttonExpanded;
 

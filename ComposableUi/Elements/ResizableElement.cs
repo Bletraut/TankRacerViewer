@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ComposableUi.Utilities;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -54,66 +56,8 @@ namespace ComposableUi
         {
             base.OnPointerDown(position);
 
-            _sizeDirection = Vector2.Zero;
-            _positionDirection = Vector2.Zero;
-
-            var interactionRectangle = InteractionRectangle;
-
-            // Left
-            var edgeRectangle = new Rectangle()
-            {
-                X = InteractionRectangle.Left,
-                Y = InteractionRectangle.Top,
-                Width = HandleSize,
-                Height = InteractionRectangle.Height
-            };
-            if (edgeRectangle.Contains(position))
-            {
-                _sizeDirection = _sizeDirection with { X = -1 };
-                _positionDirection = _positionDirection with { X = 1 - Pivot.X };
-            }
-
-            // Right
-            edgeRectangle = new Rectangle()
-            {
-                X = InteractionRectangle.Right - HandleSize,
-                Y = InteractionRectangle.Top,
-                Width = HandleSize,
-                Height = InteractionRectangle.Height
-            };
-            if (edgeRectangle.Contains(position))
-            {
-                _sizeDirection = _sizeDirection with { X = 1 };
-                _positionDirection = _positionDirection with { X = -Pivot.X };
-            }
-
-            // Top
-            edgeRectangle = new Rectangle()
-            {
-                X = InteractionRectangle.Left,
-                Y = InteractionRectangle.Top,
-                Width = interactionRectangle.Width,
-                Height = HandleSize
-            };
-            if (edgeRectangle.Contains(position))
-            {
-                _sizeDirection = _sizeDirection with { Y = -1 };
-                _positionDirection = _positionDirection with { Y = 1 - Pivot.Y };
-            }
-
-            // Bottom
-            edgeRectangle = new Rectangle()
-            {
-                X = InteractionRectangle.Left,
-                Y = InteractionRectangle.Bottom - HandleSize,
-                Width = interactionRectangle.Width,
-                Height = HandleSize
-            };
-            if (edgeRectangle.Contains(position))
-            {
-                _sizeDirection = _sizeDirection with { Y = 1 };
-                _positionDirection = _positionDirection with { Y = -Pivot.Y };
-            }
+            _sizeDirection = InteractionRectangle.GetEdgeNormal(HandleSize, position);
+            _positionDirection = Vector2.Max(Vector2.Zero, -_sizeDirection) - Pivot;
         }
 
         protected override void OnPointerFixedDrag(Point position, Point delta)
