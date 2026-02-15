@@ -62,7 +62,7 @@ namespace ComposableUi
             TextElement.DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
 
             AddElementSolver(new HierarchyWheelScrollSolver());
-            AddElementSolver(new ComposableTabsSolver());
+            AddElementSolver(new ComposableWindowsSolver());
         }
 
         public void AddElementSolver(IElementSolver elementSolver)

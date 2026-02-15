@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -106,33 +107,43 @@ namespace TankRacerViewer.Core
 
             _uiManager = new UiManager(GraphicsDevice, Content, _spriteBatch);
 
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Gaygin?", name: "MAAAAAX"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Virgin?", name: "MAAAAAX"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAX"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAAX"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAAAX"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Ilusha"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Tolya", keyBindings: "Alt+Gay"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Hemul", keyBindings: "Alt+Alt"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(name: "Epstein Files", isInteractable: false));
+            //_contextMenu.AddItem(new ContextMenuItemElement(name: "Item 228", keyBindings: "Alt+F4"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Male"));
+            //_contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Female"));
+
+            var tabLayout = new Window2Layout();
+            tabLayout.AddWindow(new Window2Element("Game_view")
+            {
+                Position = new Vector2(0, 0)
+            });
+            tabLayout.AddWindow(new Window2Element("Hierarchy_test")
+            {
+                Position = new Vector2(100, 50)
+            });
+
             _contextMenu = new ContextMenuElement()
             {
                 Pivot = Alignment.TopLeft,
                 IsEnabled = false
             };
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Gaygin?", name: "MAAAAAX"));
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Virgin?", name: "MAAAAAX"));
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAX"));
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAAX"));
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAAAX"));
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Ilusha"));
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Tolya", keyBindings: "Alt+Gay"));
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Hemul", keyBindings: "Alt+Alt"));
-            _contextMenu.AddItem(new ContextMenuItemElement(name: "Epstein Files", isInteractable: false));
-            _contextMenu.AddItem(new ContextMenuItemElement(name: "Item 228", keyBindings: "Alt+F4"));
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Male"));
-            _contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Female"));
-
-            var tabLayout = new TabLayout();
-            tabLayout.AddTab(new TabElement("Game_view")
+            _contextMenu.AddItem(new ContextMenuItemElement(name: " Add New Tab", clickAction: _ =>
             {
-                Position = new Vector2(0, 0)
-            });
-            tabLayout.AddTab(new TabElement("Hierarchy_test")
-            {
-                Position = new Vector2(100, 50)
-            });
+                var window = new Window2Element(titleText: "TEST")
+                {
+                    Pivot = Alignment.TopLeft,
+                    LocalPosition = Vector2.Transform(Input.MousePosition.ToVector2(), tabLayout.GlobalInverseTransformationMatrix)
+                };
+                tabLayout.AddWindow(window);
+            }));
 
             _uiManager.Root.AddChild(new CanvasElement(Window,
                 children: [
