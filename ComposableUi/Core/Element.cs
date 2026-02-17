@@ -57,6 +57,8 @@ namespace ComposableUi
             }
         }
 
+        public Vector2 PivotOffset => Size * Pivot;
+
         private Vector2 _position;
         public Vector2 Position
         {

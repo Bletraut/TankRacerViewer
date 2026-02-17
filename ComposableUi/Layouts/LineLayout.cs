@@ -200,6 +200,7 @@ namespace ComposableUi
         {
             Size = size;
 
+            var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
             var (totalSpacing, totalFlexFactor) = CalculateMainAxisSpacingAndFlexFactor();
             var mainAxisPreferredChildrenSize = MainAxis * (!ExpandChildrenMainAxis
                 ? CalculatePreferredChildrenSize()
@@ -237,14 +238,13 @@ namespace ComposableUi
                 if (ExpandChildrenMainAxis || ExpandChildrenCrossAxis)
                 {
                     var mainAxisSize = MainAxis * (ExpandChildrenMainAxis
-                        ? (mainAxisPreferredChildrenSize - totalSpacing) * (flexFactor / totalFlexFactor)
+                        ? (mainAxisPreferredChildrenSize - totalSpacing - paddings) * (flexFactor / totalFlexFactor)
                         : childSize);
                     var crossAxisSize = CrossAxis * (ExpandChildrenCrossAxis 
-                        ? Size 
+                        ? Size - paddings
                         : childSize);
 
-                    var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
-                    childSize = mainAxisSize + crossAxisSize - paddings;
+                    childSize = mainAxisSize + crossAxisSize;
                 }
                 child.Rebuild(childSize);
 

@@ -12,6 +12,9 @@ namespace ComposableUi
             get
             {
                 var boundingRectangle = BoundingRectangle;
+                if (!IsInteractable)
+                    return boundingRectangle;
+
                 return new Rectangle()
                 {
                     X = boundingRectangle.Left - HandleSize,

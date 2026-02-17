@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ComposableUi
 {
@@ -27,24 +28,15 @@ namespace ComposableUi
                 AddChild(child);
         }
 
-        public override Element GetChildAt(int index)
-            => _children[index];
-
-        public override void Rebuild(Vector2 size)
+        public int IndexOf(Element child)
         {
-            Size = size;
+            if (child.Parent != this)
+                return -1;
 
-            foreach (var child in _children)
-            {
-                if (!child.IsEnabled)
-                    continue;
-
-                var childSize = child.CalculatePreferredSize();
-                child.Rebuild(childSize);
-            }
+            return _children.IndexOf(child);
         }
 
-        public override void AddChild(Element child)
+        public void InsertChild(int index, Element child)
         {
             if (child.Parent == this)
                 return;
@@ -64,7 +56,42 @@ namespace ComposableUi
             child.Parent?.RemoveChild(child);
             child.Parent = this;
 
-            _children.Add(child);
+            if (index < _children.Count)
+            {
+                _children.Insert(Math.Max(0, index), child);
+            }
+            else
+            {
+                _children.Add(child);
+            }
+        }
+
+        public void BringToFront(Element child)
+        {
+            RemoveChild(child);
+            AddChild(child);
+        }
+
+        public override Element GetChildAt(int index)
+            => _children[index];
+
+        public override void Rebuild(Vector2 size)
+        {
+            Size = size;
+
+            foreach (var child in _children)
+            {
+                if (!child.IsEnabled)
+                    continue;
+
+                var childSize = child.CalculatePreferredSize();
+                child.Rebuild(childSize);
+            }
+        }
+
+        public override void AddChild(Element child)
+        {
+            InsertChild(_children.Count, child);
         }
 
         public override void RemoveChild(Element child)

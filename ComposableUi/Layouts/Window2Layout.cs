@@ -44,7 +44,7 @@ namespace ComposableUi
             _tempWindow.Position = source.Position;
         }
 
-        private void HideTempTab()
+        private void HideTempWindow()
         {
             _tempWindow.IsEnabled = false;
         }
@@ -56,7 +56,7 @@ namespace ComposableUi
 
         private void OnTabPointerUp(Window2Element window, Point position)
         {
-            HideTempTab();
+            HideTempWindow();
         }
 
         private void OnTabPointerDrag(Window2Element window, Point delta)
@@ -66,7 +66,7 @@ namespace ComposableUi
 
         private void OnSplitPreviewShown(Window2Element window)
         {
-            HideTempTab();
+            HideTempWindow();
         }
 
         private void OnSplitPreviewHidden(Window2Element window)

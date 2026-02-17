@@ -137,7 +137,7 @@ namespace TankRacerViewer.Core
             };
             _contextMenu.AddItem(new ContextMenuItemElement(name: " Add New Tab", clickAction: _ =>
             {
-                var window = new Window2Element(titleText: "TEST")
+                var window = new Window2Element(titleText: $"TEST_{Random.Shared.Next(0, 1000)}")
                 {
                     Pivot = Alignment.TopLeft,
                     LocalPosition = Vector2.Transform(Input.MousePosition.ToVector2(), tabLayout.GlobalInverseTransformationMatrix)

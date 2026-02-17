@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 using ComposableUi.Utilities;
@@ -20,24 +21,78 @@ namespace ComposableUi
 
         private static readonly Window2Element _splitPreviewWindow = CreateNonInteractiveWindow();
 
+        internal static Window2Element CreateNonInteractiveWindow()
+        {
+            var window = new Window2Element()
+            {
+                IsInteractable = false,
+                BlockInput = false
+            };
+            window.DragHandle.IsInteractable = false;
+            window.DragHandle.BlockInput = false;
+            window.Tab.IsInteractable = false;
+            window.Tab.BlockInput = false;
+            window._splitArea.IsEnabled = false;
+
+            return window;
+        }
+
         internal static LineLayout GetRow()
         {
-            var row = new RowLayout(
+            var layout = new RowLayout(
                 expandChildrenMainAxis: true,
                 expandChildrenCrossAxis: true
             );
 
-            return row;
+            // For debug.
+            layout.AddChild(new LayoutElement(
+                ignoreLayout: true,
+                innerElement: new ExpandedElement(
+                    innerElement: new SpriteElement(
+                        skin: StandardSkin.WhitePixel,
+                        color: new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle())
+                    )
+                )
+            ));
+            layout.Spacing = 4;
+            layout.LeftPadding = layout.RightPadding = 4;
+            layout.TopPadding = layout.BottomPadding = 4;
+            // end.
+
+            return layout;
         }
 
         internal static LineLayout GetColumn()
         {
-            var column = new ColumnLayout(
+            var layout = new ColumnLayout(
                 expandChildrenMainAxis: true,
                 expandChildrenCrossAxis: true
             );
 
-            return column;
+            // For debug.
+            layout.AddChild(new LayoutElement(
+                ignoreLayout: true,
+                innerElement: new ExpandedElement(
+                    innerElement: new SpriteElement(
+                        skin: StandardSkin.WhitePixel,
+                        color: new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle())
+                    )
+                )
+            ));
+            layout.Spacing = 4;
+            layout.LeftPadding = layout.RightPadding = 4;
+            layout.TopPadding = layout.BottomPadding = 4;
+            // end.
+
+            return layout;
+        }
+
+        internal static Window2Element GetContainerWindow()
+        {
+            var window = GetWindow();
+            window.InnerElement = null;
+
+            return window;
         }
 
         internal static Window2Element GetWindow()
@@ -55,20 +110,107 @@ namespace ComposableUi
             _windowPool.Push(window);
         }
 
-        internal static Window2Element CreateNonInteractiveWindow()
+        public static void AttachTo(Window2Element source, Window2Element target, Edge edge)
         {
-            var window =  new Window2Element()
-            {
-                IsInteractable = false,
-                BlockInput = false
-            };
-            window.DragHandle.IsInteractable = false;
-            window.DragHandle.BlockInput = false;
-            window.Tab.IsInteractable = false;
-            window.Tab.BlockInput = false;
-            window._splitArea.IsEnabled = false;
+            DetachFromParent(source, Vector2.Zero);
 
-            return window;
+            var isHorizontalSplit = edge is Edge.Left or Edge.Right;
+            var insertIndex = edge is Edge.Left or Edge.Top ? 0 : 1;
+
+            var splitLayout = isHorizontalSplit ? GetRow() : GetColumn();
+
+            var containerWindow = GetContainerWindow();
+            containerWindow.Size = target.Size;
+            containerWindow.InnerElement = splitLayout;
+            containerWindow.InnerElement.Size = target.Size;
+            containerWindow._containerWindow = target._containerWindow;
+            containerWindow._rootWindow = target._rootWindow;
+            containerWindow.IsInteractable =  target.IsInteractable;
+            containerWindow.LocalPosition = target.LocalPosition 
+                - target.PivotOffset + containerWindow.PivotOffset;
+
+            if (target._containerWindow?.InnerElement is LineLayout parentSplitLayout)
+            {
+                var index = parentSplitLayout.IndexOf(target);
+                parentSplitLayout.InsertChild(index, containerWindow);
+
+                target._containerWindow._childWindows.Remove(target);
+                target._containerWindow._childWindows.Add(containerWindow);
+            }
+            else
+            {
+                target.Parent.AddChild(containerWindow);
+            }
+
+            containerWindow._childWindows ??= [];
+
+            target._containerWindow = containerWindow;
+            target._rootWindow = containerWindow._rootWindow ?? containerWindow;
+            target.IsInteractable = false;
+            splitLayout.AddChild(target);
+            containerWindow._childWindows.Add(target);
+
+            source._containerWindow = containerWindow;
+            source._rootWindow = containerWindow._rootWindow ?? containerWindow;
+            source.IsInteractable = false;
+            splitLayout.InsertChild(splitLayout.IndexOf(target) + insertIndex, source);
+            containerWindow._childWindows.Add(source);
+        }
+
+        public static void AttachToParent(Window2Element source, Window2Element target, Edge edge)
+        {
+
+        }
+
+        public static void DetachFromParent(Window2Element source, Vector2 position)
+        {
+            var containerWindow = source._containerWindow;
+            if (containerWindow is null)
+                return;
+
+            var parent = containerWindow._rootWindow?.Parent ?? containerWindow.Parent;
+            parent.AddChild(source);
+            containerWindow._childWindows.Remove(source);
+            source._containerWindow = null;
+            source._rootWindow = null;
+            source.IsInteractable = true;
+            source.Position = position;
+
+            if (containerWindow._childWindows.Count == 1)
+            {
+                var lastWindow = containerWindow._childWindows[0];
+                containerWindow._childWindows.Clear();
+
+                lastWindow.Size = containerWindow.Size;
+                lastWindow.InnerElement.Size = containerWindow.Size;
+                lastWindow._containerWindow = containerWindow._containerWindow;
+                lastWindow._rootWindow = containerWindow._rootWindow;
+                lastWindow.IsInteractable = containerWindow.IsInteractable;
+
+                if (containerWindow._containerWindow?.InnerElement is LineLayout parentSplitLayout)
+                {
+                    var index = parentSplitLayout.IndexOf(containerWindow);
+                    parentSplitLayout.InsertChild(index, lastWindow);
+
+                    containerWindow._containerWindow._childWindows.Add(lastWindow);
+                    containerWindow._containerWindow._childWindows.Remove(containerWindow);
+                }
+                else
+                {
+                    var worldPosition = containerWindow.Position;
+                    containerWindow.Parent.AddChild(lastWindow);
+                    lastWindow.Position = worldPosition - containerWindow.PivotOffset + lastWindow.PivotOffset;
+                }
+            }
+            if (containerWindow._childWindows.Count <= 0)
+            {
+                containerWindow._containerWindow = null;
+                containerWindow._rootWindow = null;
+                containerWindow.InnerElement = null;
+                containerWindow.Parent?.RemoveChild(containerWindow);
+
+                ReleaseWindow(containerWindow);
+            }
         }
 
         // Class.
@@ -82,8 +224,7 @@ namespace ComposableUi
         public event ElementEventHandler<Window2Element> SplitPreviewShown;
         public event ElementEventHandler<Window2Element> SplitPreviewHidden;
 
-        private readonly ExpandedElement _view;
-        private readonly ExpandedElement _splitLayoutExpanded;
+        private readonly ContainerElement _view;
 
         private readonly RowLayout _tabsRow;
         private readonly ContainerElement _contentContainer;
@@ -93,7 +234,9 @@ namespace ComposableUi
         private readonly ExpandedElement _splitPreviewExpanded;
         private readonly AlignmentElement _splitPreviewAlignment;
 
-        private Window2Element _parentWindow;
+        private List<Window2Element> _childWindows;
+
+        private Window2Element _containerWindow;
         private Window2Element _rootWindow;
 
         private Vector2 _dragDeltaAccumulator;
@@ -118,6 +261,7 @@ namespace ComposableUi
             DragHandle = new PointerInputHandlerElement(
                 innerElement: new SpriteElement(skin: StandardSkin.TabInactiveHeader)
             );
+            DragHandle.PointerDown += OnDragHandlePointerDown;
             DragHandle.PointerFixedDrag += OnDragHandlePointerFixedDrag;
 
             _tabsRow = new RowLayout(
@@ -174,59 +318,50 @@ namespace ComposableUi
                 topPadding: DefaultHeaderHeight,
                 innerElement: _splitArea
             );
+            _splitArea.PointerDown += OnSlitAreaPointerDown;
             _splitArea.PointerMove += OnSplitAreaPointerMove;
             _splitArea.PointerLeave += OnSplitAreaPointerLeave;
 
-            _view = new ExpandedElement(
-                new ContainerElement(
-                    children: [
-                        background,
-                        contentContainerParent,
-                        headerParent,
-                        _splitPreviewExpanded,
-                        splitAreaParent,
-                    ]
-                )
-            );
-
-            _splitLayoutExpanded = new ExpandedElement
-            {
-                IsEnabled = false
-            };
-
-            InnerElement = new ContainerElement(
+            _view = new ContainerElement(
                 size: size ?? DefaultSize,
-                children: [_view, _splitLayoutExpanded]
+                children: [
+                    background,
+                    contentContainerParent,
+                    headerParent,
+                    _splitPreviewExpanded,
+                    splitAreaParent,
+                ]
             );
+
+            InnerElement = _view;
         }
 
-        internal void Attach(Window2Element window)
+        internal void Attach(Window2Element source)
         {
-            _view.IsEnabled = false;
+            var edge = _currentSplitPreviewEdgeNormal switch
+            {
+                { X: < 0 } => Edge.Left,
+                { X: > 0 } => Edge.Right,
+                { Y: < 0 } => Edge.Top,
+                { Y: > 0 } => Edge.Bottom,
+                _ => throw new NotImplementedException(),
+            };
 
-            _splitLayoutExpanded.IsEnabled = true;
+            AttachTo(source, this, edge);
 
-            var splitLayout = _currentSplitPreviewEdgeNormal.X != 0
-                ? GetRow()
-                : GetColumn();
-            _splitLayoutExpanded.InnerElement = splitLayout;
-
-            var newWindow = GetWindow();
-            newWindow._rootWindow = _rootWindow ?? this;
-            newWindow.IsInteractable = false;
-            newWindow.BlockInput = false;
-            newWindow.Tab.CopyHeaderFrom(Tab);
-            splitLayout.AddChild(newWindow);
-
-            window._rootWindow = _rootWindow ?? this;
-            window.IsInteractable = false;
-            window.BlockInput = false;
-            splitLayout.AddChild(window);
+            HideSplitPreviewIfPossible();
         }
 
         internal void AttachSolver(ComposableWindowsSolver solver)
         {
             _composableWindowsSolver = solver;
+        }
+
+        public void BringToFront()
+        {
+            var target = _rootWindow ?? this;
+            if (target.Parent is ContainerElement container)
+                container.BringToFront(target);
         }
 
         private bool TryShowSplitPreview(Window2Element window, Point position)
@@ -280,6 +415,11 @@ namespace ComposableUi
             SplitPreviewHidden?.Invoke(this);
         }
 
+        private void OnDragHandlePointerDown(PointerInputHandlerElement sender, Point e)
+        {
+            BringToFront();
+        }
+
         private void OnDragHandlePointerFixedDrag(PointerInputHandlerElement sender,
             (Point Position, Point Delta) arguments)
         {
@@ -301,7 +441,17 @@ namespace ComposableUi
             if (_composableWindowsSolver is not null)
             {
                 if (!_composableWindowsSolver.TryAttach())
-                    Position += _dragDeltaAccumulator;
+                {
+                    if (_containerWindow is not null)
+                    {
+                        DetachFromParent(this, Position + _dragDeltaAccumulator);
+                    }
+                    else
+                    {
+                        Position += _dragDeltaAccumulator;
+                    }
+                }
+                BringToFront();
             }
 
             TabPointerUp?.Invoke(this, position);
@@ -313,6 +463,11 @@ namespace ComposableUi
             _dragDeltaAccumulator += arguments.Delta.ToVector2();
 
             TabPointerDrag?.Invoke(this, arguments.Delta);
+        }
+
+        private void OnSlitAreaPointerDown(PointerInputHandlerElement sender, Point position)
+        {
+            BringToFront();
         }
 
         private void OnSplitAreaPointerMove(PointerInputHandlerElement sender, Point position)
@@ -341,6 +496,20 @@ namespace ComposableUi
         {
             _composableWindowsSolver?.ReleaseTarget(this);
             HideSplitPreviewIfPossible();
+        }
+
+        protected override void OnPointerDown(Point position)
+        {
+            base.OnPointerDown(position);
+            BringToFront();
+        }
+
+        public enum Edge
+        {
+            Left,
+            Right,
+            Top,
+            Bottom
         }
 
         private enum SplitDirection
