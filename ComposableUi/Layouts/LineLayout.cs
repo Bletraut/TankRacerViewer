@@ -6,6 +6,32 @@ namespace ComposableUi
 {
     public abstract class LineLayout : ContainerElement
     {
+        // Static.
+        private static float CalculateExpandingFactor(Vector2 axis, ExpandingMode mode, LayoutElement element)
+        {
+            var factor = mode switch
+            {
+                ExpandingMode.FlexFactor => element.FlexFactor,
+                ExpandingMode.Size => Vector2.Dot(axis, element.InnerElement.Size),
+                _ => throw new System.NotImplementedException()
+            };
+
+            return factor;
+        }
+
+        private static float CalculateExpandingFactor(Vector2 axis, ExpandingMode mode, Element element)
+        {
+            var factor = mode switch
+            {
+                ExpandingMode.FlexFactor => 1,
+                ExpandingMode.Size => Vector2.Dot(axis, element.Size),
+                _ => throw new System.NotImplementedException()
+            };
+
+            return factor;
+        }
+
+        // Class.
         private Vector2 _alignmentFactor;
         public Vector2 AlignmentFactor
         {
@@ -76,6 +102,13 @@ namespace ComposableUi
             set => SetAndChangeState(ref _expandChildrenCrossAxis, value);
         }
 
+        private ExpandingMode _mainAxisChildrenExpandingMode;
+        public ExpandingMode MainAxisChildrenExpandingMode
+        {
+            get => _mainAxisChildrenExpandingMode;
+            set => SetAndChangeState(ref _mainAxisChildrenExpandingMode, value);
+        }
+
         public Vector2 MainAxis { get; }
         public Vector2 CrossAxis { get; }
 
@@ -90,7 +123,8 @@ namespace ComposableUi
             bool sizeMainAxisToContent = default,
             bool sizeCrossAxisToContent = default,
             bool expandChildrenMainAxis = default,
-            bool expandChildrenCrossAxis = default)
+            bool expandChildrenCrossAxis = default,
+            ExpandingMode mainAxisChildrenExpandingMode = default)
             : base(children)
         {
             MainAxis = mainAxis;
@@ -108,6 +142,7 @@ namespace ComposableUi
             SizeCrossAxisToContent = sizeCrossAxisToContent;
             ExpandChildrenMainAxis = expandChildrenMainAxis;
             ExpandChildrenCrossAxis = expandChildrenCrossAxis;
+            MainAxisChildrenExpandingMode = mainAxisChildrenExpandingMode;
         }
 
         private Vector2 CalculatePreferredChildrenSize()
@@ -145,9 +180,9 @@ namespace ComposableUi
             return preferredChildrenSize;
         }
 
-        private (Vector2 Spacing, float FlexFactor) CalculateMainAxisSpacingAndFlexFactor()
+        private (Vector2 Spacing, float ExpandingFactor) CalculateMainAxisSpacingAndExpandingFactor()
         {
-            var totalFlexFactor = 0f;
+            var totalExpandingFactor = 0f;
             var activeChildCount = 0;
 
             for (var i = 0; i < ChildCount; i++)
@@ -164,17 +199,19 @@ namespace ComposableUi
                     if (!layoutElement.HasActiveInnerElement)
                         continue;
 
-                    totalFlexFactor += layoutElement.FlexFactor;
+                    totalExpandingFactor += CalculateExpandingFactor(MainAxis,
+                        MainAxisChildrenExpandingMode, layoutElement);
                 }
                 else
                 {
-                    totalFlexFactor += 1;
+                    totalExpandingFactor += CalculateExpandingFactor(MainAxis,
+                        MainAxisChildrenExpandingMode, child);
                 }
 
                 activeChildCount++;
             }
 
-            return (MainAxis * (activeChildCount - 1) * Spacing, totalFlexFactor);
+            return (MainAxis * (activeChildCount - 1) * Spacing, totalExpandingFactor);
         }
 
         public override Vector2 CalculatePreferredSize()
@@ -201,7 +238,7 @@ namespace ComposableUi
             Size = size;
 
             var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
-            var (totalSpacing, totalFlexFactor) = CalculateMainAxisSpacingAndFlexFactor();
+            var (totalSpacing, totalExpandingFactor) = CalculateMainAxisSpacingAndExpandingFactor();
             var mainAxisPreferredChildrenSize = MainAxis * (!ExpandChildrenMainAxis
                 ? CalculatePreferredChildrenSize()
                 : Size);
@@ -213,7 +250,7 @@ namespace ComposableUi
                 if (!child.IsEnabled)
                     continue;
 
-                var flexFactor = 1f;
+                float expandingFactor;
                 if (child is LayoutElement layoutElement)
                 {
                     if (!layoutElement.HasActiveInnerElement)
@@ -231,14 +268,20 @@ namespace ComposableUi
                     }
 
                     child = layoutElement.InnerElement;
-                    flexFactor = layoutElement.FlexFactor;
+                    expandingFactor = CalculateExpandingFactor(MainAxis,
+                        MainAxisChildrenExpandingMode, layoutElement);
+                }
+                else
+                {
+                    expandingFactor = CalculateExpandingFactor(MainAxis,
+                        MainAxisChildrenExpandingMode, child);
                 }
 
                 var childSize = child.CalculatePreferredSize();
                 if (ExpandChildrenMainAxis || ExpandChildrenCrossAxis)
                 {
                     var mainAxisSize = MainAxis * (ExpandChildrenMainAxis
-                        ? (mainAxisPreferredChildrenSize - totalSpacing - paddings) * (flexFactor / totalFlexFactor)
+                        ? (mainAxisPreferredChildrenSize - totalSpacing - paddings) * (expandingFactor / totalExpandingFactor)
                         : childSize);
                     var crossAxisSize = CrossAxis * (ExpandChildrenCrossAxis 
                         ? Size - paddings
@@ -256,5 +299,11 @@ namespace ComposableUi
                 totalMainAxisLayoutOffset -= MainAxis * (childSize + new Vector2(Spacing));
             }
         }
+    }
+
+    public enum ExpandingMode
+    {
+        FlexFactor,
+        Size
     }
 }

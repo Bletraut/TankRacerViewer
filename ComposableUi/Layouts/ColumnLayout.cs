@@ -16,7 +16,8 @@ namespace ComposableUi
             bool sizeMainAxisToContent = default,
             bool sizeCrossAxisToContent = default,
             bool expandChildrenMainAxis = default,
-            bool expandChildrenCrossAxis = default)
+            bool expandChildrenCrossAxis = default,
+            ExpandingMode mainAxisChildrenExpandingMode = default)
             : base(Vector2.UnitY, Vector2.UnitX,
                   children,
                   alignmentFactor,
@@ -28,6 +29,7 @@ namespace ComposableUi
                   sizeMainAxisToContent,
                   sizeCrossAxisToContent,
                   expandChildrenMainAxis,
-                  expandChildrenCrossAxis) { }
+                  expandChildrenCrossAxis,
+                  mainAxisChildrenExpandingMode) { }
     }
 }

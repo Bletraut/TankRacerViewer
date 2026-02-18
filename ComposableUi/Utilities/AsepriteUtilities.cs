@@ -62,7 +62,6 @@ namespace ComposableUi.Utilities
                 RightBorder = slice.SourceRectangle.Width - slice.CenterRectangle.Right,
                 TopBorder = slice.CenterRectangle.Top,
                 BottomBorder = slice.SourceRectangle.Height - slice.CenterRectangle.Bottom
-
             };
         }
 
@@ -87,61 +86,4 @@ namespace ComposableUi.Utilities
         public readonly Rectangle CenterRectangle = centerRectangle;
     }
 }
-
-//public static class AsepriteSliceParser
-//{
-//    public static bool TryGetSlice(
-//        string json,
-//        string sliceName,
-//        out SliceData sliceData)
-//    {
-//        sliceData = default;
-
-//        using JsonDocument doc = JsonDocument.Parse(json);
-
-//        if (!doc.RootElement.TryGetProperty("meta", out var meta))
-//            return false;
-
-//        if (!meta.TryGetProperty("slices", out var slices))
-//            return false;
-
-//        foreach (var slice in slices.EnumerateArray())
-//        {
-//            if (slice.GetProperty("name").GetString() != sliceName)
-//                continue;
-
-//            var keys = slice.GetProperty("keys");
-//            var key = keys[0]; // берём только frame 0
-
-//            var bounds = ReadRect(key.GetProperty("bounds"));
-
-//            Rect? center = null;
-//            if (key.TryGetProperty("center", out var centerElement))
-//            {
-//                center = ReadRect(centerElement);
-//            }
-
-//            sliceData = new SliceData
-//            {
-//                Bounds = bounds,
-//                Center = center
-//            };
-
-//            return true;
-//        }
-
-//        return false;
-//    }
-
-//    private static Rect ReadRect(JsonElement element)
-//    {
-//        return new Rect
-//        {
-//            X = element.GetProperty("x").GetInt32(),
-//            Y = element.GetProperty("y").GetInt32(),
-//            W = element.GetProperty("w").GetInt32(),
-//            H = element.GetProperty("h").GetInt32()
-//        };
-//    }
-//}
 

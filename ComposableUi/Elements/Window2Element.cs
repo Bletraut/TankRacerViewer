@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using ComposableUi.Utilities;
 
@@ -11,6 +10,9 @@ namespace ComposableUi
     public class Window2Element : ResizableElement
     {
         public const int DefaultHeaderHeight = 30;
+
+        private const float SplitSizeFactor = 0.3f;
+        private const float SplitAreaThicknessFactor = 0.3f;
 
         public static readonly Vector2 DefaultSize = new(250, 300);
         public static readonly Vector2 DefaultMinSize = new(80, 100);
@@ -41,7 +43,8 @@ namespace ComposableUi
         {
             var layout = new RowLayout(
                 expandChildrenMainAxis: true,
-                expandChildrenCrossAxis: true
+                expandChildrenCrossAxis: true,
+                mainAxisChildrenExpandingMode: ExpandingMode.Size
             );
 
             // For debug.
@@ -66,7 +69,8 @@ namespace ComposableUi
         {
             var layout = new ColumnLayout(
                 expandChildrenMainAxis: true,
-                expandChildrenCrossAxis: true
+                expandChildrenCrossAxis: true,
+                mainAxisChildrenExpandingMode: ExpandingMode.Size
             );
 
             // For debug.
@@ -120,15 +124,14 @@ namespace ComposableUi
             var splitLayout = isHorizontalSplit ? GetRow() : GetColumn();
 
             var containerWindow = GetContainerWindow();
-            containerWindow.Size = target.Size;
             containerWindow.InnerElement = splitLayout;
-            containerWindow.InnerElement.Size = target.Size;
+            containerWindow.SetSize(target.Size);
             containerWindow._containerWindow = target._containerWindow;
-            containerWindow._rootWindow = target._rootWindow;
             containerWindow.IsInteractable =  target.IsInteractable;
             containerWindow.LocalPosition = target.LocalPosition 
                 - target.PivotOffset + containerWindow.PivotOffset;
 
+            // Replaces the target window with the container window.
             if (target._containerWindow?.InnerElement is LineLayout parentSplitLayout)
             {
                 var index = parentSplitLayout.IndexOf(target);
@@ -142,19 +145,23 @@ namespace ComposableUi
                 target.Parent.AddChild(containerWindow);
             }
 
+            var sourceSize = containerWindow.Size * SplitSizeFactor;
+            var targetSize = containerWindow.Size - sourceSize;
             containerWindow._childWindows ??= [];
 
             target._containerWindow = containerWindow;
-            target._rootWindow = containerWindow._rootWindow ?? containerWindow;
             target.IsInteractable = false;
+            target.SetSize(targetSize);
             splitLayout.AddChild(target);
             containerWindow._childWindows.Add(target);
 
             source._containerWindow = containerWindow;
-            source._rootWindow = containerWindow._rootWindow ?? containerWindow;
             source.IsInteractable = false;
+            source.SetSize(sourceSize);
             splitLayout.InsertChild(splitLayout.IndexOf(target) + insertIndex, source);
             containerWindow._childWindows.Add(source);
+
+            containerWindow.ApplyRootWindow(target._rootWindow);
         }
 
         public static void AttachToParent(Window2Element source, Window2Element target, Edge edge)
@@ -172,7 +179,7 @@ namespace ComposableUi
             parent.AddChild(source);
             containerWindow._childWindows.Remove(source);
             source._containerWindow = null;
-            source._rootWindow = null;
+            source.ApplyRootWindow(null);
             source.IsInteractable = true;
             source.Position = position;
 
@@ -181,10 +188,9 @@ namespace ComposableUi
                 var lastWindow = containerWindow._childWindows[0];
                 containerWindow._childWindows.Clear();
 
-                lastWindow.Size = containerWindow.Size;
-                lastWindow.InnerElement.Size = containerWindow.Size;
+                lastWindow.SetSize(containerWindow.Size);
                 lastWindow._containerWindow = containerWindow._containerWindow;
-                lastWindow._rootWindow = containerWindow._rootWindow;
+                lastWindow.ApplyRootWindow(containerWindow._rootWindow);
                 lastWindow.IsInteractable = containerWindow.IsInteractable;
 
                 if (containerWindow._containerWindow?.InnerElement is LineLayout parentSplitLayout)
@@ -205,7 +211,7 @@ namespace ComposableUi
             if (containerWindow._childWindows.Count <= 0)
             {
                 containerWindow._containerWindow = null;
-                containerWindow._rootWindow = null;
+                containerWindow.ApplyRootWindow(null);
                 containerWindow.InnerElement = null;
                 containerWindow.Parent?.RemoveChild(containerWindow);
 
@@ -321,6 +327,7 @@ namespace ComposableUi
             _splitArea.PointerDown += OnSlitAreaPointerDown;
             _splitArea.PointerMove += OnSplitAreaPointerMove;
             _splitArea.PointerLeave += OnSplitAreaPointerLeave;
+            _splitArea.PointerFixedDrag += OnSplitAreaPointerFixedDrag;
 
             _view = new ContainerElement(
                 size: size ?? DefaultSize,
@@ -366,7 +373,7 @@ namespace ComposableUi
 
         private bool TryShowSplitPreview(Window2Element window, Point position)
         {
-            var thickness = (_splitArea.Size * 0.3f).ToPoint();
+            var thickness = (_splitArea.Size * SplitAreaThicknessFactor).ToPoint();
             var normal = _splitArea.InteractionRectangle.GetEdgeNormal(thickness, position);
             normal.Y = normal.X != 0 ? 0 : normal.Y;
 
@@ -399,7 +406,7 @@ namespace ComposableUi
             _splitPreviewAlignment.AlignmentFactor = alignmentFactor;
             _splitPreviewAlignment.Pivot = alignmentFactor;
 
-            _splitPreviewWindow.InnerElement.Size = Size * 0.3f;
+            _splitPreviewWindow.SetSize(Size * SplitSizeFactor);
             _splitPreviewWindow.Tab.CopyHeaderFrom(window.Tab);
         }
 
@@ -413,6 +420,23 @@ namespace ComposableUi
             _splitPreviewExpanded.IsEnabled = false;
 
             SplitPreviewHidden?.Invoke(this);
+        }
+
+        private void SetSize(Vector2 size)
+        {
+            Size = size;
+            InnerElement.Size = Size;
+        }
+
+        private void ApplyRootWindow(Window2Element window)
+        {
+            _rootWindow = window;
+
+            if (_childWindows is null)
+                return;
+
+            foreach (var childWindow in _childWindows)
+                childWindow.ApplyRootWindow(window ?? this);
         }
 
         private void OnDragHandlePointerDown(PointerInputHandlerElement sender, Point e)
@@ -496,6 +520,16 @@ namespace ComposableUi
         {
             _composableWindowsSolver?.ReleaseTarget(this);
             HideSplitPreviewIfPossible();
+        }
+
+        private void OnSplitAreaPointerFixedDrag(PointerInputHandlerElement sender,
+            (Point Position, Point Delta) arguments)
+        {
+            if (_containerWindow is null) 
+                return;
+
+            // TODO: Implement child expanding.
+            //SetSize(Size + arguments.Delta.ToVector2());
         }
 
         protected override void OnPointerDown(Point position)
