@@ -408,8 +408,36 @@ namespace ComposableUi
 
         internal void Attach(Window2Element source)
         {
-            var edge = EdgeNormalToEdge(_currentSplitPreviewEdgeNormal);
-            AttachTo(source, _currentSplitPreviewTarget, edge);
+            if (_currentSplitPreviewTarget is not null)
+            {
+                var edge = EdgeNormalToEdge(_currentSplitPreviewEdgeNormal);
+
+                var shouldRemoveTargetAfterDetach = source._containerWindow == _containerWindow
+                    && _currentSplitPreviewTarget == _containerWindow
+                    && _currentSplitPreviewTarget._childWindows.Count <= 2;
+                if (shouldRemoveTargetAfterDetach)
+                {
+                    foreach (var childWindow in _containerWindow._childWindows)
+                    {
+                        if (childWindow != source)
+                        {
+                            HideSplitPreviewIfPossible();
+
+                            _currentSplitPreviewTarget = childWindow;
+                            if (_currentSplitPreviewTarget._childWindows is not null)
+                            {
+                                _currentSplitPreviewTarget = EdgeToInsertIndex(edge) > 0
+                                    ? _currentSplitPreviewTarget._childWindows[^1]
+                                    : _currentSplitPreviewTarget._childWindows[0];
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+                AttachTo(source, _currentSplitPreviewTarget, edge);
+            }
 
             HideSplitPreviewIfPossible();
         }
@@ -426,9 +454,9 @@ namespace ComposableUi
                 container.BringToFront(target);
         }
 
-        private bool TryShowSplitPreview(Window2Element window, Point position)
+        private bool TryShowSplitPreview(Window2Element source, Point position)
         {
-            if (TryDetectSplitTarget(position, out var edgeNormal, out var target))
+            if (TryDetectSplitTarget(position, source, out var edgeNormal, out var target))
             {
                 var isTargetChanged = _currentSplitPreviewTarget != target;
                 var isNormalChanged = _currentSplitPreviewEdgeNormal != edgeNormal;
@@ -441,7 +469,7 @@ namespace ComposableUi
 
                     _currentSplitPreviewTarget = target;
                     _currentSplitPreviewEdgeNormal = edgeNormal;
-                    _currentSplitPreviewTarget.ShowSplitPreview(window, edgeNormal);
+                    _currentSplitPreviewTarget.ShowSplitPreview(source, edgeNormal);
 
                     SplitPreviewShown?.Invoke(this);
                 }
@@ -454,7 +482,8 @@ namespace ComposableUi
             return false;
         }
 
-        private bool TryDetectSplitTarget(Point position, out Vector2 edgeNormal, out Window2Element window)
+        private bool TryDetectSplitTarget(Point position, Window2Element source,
+            out Vector2 edgeNormal, out Window2Element window)
         {
             window = default;
 
@@ -485,7 +514,10 @@ namespace ComposableUi
                 }
             }
 
-            return true;
+            var isValidSplitTarget = source != this
+                || window == _containerWindow;
+
+            return isValidSplitTarget;
         }
 
         private void ShowSplitPreview(Window2Element source, Vector2 edgeNormal)
@@ -594,14 +626,11 @@ namespace ComposableUi
             if (_composableWindowsSolver is null)
                 return;
 
-            var sourceWindow = _composableWindowsSolver.Source;
-            if (sourceWindow is null)
+            var source = _composableWindowsSolver.Source;
+            if (source is null)
                 return;
 
-            if (sourceWindow == this)
-                return;
-
-            if (TryShowSplitPreview(sourceWindow, position))
+            if (TryShowSplitPreview(source, position))
             {
                 _composableWindowsSolver.SelectTarget(this);
             }
