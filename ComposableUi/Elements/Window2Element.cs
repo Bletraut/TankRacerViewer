@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using ComposableUi.Utilities;
 
@@ -12,7 +13,8 @@ namespace ComposableUi
         public const int DefaultHeaderHeight = 30;
 
         private const float SplitSizeFactor = 0.3f;
-        private const float SplitAreaThicknessFactor = 0.3f;
+        private const float SplitAreaSelfThicknessFactor = 0.3f;
+        private const float SplitAreaParentThicknessFactor = 0.1f;
 
         public static readonly Vector2 DefaultSize = new(250, 300);
         public static readonly Vector2 DefaultMinSize = new(80, 100);
@@ -94,7 +96,8 @@ namespace ComposableUi
         internal static Window2Element GetContainerWindow()
         {
             var window = GetWindow();
-            window.InnerElement = null;
+            window._viewHolder.InnerElement = null;
+            window._splitArea.IsEnabled = false;
 
             return window;
         }
@@ -118,13 +121,23 @@ namespace ComposableUi
         {
             DetachFromParent(source, Vector2.Zero);
 
-            var isHorizontalSplit = edge is Edge.Left or Edge.Right;
-            var insertIndex = edge is Edge.Left or Edge.Top ? 0 : 1;
+            var splitDirection = EdgeToSplitDirection(edge);
 
-            var splitLayout = isHorizontalSplit ? GetRow() : GetColumn();
+            var shouldAttachToParent = target._containerWindow?._currentSplitDirection == splitDirection;
+            if (shouldAttachToParent)
+            {
+                if (TryAttachToParent(source, target, edge))
+                    return;
+            }
+
+            var insertIndex = EdgeToInsertIndex(edge);
+            var splitLayout = splitDirection is SplitDirection.Horizontal 
+                ? GetRow() 
+                : GetColumn();
 
             var containerWindow = GetContainerWindow();
-            containerWindow.InnerElement = splitLayout;
+            containerWindow._currentSplitDirection = splitDirection;
+            containerWindow._viewHolder.InnerElement = splitLayout;
             containerWindow.SetSize(target.Size);
             containerWindow._containerWindow = target._containerWindow;
             containerWindow.IsInteractable =  target.IsInteractable;
@@ -132,10 +145,13 @@ namespace ComposableUi
                 - target.PivotOffset + containerWindow.PivotOffset;
 
             // Replaces the target window with the container window.
-            if (target._containerWindow?.InnerElement is LineLayout parentSplitLayout)
+            if (target._containerWindow is not null)
             {
-                var index = parentSplitLayout.IndexOf(target);
-                parentSplitLayout.InsertChild(index, containerWindow);
+                if (target._containerWindow._viewHolder.InnerElement is LineLayout parentSplitLayout)
+                {
+                    var index = parentSplitLayout.IndexOf(target);
+                    parentSplitLayout.InsertChild(index, containerWindow);
+                }
 
                 target._containerWindow._childWindows.Remove(target);
                 target._containerWindow._childWindows.Add(containerWindow);
@@ -164,11 +180,6 @@ namespace ComposableUi
             containerWindow.ApplyRootWindow(target._rootWindow);
         }
 
-        public static void AttachToParent(Window2Element source, Window2Element target, Edge edge)
-        {
-
-        }
-
         public static void DetachFromParent(Window2Element source, Vector2 position)
         {
             var containerWindow = source._containerWindow;
@@ -193,7 +204,7 @@ namespace ComposableUi
                 lastWindow.ApplyRootWindow(containerWindow._rootWindow);
                 lastWindow.IsInteractable = containerWindow.IsInteractable;
 
-                if (containerWindow._containerWindow?.InnerElement is LineLayout parentSplitLayout)
+                if (containerWindow._containerWindow?._viewHolder.InnerElement is ContainerElement parentSplitLayout)
                 {
                     var index = parentSplitLayout.IndexOf(containerWindow);
                     parentSplitLayout.InsertChild(index, lastWindow);
@@ -210,13 +221,57 @@ namespace ComposableUi
             }
             if (containerWindow._childWindows.Count <= 0)
             {
+                containerWindow._currentSplitDirection = SplitDirection.None;
                 containerWindow._containerWindow = null;
                 containerWindow.ApplyRootWindow(null);
-                containerWindow.InnerElement = null;
+                containerWindow._viewHolder.InnerElement = null;
                 containerWindow.Parent?.RemoveChild(containerWindow);
 
                 ReleaseWindow(containerWindow);
             }
+        }
+
+        private static bool TryAttachToParent(Window2Element source, Window2Element target, Edge edge)
+        {
+            if (target._containerWindow._viewHolder.InnerElement is not ContainerElement splitLayout)
+                return false;
+
+            var insertIndex = EdgeToInsertIndex(edge);
+            var targetIndex = splitLayout.IndexOf(target);
+
+            var sourceSize = target.Size * SplitSizeFactor;
+            var targetSize = target.Size - sourceSize;
+
+            target.SetSize(targetSize);
+
+            source._containerWindow = target._containerWindow;
+            source.ApplyRootWindow(target._rootWindow);
+            source.IsInteractable = false;
+            source.SetSize(sourceSize);
+            splitLayout.InsertChild(targetIndex + insertIndex, source);
+            target._containerWindow._childWindows.Add(source);
+
+            return true;
+        }
+
+        private static int EdgeToInsertIndex(Edge edge)
+            => edge is Edge.Left or Edge.Top ? 0 : 1;
+
+        private static SplitDirection EdgeToSplitDirection(Edge edge)
+            => edge is Edge.Left or Edge.Right ? SplitDirection.Horizontal : SplitDirection.Vertical;
+
+        private static Edge EdgeNormalToEdge(Vector2 edgeNormal)
+        {
+            var edge = edgeNormal switch
+            {
+                { X: < 0 } => Edge.Left,
+                { X: > 0 } => Edge.Right,
+                { Y: < 0 } => Edge.Top,
+                { Y: > 0 } => Edge.Bottom,
+                _ => throw new NotImplementedException(),
+            };
+
+            return edge;
         }
 
         // Class.
@@ -230,7 +285,8 @@ namespace ComposableUi
         public event ElementEventHandler<Window2Element> SplitPreviewShown;
         public event ElementEventHandler<Window2Element> SplitPreviewHidden;
 
-        private readonly ContainerElement _view;
+        private readonly Element _view;
+        private readonly ExpandedElement _viewHolder;
 
         private readonly RowLayout _tabsRow;
         private readonly ContainerElement _contentContainer;
@@ -246,7 +302,9 @@ namespace ComposableUi
         private Window2Element _rootWindow;
 
         private Vector2 _dragDeltaAccumulator;
+        private Window2Element _currentSplitPreviewTarget;
         private Vector2 _currentSplitPreviewEdgeNormal;
+        private SplitDirection _currentSplitDirection;
 
         private ComposableWindowsSolver _composableWindowsSolver;
 
@@ -330,31 +388,28 @@ namespace ComposableUi
             _splitArea.PointerFixedDrag += OnSplitAreaPointerFixedDrag;
 
             _view = new ContainerElement(
-                size: size ?? DefaultSize,
                 children: [
                     background,
                     contentContainerParent,
-                    headerParent,
+                    headerParent
+                ]
+            );
+            _viewHolder = new ExpandedElement(_view);
+
+            InnerElement = new ContainerElement(
+                size: size ?? DefaultSize,
+                children: [
+                    _viewHolder,
                     _splitPreviewExpanded,
                     splitAreaParent,
                 ]
             );
-
-            InnerElement = _view;
         }
 
         internal void Attach(Window2Element source)
         {
-            var edge = _currentSplitPreviewEdgeNormal switch
-            {
-                { X: < 0 } => Edge.Left,
-                { X: > 0 } => Edge.Right,
-                { Y: < 0 } => Edge.Top,
-                { Y: > 0 } => Edge.Bottom,
-                _ => throw new NotImplementedException(),
-            };
-
-            AttachTo(source, this, edge);
+            var edge = EdgeNormalToEdge(_currentSplitPreviewEdgeNormal);
+            AttachTo(source, _currentSplitPreviewTarget, edge);
 
             HideSplitPreviewIfPossible();
         }
@@ -373,28 +428,67 @@ namespace ComposableUi
 
         private bool TryShowSplitPreview(Window2Element window, Point position)
         {
-            var thickness = (_splitArea.Size * SplitAreaThicknessFactor).ToPoint();
-            var normal = _splitArea.InteractionRectangle.GetEdgeNormal(thickness, position);
-            normal.Y = normal.X != 0 ? 0 : normal.Y;
-
-            if (normal == Vector2.Zero)
+            if (TryDetectSplitTarget(position, out var edgeNormal, out var target))
             {
-                HideSplitPreviewIfPossible();
-                return false;
+                var isTargetChanged = _currentSplitPreviewTarget != target;
+                var isNormalChanged = _currentSplitPreviewEdgeNormal != edgeNormal;
+
+                var isSplitPreviewChanged = isTargetChanged || isNormalChanged;
+                if (isSplitPreviewChanged)
+                {
+                    if (isTargetChanged)
+                        HideSplitPreviewIfPossible();
+
+                    _currentSplitPreviewTarget = target;
+                    _currentSplitPreviewEdgeNormal = edgeNormal;
+                    _currentSplitPreviewTarget.ShowSplitPreview(window, edgeNormal);
+
+                    SplitPreviewShown?.Invoke(this);
+                }
+
+                return true;
             }
 
-            if (_currentSplitPreviewEdgeNormal == normal)
-                return true;
+            HideSplitPreviewIfPossible();
 
-            _currentSplitPreviewEdgeNormal = normal;
-            ShowSplitPreview(window, _currentSplitPreviewEdgeNormal);
+            return false;
+        }
 
-            SplitPreviewShown?.Invoke(this);
+        private bool TryDetectSplitTarget(Point position, out Vector2 edgeNormal, out Window2Element window)
+        {
+            window = default;
+
+            var interactionRectangle = _splitArea.InteractionRectangle;
+
+            var selfThickness = (_splitArea.Size * SplitAreaSelfThicknessFactor).ToPoint();
+            edgeNormal = interactionRectangle.GetEdgeNormal(selfThickness, position,
+                RectangleUtilities.EdgeNormalResolveMode.PreferX);
+
+            if (edgeNormal == Vector2.Zero)
+                return false;
+
+            window = this;
+
+            if (_containerWindow is not null)
+            {
+                var thicknessFactor = _containerWindow._currentSplitDirection is SplitDirection.Horizontal
+                    ? Vector2.UnitY 
+                    : Vector2.UnitX;
+                var parentThickness = (_splitArea.Size * SplitAreaParentThicknessFactor * thicknessFactor).ToPoint();
+                var parentEdgeNormal = interactionRectangle.GetEdgeNormal(parentThickness, position,
+                    RectangleUtilities.EdgeNormalResolveMode.PreferX);
+
+                if (parentEdgeNormal != Vector2.Zero)
+                {
+                    edgeNormal = parentEdgeNormal;
+                    window = _containerWindow;
+                }
+            }
 
             return true;
         }
 
-        private void ShowSplitPreview(Window2Element window, Vector2 edgeNormal)
+        private void ShowSplitPreview(Window2Element source, Vector2 edgeNormal)
         {
             var alignmentFactor = Vector2.Max(Vector2.Zero, edgeNormal);
 
@@ -407,17 +501,18 @@ namespace ComposableUi
             _splitPreviewAlignment.Pivot = alignmentFactor;
 
             _splitPreviewWindow.SetSize(Size * SplitSizeFactor);
-            _splitPreviewWindow.Tab.CopyHeaderFrom(window.Tab);
+            _splitPreviewWindow.Tab.CopyHeaderFrom(source.Tab);
         }
 
         private void HideSplitPreviewIfPossible()
         {
-            if (_currentSplitPreviewEdgeNormal == Vector2.Zero)
+            if (_currentSplitPreviewTarget is null)
                 return;
 
-            _currentSplitPreviewEdgeNormal = Vector2.Zero;
+            _currentSplitPreviewTarget._splitPreviewExpanded.IsEnabled = false;
 
-            _splitPreviewExpanded.IsEnabled = false;
+            _currentSplitPreviewTarget = null;
+            _currentSplitPreviewEdgeNormal = Vector2.Zero;
 
             SplitPreviewHidden?.Invoke(this);
         }

@@ -6,7 +6,7 @@ namespace ComposableUi
 {
     public class HolderElement : ParentElement
     {
-        public Element _innerElement;
+        private Element _innerElement;
         public Element InnerElement
         {
             get => _innerElement;

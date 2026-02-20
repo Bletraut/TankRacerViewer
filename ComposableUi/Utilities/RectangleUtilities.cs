@@ -1,14 +1,16 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi.Utilities
 {
     public static class RectangleUtilities
     {
         public static Vector2 GetEdgeNormal(this Rectangle rectangle,
-            int thickness, Point point)
-            => GetEdgeNormal(rectangle, new Point(thickness), point);
+            int thickness, Point point, EdgeNormalResolveMode resolveMode = default)
+            => GetEdgeNormal(rectangle, new Point(thickness), point, resolveMode = default);
         public static Vector2 GetEdgeNormal(this Rectangle rectangle,
-            Point thickness, Point point)
+            Point thickness, Point point, EdgeNormalResolveMode resolveMode)
         {
             thickness.X = int.Clamp(thickness.X, 0, rectangle.Width / 2);
             thickness.Y = int.Clamp(thickness.Y, 0, rectangle.Height / 2);
@@ -59,7 +61,28 @@ namespace ComposableUi.Utilities
             if (edgeRectangle.Contains(point))
                 normal = normal with { Y = 1 };
 
+            switch (resolveMode)
+            {
+                case EdgeNormalResolveMode.AllowDiagonal:
+                    break;
+                case EdgeNormalResolveMode.PreferX:
+                    normal.Y = normal.X != 0 ? 0 : normal.Y;
+                    break;
+                case EdgeNormalResolveMode.PreferY:
+                    normal.X = normal.Y != 0 ? 0 : normal.X;
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
             return normal;
+        }
+
+        public enum EdgeNormalResolveMode
+        {
+            AllowDiagonal,
+            PreferX,
+            PreferY
         }
     }
 }
