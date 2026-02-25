@@ -97,33 +97,33 @@ namespace ComposableUi
             OnInteractionStateChanged(value ? InteractionState.Normal : InteractionState.Disabled);
         }
 
-        protected override void OnPointerEnter(Point position)
+        protected override void OnPointerEnter(in PointerEvent pointerEvent)
         {
-            base.OnPointerEnter(position);
+            base.OnPointerEnter(pointerEvent);
 
             IsHover = true;
             OnInteractionStateChanged(IsPressed ? InteractionState.Pressed : InteractionState.Hover);
         }
 
-        protected override void OnPointerLeave(Point position)
+        protected override void OnPointerLeave(in PointerEvent pointerEvent)
         {
-            base.OnPointerLeave(position);
+            base.OnPointerLeave(pointerEvent);
 
             IsHover = false;
             OnInteractionStateChanged(InteractionState.Normal);
         }
 
-        protected override void OnPointerDown(Point position)
+        protected override void OnPointerDown(in PointerEvent pointerEvent)
         {
-            base.OnPointerDown(position);
+            base.OnPointerDown(pointerEvent);
 
             IsPressed = true;
             OnInteractionStateChanged(InteractionState.Pressed);
         }
 
-        protected override void OnPointerUp(Point position)
+        protected override void OnPointerUp(in PointerEvent pointerEvent)
         {
-            base.OnPointerUp(position);
+            base.OnPointerUp(pointerEvent);
 
             IsPressed = false;
             OnInteractionStateChanged(IsHover ? InteractionState.Hover : InteractionState.Normal);

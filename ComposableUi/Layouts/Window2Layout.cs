@@ -49,19 +49,19 @@ namespace ComposableUi
             _tempWindow.IsEnabled = false;
         }
 
-        private void OnTabPointerDown(Window2Element window, Point position)
+        private void OnTabPointerDown(Window2Element window, PointerEvent pointerEvent)
         {
-            ShowTempWindow(window, position.ToVector2());
+            ShowTempWindow(window, pointerEvent.Position.ToVector2());
         }
 
-        private void OnTabPointerUp(Window2Element window, Point position)
+        private void OnTabPointerUp(Window2Element window, PointerEvent pointerEvent)
         {
             HideTempWindow();
         }
 
-        private void OnTabPointerDrag(Window2Element window, Point delta)
+        private void OnTabPointerDrag(Window2Element window, PointerDragEvent pointerEvent)
         {
-            _tempWindow.Position += delta.ToVector2();
+            _tempWindow.Position += pointerEvent.Delta.ToVector2();
         }
 
         private void OnSplitPreviewShown(Window2Element window)

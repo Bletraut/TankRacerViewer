@@ -110,10 +110,25 @@ namespace ComposableUi
 
             _lastPointerPosition = _currentPointerPosition;
             _currentPointerPosition = PointerInputProvider.PointerPosition;
-            var pointerPositionDelta = _currentPointerPosition - _lastPointerPosition;
+
+            var isPrimaryButtonPressed = PointerInputProvider.IsPrimaryButtonPressed;
+            var isSecondaryButtonPressed = PointerInputProvider.IsSecondaryButtonPressed;
+
+            var pointer = PointerInputProvider.Pointer;
+            var pointerEvent = new PointerEvent(pointer, _currentPointerPosition,
+                isPrimaryButtonPressed, isSecondaryButtonPressed);
 
             var scrollWheelValueDelta = PointerInputProvider.ScrollWheelValueDelta;
+            var pointerScrollEvent = new PointerScrollEvent(pointer, _currentPointerPosition,
+                isPrimaryButtonPressed, isSecondaryButtonPressed, scrollWheelValueDelta);
+
             var horizontalScrollWheelValueDelta = PointerInputProvider.HorizontalScrollWheelValueDelta;
+            var pointerHorizontalScrollEvent = new PointerScrollEvent(pointer, _currentPointerPosition,
+                isPrimaryButtonPressed, isSecondaryButtonPressed, horizontalScrollWheelValueDelta);
+
+            var pointerPositionDelta = _currentPointerPosition - _lastPointerPosition;
+            var pointerDragEvent = new PointerDragEvent(pointer, _currentPointerPosition,
+                isPrimaryButtonPressed, isSecondaryButtonPressed, pointerPositionDelta);
 
             var isInputBlocked = false;
             for (var i = _pointerInputHandlers.Count - 1; i >= 0; i--)
@@ -133,45 +148,45 @@ namespace ComposableUi
                     }
 
                     if (scrollWheelValueDelta != 0)
-                        handler.OnScrollWheel(_currentPointerPosition, scrollWheelValueDelta);
+                        handler.OnScrollWheel(pointerScrollEvent);
                     if (horizontalScrollWheelValueDelta != 0)
-                        handler.OnHorizontalScrollWheel(_currentPointerPosition, horizontalScrollWheelValueDelta);
+                        handler.OnHorizontalScrollWheel(pointerHorizontalScrollEvent);
 
                     if (_activeHandlers.Add(handler))
-                        handler.OnPointerEnter(_currentPointerPosition);
+                        handler.OnPointerEnter(pointerEvent);
 
-                    handler.OnPointerMove(_currentPointerPosition);
+                    handler.OnPointerMove(pointerEvent);
 
                     if (PointerInputProvider.IsPrimaryButtonDown)
                     {
                         if (_primaryButtonPressedHandlers.Add(handler))
-                            handler.OnPointerDown(_currentPointerPosition);
+                            handler.OnPointerDown(pointerEvent);
                     }
                     else if (PointerInputProvider.IsPrimaryButtonUp)
                     {
                         if (_primaryButtonPressedHandlers.Remove(handler))
                         {
-                            handler.OnPointerUp(_currentPointerPosition);
-                            handler.OnPointerClick(_currentPointerPosition);
+                            handler.OnPointerUp(pointerEvent);
+                            handler.OnPointerClick(pointerEvent);
                         }
                     }
-                    if (PointerInputProvider.IsPrimaryButtonPressed)
+                    if (isPrimaryButtonPressed)
                     {
                         if (_primaryButtonPressedHandlers.Contains(handler))
-                            handler.OnPointerDrag(_currentPointerPosition, pointerPositionDelta);
+                            handler.OnPointerDrag(pointerDragEvent);
                     }
 
                     if (PointerInputProvider.IsSecondaryButtonDown)
                     {
                         if (_secondaryButtonPressedHandlers.Add(handler))
-                            handler.OnPointerSecondaryDown(_currentPointerPosition);
+                            handler.OnPointerSecondaryDown(pointerEvent);
                     }
                     else if (PointerInputProvider.IsSecondaryButtonUp)
                     {
                         if (_secondaryButtonPressedHandlers.Remove(handler))
                         {
-                            handler.OnPointerSecondaryUp(_currentPointerPosition);
-                            handler.OnPointerSecondaryClick(_currentPointerPosition);
+                            handler.OnPointerSecondaryUp(pointerEvent);
+                            handler.OnPointerSecondaryClick(pointerEvent);
                         }
                     }
 
@@ -179,20 +194,20 @@ namespace ComposableUi
                 }
                 else if (_activeHandlers.Remove(handler))
                 {
-                    handler.OnPointerLeave(_currentPointerPosition);
+                    handler.OnPointerLeave(pointerEvent);
                 }
 
-                if (PointerInputProvider.IsPrimaryButtonPressed)
+                if (isPrimaryButtonPressed)
                 {
                     if (_primaryButtonPressedHandlers.Contains(handler))
-                        handler.OnPointerDrag(_currentPointerPosition, pointerPositionDelta);
+                        handler.OnPointerDrag(pointerDragEvent);
                 }
             }
 
             if (PointerInputProvider.IsPrimaryButtonUp)
             {
                 foreach (var handler in _primaryButtonPressedHandlers)
-                    handler.OnPointerUp(_currentPointerPosition);
+                    handler.OnPointerUp(pointerEvent);
 
                 _primaryButtonPressedHandlers.Clear();
             }
@@ -200,7 +215,7 @@ namespace ComposableUi
             if (PointerInputProvider.IsSecondaryButtonUp)
             {
                 foreach(var handler in _secondaryButtonPressedHandlers)
-                    handler.OnPointerSecondaryUp(_currentPointerPosition);
+                    handler.OnPointerSecondaryUp(pointerEvent);
 
                 _secondaryButtonPressedHandlers.Clear();
             }

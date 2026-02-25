@@ -4,6 +4,8 @@ namespace ComposableUi
 {
     public interface IPointerInputProvider
     {
+        public IPointer Pointer { get; }
+
         public Point PointerPosition { get; }
 
         public int ScrollWheelValueDelta { get; }

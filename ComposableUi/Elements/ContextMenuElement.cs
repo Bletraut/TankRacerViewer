@@ -44,9 +44,9 @@ namespace ComposableUi
 
         private readonly Dictionary<string, Submenu> _submenus = [];
 
-        private readonly ElementEventHandler<ContextMenuItemElement, Point> _onItemPointerEnter;
-        private readonly ElementEventHandler<ContextMenuItemElement, Point> _onItemPointerLeave;
-        private readonly ElementEventHandler<ContextMenuItemElement, Point> _onItemClicked;
+        private readonly ElementEventHandler<ContextMenuItemElement, PointerEvent> _onItemPointerEnter;
+        private readonly ElementEventHandler<ContextMenuItemElement, PointerEvent> _onItemPointerLeave;
+        private readonly ElementEventHandler<ContextMenuItemElement, PointerEvent> _onItemClicked;
         private ContextMenuItemElement _currentItem;
 
         public ContextMenuElement(IEnumerable<ContextMenuItemElement> items = default,
@@ -332,7 +332,8 @@ namespace ComposableUi
             _columnsRow.LocalPosition = _columnsRow.Size * _columnsRow.Pivot - Size * Pivot;
         }
 
-        private void OnItemPointerEnter(ContextMenuItemElement item, Point position)
+        private void OnItemPointerEnter(ContextMenuItemElement item,
+            PointerEvent pointerEvent)
         {
             HideAllSubmenus();
             _currentItem?.SetHover(false);
@@ -341,7 +342,8 @@ namespace ComposableUi
             _currentItem.SetHover(true);
         }
 
-        private void OnItemPointerLeave(ContextMenuItemElement item, Point position)
+        private void OnItemPointerLeave(ContextMenuItemElement item,
+            PointerEvent pointerEvent)
         {
             if (_currentItem == item)
                 _currentItem = null;
@@ -349,7 +351,8 @@ namespace ComposableUi
             item.SetHover(false);
         }
 
-        private void OnItemClicked(ContextMenuItemElement item, Point position)
+        private void OnItemClicked(ContextMenuItemElement item,
+            PointerEvent pointerEvent)
         {
             item.ClickAction?.Invoke(item);
         }

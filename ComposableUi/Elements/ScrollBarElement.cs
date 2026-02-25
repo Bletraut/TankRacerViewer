@@ -103,10 +103,10 @@ namespace ComposableUi
             ProgressValueChanged?.Invoke(this, _progressValue);
         }
 
-        private void OnButtonPointerFixedDrag(Element sender, (Point Position, Point Delta) arguments)
+        private void OnButtonPointerFixedDrag(Element sender, PointerDragEvent pointerEvent)
         {
-            var vectorDelta = arguments.Delta.ToVector2();
-            var mainAxisDelta = Vector2.Dot(MainAxis, arguments.Delta.ToVector2() * MainAxis);
+            var vectorDelta = pointerEvent.Delta.ToVector2();
+            var mainAxisDelta = Vector2.Dot(MainAxis, pointerEvent.Delta.ToVector2() * MainAxis);
 
             if (mainAxisDelta == 0)
                 return;

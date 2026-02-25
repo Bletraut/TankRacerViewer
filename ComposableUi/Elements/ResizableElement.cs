@@ -1,4 +1,6 @@
-﻿using ComposableUi.Utilities;
+﻿using System.Diagnostics;
+
+using ComposableUi.Utilities;
 
 using Microsoft.Xna.Framework;
 
@@ -7,6 +9,8 @@ namespace ComposableUi
     public class ResizableElement : PointerInputHandlerElement,
         IPointerInputHandler
     {
+        public const int DefaultHandleSize = 6;
+
         public override Rectangle InteractionRectangle
         {
             get
@@ -39,11 +43,13 @@ namespace ComposableUi
             set => SetAndChangeState(ref _minSize, value);
         }
 
+        public bool IsResizing => _sizeDirection != Vector2.Zero;
+
         private Vector2 _sizeDirection = Vector2.Zero;
         private Vector2 _positionDirection = Vector2.Zero;
 
         public ResizableElement(Element innerElement = default,
-            int handleSize = 8,
+            int handleSize = DefaultHandleSize,
             Vector2 minSize = default,
             bool blockInput = true,
             bool isInteractable = true)
@@ -55,19 +61,69 @@ namespace ComposableUi
             MinSize = minSize;
         }
 
-        protected override void OnPointerDown(Point position)
+        private void ResolvePointerCursor(IPointer pointer, Point position)
         {
-            base.OnPointerDown(position);
+            var cursor = PointerCursor.Arrow;
 
-            _sizeDirection = InteractionRectangle.GetEdgeNormal(HandleSize, position);
+            var normal = InteractionRectangle.GetEdgeNormal(HandleSize, position);
+            if (normal != Vector2.Zero)
+            {
+                cursor = normal switch
+                {
+                    { X: not 0, Y: 0 } => PointerCursor.SizeWE,
+                    { X: 0, Y: not 0 } => PointerCursor.SizeNS,
+                    { X: not 0, Y: not 0 } when normal.X * normal.Y > 0 => PointerCursor.SizeNWSE,
+                    { X: not 0, Y: not 0 } when normal.X * normal.Y < 0 => PointerCursor.SizeNESW,
+                    _ => PointerCursor.Arrow
+                };
+            }
+
+            pointer.SetCursor(cursor);
+        }
+
+        protected override void OnPointerMove(in PointerEvent pointerEvent)
+        {
+            base.OnPointerMove(pointerEvent);
+
+            if (pointerEvent.IsPrimaryButtonPressed)
+                return;
+
+            ResolvePointerCursor(pointerEvent.Pointer, pointerEvent.Position);
+        }
+
+        protected override void OnPointerLeave(in PointerEvent pointerEvent)
+        {
+            base.OnPointerLeave(pointerEvent);
+
+            if (pointerEvent.IsPrimaryButtonPressed)
+                return;
+
+            pointerEvent.Pointer.SetCursor(PointerCursor.Arrow);
+        }
+
+        protected override void OnPointerDown(in PointerEvent pointerEvent)
+        {
+            base.OnPointerDown(pointerEvent);
+
+            _sizeDirection = InteractionRectangle.GetEdgeNormal(HandleSize, pointerEvent.Position);
             _positionDirection = Vector2.Max(Vector2.Zero, -_sizeDirection) - Pivot;
         }
 
-        protected override void OnPointerFixedDrag(Point position, Point delta)
+        protected override void OnPointerUp(in PointerEvent pointerEvent)
         {
-            base.OnPointerFixedDrag(position, delta);
+            base.OnPointerUp(pointerEvent);
 
-            var deltaVector = delta.ToVector2();
+            if (IsResizing)
+                ResolvePointerCursor(pointerEvent.Pointer, pointerEvent.Position);
+
+            _sizeDirection = Vector2.Zero;
+        }
+
+        protected override void OnPointerFixedDrag(in PointerDragEvent pointerEvent)
+        {
+            base.OnPointerFixedDrag(pointerEvent);
+
+            var deltaVector = pointerEvent.Delta.ToVector2();
             if (HasActiveInnerElement)
             {
                 var size = InnerElement.Size;

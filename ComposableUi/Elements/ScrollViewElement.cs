@@ -303,14 +303,14 @@ namespace ComposableUi
             };
         }
 
-        private void OnScrollWheel(Element sender, (Point Position, int Delta) arguments)
+        private void OnScrollWheel(Element sender, PointerScrollEvent pointerEvent)
         {
-            ScrollContentIfPossible(Vector2.UnitY, arguments.Delta);
+            ScrollContentIfPossible(Vector2.UnitY, pointerEvent.Delta);
         }
 
-        private void OnHorizontalScrollWheel(Element sender, (Point Position, int Delta) arguments)
+        private void OnHorizontalScrollWheel(Element sender, PointerScrollEvent pointerEvent)
         {
-            ScrollContentIfPossible(Vector2.UnitX, arguments.Delta);
+            ScrollContentIfPossible(Vector2.UnitX, pointerEvent.Delta);
         }
     }
 }

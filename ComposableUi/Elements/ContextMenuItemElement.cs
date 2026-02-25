@@ -64,9 +64,9 @@ namespace ComposableUi
             }
         }
 
-        public event ElementEventHandler<ContextMenuItemElement, Point> PointerEnter;
-        public event ElementEventHandler<ContextMenuItemElement, Point> PointerLeave;
-        public event ElementEventHandler<ContextMenuItemElement, Point> PointerClick;
+        public event ElementEventHandler<ContextMenuItemElement, PointerEvent> PointerEnter;
+        public event ElementEventHandler<ContextMenuItemElement, PointerEvent> PointerLeave;
+        public event ElementEventHandler<ContextMenuItemElement, PointerEvent> PointerClick;
 
         private readonly Element _arrowSpaceHolder;
         private readonly SpriteElement _buttonBackground;
@@ -168,19 +168,19 @@ namespace ComposableUi
             Arrow.Color = color;
         }
 
-        private void OnButtonPointerEnter(Element sender, Point position)
+        private void OnButtonPointerEnter(Element sender, PointerEvent pointerEvent)
         {
-            PointerEnter?.Invoke(this, position);
+            PointerEnter?.Invoke(this, pointerEvent);
         }
 
-        private void OnButtonPointerLeave(Element sender, Point position)
+        private void OnButtonPointerLeave(Element sender, PointerEvent pointerEvent)
         {
-            PointerLeave?.Invoke(this, position);
+            PointerLeave?.Invoke(this, pointerEvent);
         }
 
-        private void OnButtonClicked(Element sender, Point position)
+        private void OnButtonClicked(Element sender, PointerEvent pointerEvent)
         {
-            PointerClick?.Invoke(this, position);
+            PointerClick?.Invoke(this, pointerEvent);
         }
     }
 }

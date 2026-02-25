@@ -5,6 +5,10 @@ namespace ComposableUi
 {
     public sealed class DefaultPointerInputProvider : IPointerInputProvider, IUpdateable
     {
+        public MousePointer MousePointer { get; set; } = new MousePointer();
+
+        IPointer IPointerInputProvider.Pointer => MousePointer;
+
         Point IPointerInputProvider.PointerPosition => _currentMouseState.Position;
 
         int IPointerInputProvider.ScrollWheelValueDelta 

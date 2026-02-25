@@ -318,9 +318,9 @@ namespace ComposableUi
 
         private bool IsResizingInternally => _resizeNormal != Vector2.Zero;
 
-        public event ElementEventHandler<Window2Element, Point> TabPointerDown;
-        public event ElementEventHandler<Window2Element, Point> TabPointerUp;
-        public event ElementEventHandler<Window2Element, Point> TabPointerDrag;
+        public event ElementEventHandler<Window2Element, PointerEvent> TabPointerDown;
+        public event ElementEventHandler<Window2Element, PointerEvent> TabPointerUp;
+        public event ElementEventHandler<Window2Element, PointerDragEvent> TabPointerDrag;
         public event ElementEventHandler<Window2Element> SplitPreviewShown;
         public event ElementEventHandler<Window2Element> SplitPreviewHidden;
 
@@ -656,16 +656,17 @@ namespace ComposableUi
         }
 
         private void OnDragHandlePointerFixedDrag(PointerInputHandlerElement sender,
-            (Point Position, Point Delta) arguments)
+            PointerDragEvent pointerEvent)
         {
             if (IsResizingInternally)
                 return;
 
             var targetWindow = _rootWindow ?? this;
-            targetWindow.Position += arguments.Delta.ToVector2();
+            targetWindow.Position += pointerEvent.Delta.ToVector2();
         }
 
-        private void OnTabButtonPointerDown(PointerInputHandlerElement sender, Point position)
+        private void OnTabButtonPointerDown(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
         {
             if (IsResizingInternally)
                 return;
@@ -675,10 +676,11 @@ namespace ComposableUi
 
             _composableWindowsSolver?.SelectSource(this);
 
-            TabPointerDown?.Invoke(this, position);
+            TabPointerDown?.Invoke(this, pointerEvent);
         }
 
-        private void OnTabButtonPointerUp(PointerInputHandlerElement sender, Point position)
+        private void OnTabButtonPointerUp(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
         {
             if (!_isTapPressed)
                 return;
@@ -701,21 +703,22 @@ namespace ComposableUi
                 BringToFront();
             }
 
-            TabPointerUp?.Invoke(this, position);
+            TabPointerUp?.Invoke(this, pointerEvent);
         }
 
         private void OnTabButtonPointerDrag(PointerInputHandlerElement sender,
-            (Point Position, Point Delta) arguments)
+            PointerDragEvent pointerEvent)
         {
             if (!_isTapPressed)
                 return;
 
-            _dragDeltaAccumulator += arguments.Delta.ToVector2();
+            _dragDeltaAccumulator += pointerEvent.Delta.ToVector2();
 
-            TabPointerDrag?.Invoke(this, arguments.Delta);
+            TabPointerDrag?.Invoke(this, pointerEvent);
         }
 
-        private void OnSplitAreaPointerMove(PointerInputHandlerElement sender, Point position)
+        private void OnSplitAreaPointerMove(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
         {
             if (_composableWindowsSolver is null)
                 return;
@@ -724,7 +727,7 @@ namespace ComposableUi
             if (source is null)
                 return;
 
-            if (TryShowSplitPreview(source, position))
+            if (TryShowSplitPreview(source, pointerEvent.Position))
             {
                 _composableWindowsSolver.SelectTarget(this);
             }
@@ -734,13 +737,15 @@ namespace ComposableUi
             }
         }
 
-        private void OnSplitAreaPointerLeave(PointerInputHandlerElement sender, Point position)
+        private void OnSplitAreaPointerLeave(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
         {
             _composableWindowsSolver?.ReleaseTarget(this);
             HideSplitPreviewIfPossible();
         }
 
-        private void OnInnerResizeHandlePointerDown(PointerInputHandlerElement sender, Point position)
+        private void OnInnerResizeHandlePointerDown(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
         {
             BringToFront();
 
@@ -748,22 +753,23 @@ namespace ComposableUi
                 return;
 
             _resizeNormal = _innerResizeHandle.InteractionRectangle.GetEdgeNormal(SplitAreaResizeHandleSize,
-                position, RectangleUtilities.EdgeNormalResolveMode.PreferX);
+                pointerEvent.Position, RectangleUtilities.EdgeNormalResolveMode.PreferX);
             _resizeAxis = new Vector2(MathF.Abs(_resizeNormal.X), MathF.Abs(_resizeNormal.Y));
         }
 
-        private void OnInnerResizeHandlePointerUp(PointerInputHandlerElement sender, Point e)
+        private void OnInnerResizeHandlePointerUp(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
         {
             _resizeNormal = Vector2.Zero;
         }
 
         private void OnInnerResizeHandlePointerFixedDrag(PointerInputHandlerElement sender,
-            (Point Position, Point Delta) arguments)
+            PointerDragEvent pointerEvent)
         {
             if (!IsResizingInternally)
                 return;
 
-            var deltaVector = arguments.Delta.ToVector2();
+            var deltaVector = pointerEvent.Delta.ToVector2();
 
             var axisDelta = Vector2.Dot(_resizeAxis, deltaVector);
             if (axisDelta == 0)
@@ -773,6 +779,12 @@ namespace ComposableUi
             var splitDirection = EdgeNormalToSplitDirection(_resizeNormal);
 
             IncreaseSizeInHierarchyIfPossible(splitDirection, _resizeAxis, axisDelta, delta);
+        }
+
+        protected override void OnPointerDown(in PointerEvent pointerEvent)
+        {
+            base.OnPointerDown(pointerEvent);
+            BringToFront();
         }
 
         public enum Edge

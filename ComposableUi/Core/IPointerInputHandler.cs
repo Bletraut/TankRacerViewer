@@ -9,22 +9,53 @@ namespace ComposableUi
         public bool BlockInput { get; set; }
         public bool IsInteractable { get; set; }
 
-        public void OnScrollWheel(Point position, int delta) { }
-        public void OnHorizontalScrollWheel(Point position, int delta) { }
+        public void OnScrollWheel(in PointerScrollEvent pointerEvent) { }
+        public void OnHorizontalScrollWheel(in PointerScrollEvent pointerEvent) { }
 
-        public void OnPointerEnter(Point position) { }
-        public void OnPointerMove(Point position) { }
-        public void OnPointerLeave(Point position) { }
+        public void OnPointerEnter(in PointerEvent pointerEvent) { }
+        public void OnPointerMove(in PointerEvent pointerEvent) { }
+        public void OnPointerLeave(in PointerEvent pointerEvent) { }
 
-        public void OnPointerDown(Point position) { }
-        public void OnPointerUp(Point position) { }
+        public void OnPointerDown(in PointerEvent pointerEvent) { }
+        public void OnPointerUp(in PointerEvent pointerEvent) { }
 
-        public void OnPointerSecondaryDown(Point position) { }
-        public void OnPointerSecondaryUp(Point position) { }
+        public void OnPointerSecondaryDown(in PointerEvent pointerEvent) { }
+        public void OnPointerSecondaryUp(in PointerEvent pointerEvent) { }
 
-        public void OnPointerDrag(Point position, Point delta) { }
+        public void OnPointerDrag(in PointerDragEvent pointerEvent) { }
 
-        public void OnPointerClick(Point position) { }
-        public void OnPointerSecondaryClick(Point position) { }
+        public void OnPointerClick(in PointerEvent pointerEvent) { }
+        public void OnPointerSecondaryClick(in PointerEvent pointerEvent) { }
+    }
+
+    public readonly struct PointerEvent(IPointer pointer, Point position,
+        bool isPrimaryButtonPressed, bool isSecondaryButtonPressed)
+    {
+        public readonly IPointer Pointer = pointer;
+        public readonly Point Position = position;
+        public readonly bool IsPrimaryButtonPressed = isPrimaryButtonPressed;
+        public readonly bool IsSecondaryButtonPressed = isSecondaryButtonPressed;
+    }
+
+    public readonly struct PointerScrollEvent(IPointer pointer, Point position,
+        bool isPrimaryButtonPressed, bool isSecondaryButtonPressed,
+        int delta)
+    {
+        public readonly IPointer Pointer = pointer;
+        public readonly Point Position = position;
+        public readonly bool IsPrimaryButtonPressed = isPrimaryButtonPressed;
+        public readonly bool IsSecondaryButtonPressed = isSecondaryButtonPressed;
+        public readonly int Delta = delta;
+    }
+
+    public readonly struct PointerDragEvent(IPointer pointer, Point position,
+        bool isPrimaryButtonPressed, bool isSecondaryButtonPressed,
+        Point delta)
+    {
+        public readonly IPointer Pointer = pointer;
+        public readonly Point Position = position;
+        public readonly bool IsPrimaryButtonPressed = isPrimaryButtonPressed;
+        public readonly bool IsSecondaryButtonPressed = isSecondaryButtonPressed;
+        public readonly Point Delta = delta;
     }
 }

@@ -79,9 +79,9 @@ namespace ComposableUi
             };
         }
 
-        private void OnWindowDrag(Element sender, (Point Position, Point delta) arguments)
+        private void OnWindowDrag(Element sender, PointerDragEvent pointerEvent)
         {
-            LocalPosition += arguments.delta.ToVector2();
+            LocalPosition += pointerEvent.Delta.ToVector2();
         }
     }
 }
