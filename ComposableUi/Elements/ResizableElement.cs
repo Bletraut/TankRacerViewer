@@ -127,8 +127,12 @@ namespace ComposableUi
             if (HasActiveInnerElement)
             {
                 var size = InnerElement.Size;
-                InnerElement.Size = Vector2.Max(size + deltaVector * _sizeDirection, _minSize);
-                LocalPosition += (size - InnerElement.Size) * _positionDirection;
+                // Prevents a sudden jump in size if the
+                // current size is less than the minimum size.
+                var minSize = Vector2.Min(size, MinSize);
+                var newSize = Vector2.Max(minSize, size + deltaVector * _sizeDirection);
+                Size = InnerElement.Size = newSize;
+                LocalPosition += (size - newSize) * _positionDirection;
             }
         }
     }

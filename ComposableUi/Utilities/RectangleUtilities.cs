@@ -8,7 +8,7 @@ namespace ComposableUi.Utilities
     {
         public static Vector2 GetEdgeNormal(this Rectangle rectangle,
             int thickness, Point point, EdgeNormalResolveMode resolveMode = default)
-            => GetEdgeNormal(rectangle, new Point(thickness), point, resolveMode = default);
+            => GetEdgeNormal(rectangle, new Point(thickness), point, resolveMode);
         public static Vector2 GetEdgeNormal(this Rectangle rectangle,
             Point thickness, Point point, EdgeNormalResolveMode resolveMode)
         {

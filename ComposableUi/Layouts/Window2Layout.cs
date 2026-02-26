@@ -37,11 +37,14 @@ namespace ComposableUi
 
         private void ShowTempWindow(Window2Element source, Vector2 position)
         {
+            var oldSize = source.Size;
+            var newSize = Vector2.Max(source.MinSize, oldSize);
+
             _tempWindow.IsEnabled = true;
-            _tempWindow.InnerElement.Size = source.Size;
+            _tempWindow.InnerElement.Size = newSize;
             _tempWindow.Pivot = source.Pivot;
             _tempWindow.Tab.CopyHeaderFrom(source.Tab);
-            _tempWindow.Position = source.Position;
+            _tempWindow.Position = source.Position + (newSize - oldSize) * source.Pivot;
         }
 
         private void HideTempWindow()

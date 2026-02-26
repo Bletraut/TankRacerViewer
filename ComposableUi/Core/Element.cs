@@ -69,7 +69,7 @@ namespace ComposableUi
             }
             set
             {
-                if (_position == value)
+                if (Position == value)
                     return;
 
                 LocalPosition = Parent != null

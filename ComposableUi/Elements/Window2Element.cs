@@ -43,53 +43,25 @@ namespace ComposableUi
         }
 
         internal static LineLayout GetRow()
-        {
-            var layout = new RowLayout(
-                expandChildrenMainAxis: true,
-                expandChildrenCrossAxis: true,
-                mainAxisChildrenExpandingMode: ExpandingMode.Size
-            );
-
-            // For debug.
-            layout.AddChild(new LayoutElement(
-                ignoreLayout: true,
-                innerElement: new ExpandedElement(
-                    innerElement: new SpriteElement(
-                        skin: StandardSkin.WhitePixel,
-                        color: new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle())
-                    )
-                )
-            ));
-            layout.Spacing = 4;
-            layout.LeftPadding = layout.RightPadding = 4;
-            layout.TopPadding = layout.BottomPadding = 4;
-            // end.
-
-            return layout;
-        }
+            => ApplyLineLayoutParameters(new RowLayout());
 
         internal static LineLayout GetColumn()
-        {
-            var layout = new ColumnLayout(
-                expandChildrenMainAxis: true,
-                expandChildrenCrossAxis: true,
-                mainAxisChildrenExpandingMode: ExpandingMode.Size
-            );
+            => ApplyLineLayoutParameters(new ColumnLayout());
 
-            // For debug.
+        internal static LineLayout ApplyLineLayoutParameters(LineLayout layout)
+        {
+            layout.ExpandChildrenCrossAxis = true;
+            layout.ExpandChildrenMainAxis = true;
+            layout.MainAxisChildrenExpandingMode = ExpandingMode.Size;
+
             layout.AddChild(new LayoutElement(
                 ignoreLayout: true,
                 innerElement: new ExpandedElement(
                     innerElement: new SpriteElement(
-                        skin: StandardSkin.WhitePixel,
-                        color: new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle())
+                        skin: StandardSkin.SolidDarkPixel
                     )
                 )
             ));
-            layout.Spacing = 4;
-            layout.LeftPadding = layout.RightPadding = 4;
-            layout.TopPadding = layout.BottomPadding = 4;
-            // end.
 
             return layout;
         }
@@ -180,6 +152,7 @@ namespace ComposableUi
             containerWindow._childWindows.Insert(insertIndex, source);
 
             containerWindow.ApplyRootWindow(target._rootWindow);
+            containerWindow.RefreshContainerMinSize();
         }
 
         public static void DetachFromParent(Window2Element source, Vector2 position)
@@ -206,24 +179,28 @@ namespace ComposableUi
                 lastWindow.ApplyRootWindow(containerWindow._rootWindow);
                 lastWindow.IsInteractable = containerWindow.IsInteractable;
 
-                if (containerWindow._containerWindow?._viewHolder.InnerElement is ContainerElement parentSplitLayout)
+                if (containerWindow._containerWindow is not null)
                 {
-                    var index = parentSplitLayout.IndexOf(containerWindow);
-                    parentSplitLayout.InsertChild(index, lastWindow);
+                    var parentContainerWindow = containerWindow._containerWindow;
 
-                    var containerIndex = containerWindow._childWindows.IndexOf(containerWindow);
-                    containerWindow._containerWindow._childWindows.Remove(containerWindow);
-                    containerWindow._containerWindow._childWindows.Insert(containerIndex, lastWindow);
+                    if (parentContainerWindow._viewHolder.InnerElement is ContainerElement parentSplitLayout)
+                    {
+                        var index = parentSplitLayout.IndexOf(containerWindow);
+                        parentSplitLayout.InsertChild(index, lastWindow);
+                    }
+
+                    var containerIndex = parentContainerWindow._childWindows.IndexOf(containerWindow);
+                    parentContainerWindow._childWindows.Remove(containerWindow);
+                    parentContainerWindow._childWindows.Insert(containerIndex, lastWindow);
+                    parentContainerWindow.RefreshContainerMinSize();
                 }
                 else
                 {
-                    var worldPosition = containerWindow.Position;
+                    var localPosition = containerWindow.LocalPosition;
                     containerWindow.Parent.AddChild(lastWindow);
-                    lastWindow.Position = worldPosition - containerWindow.PivotOffset + lastWindow.PivotOffset;
+                    lastWindow.LocalPosition = localPosition - containerWindow.PivotOffset + lastWindow.PivotOffset;
                 }
-            }
-            if (containerWindow._childWindows.Count <= 0)
-            {
+
                 containerWindow._currentSplitDirection = SplitDirection.None;
                 containerWindow._containerWindow = null;
                 containerWindow.ApplyRootWindow(null);
@@ -231,6 +208,10 @@ namespace ComposableUi
                 containerWindow.Parent?.RemoveChild(containerWindow);
 
                 ReleaseWindow(containerWindow);
+            }
+            else
+            {
+                containerWindow.RefreshContainerMinSize();
             }
         }
 
@@ -255,12 +236,15 @@ namespace ComposableUi
             targetIndex = target._containerWindow._childWindows.IndexOf(target);
             target._containerWindow._childWindows.Insert(targetIndex + insertIndex, source);
 
+            target._containerWindow.RefreshContainerMinSize();
+
             return true;
         }
 
         private static void IncreaseSizeIfPossible(Window2Element target, Vector2 axis,
             float delta, bool expandForward)
         {
+            var increaseDelta = 0f;
             var decreaseDelta = delta;
 
             var childWindows = target._containerWindow._childWindows;
@@ -270,19 +254,28 @@ namespace ComposableUi
             while (neighborIndex >= 0 && neighborIndex < childWindows.Count)
             {
                 var neighbor = childWindows[neighborIndex];
+                neighborIndex += expandForward ? 1 : -1;
 
                 var size = neighbor.Size;
-                neighbor.SetSize(Vector2.Max(neighbor.MinSize, size - new Vector2(decreaseDelta)));
 
-                decreaseDelta -= Vector2.Dot(axis, size - neighbor.Size);
+                var axisSize = Vector2.Dot(axis, size);
+                var minAxisSize = Vector2.Dot(axis, neighbor.MinSize);
+                if (axisSize <= minAxisSize)
+                    continue;
+
+                var newAxisSize = MathF.Max(minAxisSize, axisSize - decreaseDelta);
+                var newSize = size * (Vector2.One - axis) + new Vector2(newAxisSize) * axis;
+                neighbor.SetSize(newSize);
+
+                var sizeDelta = axisSize - newAxisSize;
+                increaseDelta += sizeDelta;
+                decreaseDelta -= sizeDelta;
+
                 if (decreaseDelta <= 0)
                     break;
-
-                neighborIndex += expandForward ? 1 : -1;
             }
 
-            if (decreaseDelta <= 0)
-                target.SetSize(target.Size + new Vector2(delta));
+            target.SetSize(target.Size + new Vector2(increaseDelta));
         }
 
         private static int EdgeToInsertIndex(Edge edge)
@@ -370,6 +363,7 @@ namespace ComposableUi
             DragHandle = new PointerInputHandlerElement(
                 innerElement: new SpriteElement(skin: StandardSkin.TabInactiveHeader)
             );
+            DragHandle.PointerDown += OnDragHandlePointerDown;
             DragHandle.PointerFixedDrag += OnDragHandlePointerFixedDrag;
 
             _tabsRow = new RowLayout(
@@ -426,6 +420,7 @@ namespace ComposableUi
                 topPadding: DefaultHeaderHeight,
                 innerElement: _splitArea
             );
+            _splitArea.PointerDown += OnSplitAreaPointerDown;
             _splitArea.PointerMove += OnSplitAreaPointerMove;
             _splitArea.PointerLeave += OnSplitAreaPointerLeave;
 
@@ -435,6 +430,8 @@ namespace ComposableUi
             var innerResizeHandleParent = new ExpandedElement(
                 innerElement: _innerResizeHandle
             );
+            _innerResizeHandle.PointerMove += OnInnerResizeHandlePointerMove;
+            _innerResizeHandle.PointerLeave += OnInnerResizeHandlePointerLeave;
             _innerResizeHandle.PointerDown += OnInnerResizeHandlePointerDown;
             _innerResizeHandle.PointerUp += OnInnerResizeHandlePointerUp;
             _innerResizeHandle.PointerFixedDrag += OnInnerResizeHandlePointerFixedDrag;
@@ -608,6 +605,24 @@ namespace ComposableUi
             InnerElement.Size = Size;
         }
 
+        private void RefreshContainerMinSize()
+        {
+            var totalSize = Vector2.Zero;
+            var maxSize = Vector2.Zero;
+
+            foreach (var window in _childWindows)
+            {
+                totalSize += window.MinSize;
+                maxSize = Vector2.Max(maxSize, window.MinSize);
+            }
+
+            MinSize = _currentSplitDirection is SplitDirection.Horizontal
+                ? new Vector2(totalSize.X, maxSize.Y)
+                : new Vector2(maxSize.X, totalSize.Y);
+
+            _containerWindow?.RefreshContainerMinSize();
+        }
+
         private void ApplyRootWindow(Window2Element window)
         {
             _rootWindow = window;
@@ -629,7 +644,6 @@ namespace ComposableUi
 
             if (_containerWindow._currentSplitDirection != splitDirection)
             {
-                axis = new Vector2(axis.Y, axis.X);
                 _containerWindow.IncreaseSizeInHierarchyIfPossible(splitDirection, axis, axisDelta, delta);
                 return;
             }
@@ -653,6 +667,59 @@ namespace ComposableUi
             }
 
             IncreaseSizeIfPossible(target, axis, delta, axisDelta > 0);
+        }
+
+        private void ResolveResizeCursor(IPointer pointer, Point position)
+        {
+            var cursor = PointerCursor.Arrow;
+
+            var normal = GetResizeNormal(position);
+            if (normal != Vector2.Zero)
+            {
+                var shouldCheckFirstChild = normal.X < 0 || normal.Y < 0;
+                var splitDirection = EdgeNormalToSplitDirection(normal);
+
+                var child = this;
+                var containerWindow = _containerWindow;
+                while (containerWindow is not null)
+                {
+                    var targetChild = shouldCheckFirstChild
+                        ? containerWindow._childWindows[0]
+                        : containerWindow._childWindows[^1];
+
+                    var canResize = containerWindow._currentSplitDirection == splitDirection
+                        && child != targetChild;
+                    if (canResize)
+                    {
+                        cursor = normal switch
+                        {
+                            { X: not 0 } => PointerCursor.SizeWE,
+                            { Y: not 0 } => PointerCursor.SizeNS,
+                            _ => PointerCursor.Arrow
+                        };
+
+                        break;
+                    }
+
+                    child = containerWindow;
+                    containerWindow = child._containerWindow;
+                }
+            }
+
+            pointer.SetCursor(cursor);
+        }
+
+        private Vector2 GetResizeNormal(Point position)
+        {
+            var normal = _innerResizeHandle.InteractionRectangle.GetEdgeNormal(SplitAreaResizeHandleSize,
+                position, RectangleUtilities.EdgeNormalResolveMode.PreferX);
+
+            return normal;
+        }
+
+        private void OnDragHandlePointerDown(PointerInputHandlerElement sender, PointerEvent e)
+        {
+            BringToFront();
         }
 
         private void OnDragHandlePointerFixedDrag(PointerInputHandlerElement sender,
@@ -694,6 +761,11 @@ namespace ComposableUi
                     if (_containerWindow is not null)
                     {
                         DetachFromParent(this, Position + _dragDeltaAccumulator);
+
+                        var oldSize = Size;
+                        var newSize = Vector2.Max(MinSize, oldSize);
+                        SetSize(newSize);
+                        Position += (newSize - oldSize) * Pivot;
                     }
                     else
                     {
@@ -715,6 +787,11 @@ namespace ComposableUi
             _dragDeltaAccumulator += pointerEvent.Delta.ToVector2();
 
             TabPointerDrag?.Invoke(this, pointerEvent);
+        }
+
+        private void OnSplitAreaPointerDown(PointerInputHandlerElement sender, PointerEvent e)
+        {
+            BringToFront();
         }
 
         private void OnSplitAreaPointerMove(PointerInputHandlerElement sender,
@@ -744,16 +821,34 @@ namespace ComposableUi
             HideSplitPreviewIfPossible();
         }
 
+        private void OnInnerResizeHandlePointerMove(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            if (_containerWindow is null) 
+                return;
+
+            if (pointerEvent.IsPrimaryButtonPressed)
+                return;
+
+            ResolveResizeCursor(pointerEvent.Pointer, pointerEvent.Position);
+        }
+
+        private void OnInnerResizeHandlePointerLeave(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            if (pointerEvent.IsPrimaryButtonPressed)
+                return;
+
+            pointerEvent.Pointer.SetCursor(PointerCursor.Arrow);
+        }
+
         private void OnInnerResizeHandlePointerDown(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
-            BringToFront();
-
             if (_containerWindow is null)
                 return;
 
-            _resizeNormal = _innerResizeHandle.InteractionRectangle.GetEdgeNormal(SplitAreaResizeHandleSize,
-                pointerEvent.Position, RectangleUtilities.EdgeNormalResolveMode.PreferX);
+            _resizeNormal = GetResizeNormal(pointerEvent.Position);
             _resizeAxis = new Vector2(MathF.Abs(_resizeNormal.X), MathF.Abs(_resizeNormal.Y));
         }
 
