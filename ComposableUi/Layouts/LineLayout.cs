@@ -233,9 +233,12 @@ namespace ComposableUi
             return preferredSize;
         }
 
-        public override void Rebuild(Vector2 size)
+        public override void Rebuild(Vector2 size, bool excludeChildren)
         {
             Size = size;
+
+            if (excludeChildren)
+                return;
 
             var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
             var (totalSpacing, totalExpandingFactor) = CalculateMainAxisSpacingAndExpandingFactor();

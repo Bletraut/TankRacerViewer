@@ -6,7 +6,12 @@ namespace ComposableUi
     {
         private readonly ContainerElement _windowContainer;
         private readonly Window2Element _tempWindow;
+        private readonly TabElement _tempTab;
         private readonly HolderElement _overlayWindowHolder;
+
+        private Element _tempTabPlaceHolder;
+
+        private bool _isSplitPreviewShown;
 
         public Window2Layout()
         {
@@ -16,6 +21,14 @@ namespace ComposableUi
             _tempWindow = Window2Element.CreateNonInteractiveWindow();
             _tempWindow.IsEnabled = false;
             AddChild(_tempWindow);
+
+            _tempTab = new TabElement
+            {
+                IsEnabled = false,
+                IsInteractable = false,
+                BlockInput = false
+            };
+            AddChild(_tempTab);
 
             _overlayWindowHolder = new HolderElement()
             {
@@ -29,22 +42,35 @@ namespace ComposableUi
             window.TabPointerDown += OnTabPointerDown;
             window.TabPointerUp += OnTabPointerUp;
             window.TabPointerDrag += OnTabPointerDrag;
+            window.InsertPreviewShown += OnInsertPreviewShown;
+            window.InsertPreviewHidden += OnInsertPreviewHidden;
             window.SplitPreviewShown += OnSplitPreviewShown;
             window.SplitPreviewHidden += OnSplitPreviewHidden;
 
             _windowContainer.AddChild(window);
         }
 
-        private void ShowTempWindow(Window2Element source, Vector2 position)
+        private void PrepareTempWindow(Window2Element source)
         {
             var oldSize = source.Size;
             var newSize = Vector2.Max(source.MinSize, oldSize);
 
-            _tempWindow.IsEnabled = true;
             _tempWindow.InnerElement.Size = newSize;
             _tempWindow.Pivot = source.Pivot;
             _tempWindow.Tab.CopyHeaderFrom(source.Tab);
             _tempWindow.Position = source.Position + (newSize - oldSize) * source.Pivot;
+        }
+
+        private void PrepareTempTab(TabElement source)
+        {
+            _tempTab.InnerElement.Size = source.InnerElement.Size;
+            _tempTab.CopyHeaderFrom(source);
+            _tempTab.Position = source.Position;
+        }
+
+        private void ShowTempWindow()
+        {
+            _tempWindow.IsEnabled = true;
         }
 
         private void HideTempWindow()
@@ -52,29 +78,74 @@ namespace ComposableUi
             _tempWindow.IsEnabled = false;
         }
 
+        private void ShowTempTab()
+        {
+            _tempTab.IsEnabled = true;
+        }
+
+        private void HideTempTab()
+        {
+            _tempTab.IsEnabled = false;
+        }
+
         private void OnTabPointerDown(Window2Element window, PointerEvent pointerEvent)
         {
-            ShowTempWindow(window, pointerEvent.Position.ToVector2());
+            PrepareTempWindow(window);
+            PrepareTempTab(window.Tab);
+
+            ShowTempTab();
         }
 
         private void OnTabPointerUp(Window2Element window, PointerEvent pointerEvent)
         {
             HideTempWindow();
+            HideTempTab();
         }
 
         private void OnTabPointerDrag(Window2Element window, PointerDragEvent pointerEvent)
         {
-            _tempWindow.Position += pointerEvent.Delta.ToVector2();
+            var deltaVector = pointerEvent.Delta.ToVector2();
+
+            _tempWindow.Position += deltaVector;
+            _tempTab.Position += deltaVector;
+
+            if (_tempTabPlaceHolder is not null)
+            {
+                _tempTab.Position = _tempTabPlaceHolder.Position with { X = _tempTab.Position.X };
+            }
+        }
+
+        private void OnInsertPreviewShown(Window2Element sender, Element placeHolder)
+        {
+            _tempTabPlaceHolder = placeHolder;
+
+            HideTempWindow();
+            ShowTempTab();
+        }
+
+        private void OnInsertPreviewHidden(Window2Element sender)
+        {
+            _tempTabPlaceHolder = null;
+
+            HideTempTab();
+
+            if (!_isSplitPreviewShown)
+                ShowTempWindow();
         }
 
         private void OnSplitPreviewShown(Window2Element window)
         {
+            _isSplitPreviewShown = true;
+
             HideTempWindow();
+            HideTempTab();
         }
 
         private void OnSplitPreviewHidden(Window2Element window)
         {
-            _tempWindow.IsEnabled = true;
+            _isSplitPreviewShown = false;
+
+            ShowTempWindow();
         }
     }
 }

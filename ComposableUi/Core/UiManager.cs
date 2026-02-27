@@ -13,7 +13,7 @@ namespace ComposableUi
         public IPointerInputProvider PointerInputProvider { get; set; }
         public IUiRenderer UiRenderer { get; set; }
 
-        public bool IsOverUi => _activeHandlers.Count > 0;
+        public bool IsOverUi => _currentActiveHandlers.Count > 0;
         public bool IsAnyElementPressed => _primaryButtonPressedHandlers.Count > 0 || _secondaryButtonPressedHandlers.Count > 0;
 
         private readonly GraphicsDevice _graphicsDevice;
@@ -22,7 +22,8 @@ namespace ComposableUi
         private readonly List<(Rectangle InputArea, IPointerInputHandler handler)> _pointerInputHandlers = [];
         private readonly List<IDrawableElement> _renderQueue = [];
 
-        private readonly HashSet<IPointerInputHandler> _activeHandlers = [];
+        private HashSet<IPointerInputHandler> _lastActiveHandlers = [];
+        private HashSet<IPointerInputHandler> _currentActiveHandlers = [];
         private readonly HashSet<IPointerInputHandler> _primaryButtonPressedHandlers = [];
         private readonly HashSet<IPointerInputHandler> _secondaryButtonPressedHandlers = [];
 
@@ -108,6 +109,9 @@ namespace ComposableUi
             if (PointerInputProvider == null)
                 return;
 
+            (_lastActiveHandlers, _currentActiveHandlers) = (_currentActiveHandlers, _lastActiveHandlers);
+            _currentActiveHandlers.Clear();
+
             _lastPointerPosition = _currentPointerPosition;
             _currentPointerPosition = PointerInputProvider.PointerPosition;
 
@@ -140,7 +144,7 @@ namespace ComposableUi
                     isInputBlocked |= handler.BlockInput;
                     if (!handler.IsInteractable)
                     {
-                        _activeHandlers.Remove(handler);
+                        _currentActiveHandlers.Add(handler);
                         _primaryButtonPressedHandlers.Remove(handler);
                         _secondaryButtonPressedHandlers.Remove(handler);
 
@@ -152,7 +156,9 @@ namespace ComposableUi
                     if (horizontalScrollWheelValueDelta != 0)
                         handler.OnHorizontalScrollWheel(pointerHorizontalScrollEvent);
 
-                    if (_activeHandlers.Add(handler))
+                    var isPointerEnter = _currentActiveHandlers.Add(handler)
+                        && !_lastActiveHandlers.Contains(handler);
+                    if (isPointerEnter)
                         handler.OnPointerEnter(pointerEvent);
 
                     handler.OnPointerMove(pointerEvent);
@@ -192,7 +198,7 @@ namespace ComposableUi
 
                     continue;
                 }
-                else if (_activeHandlers.Remove(handler))
+                else if (_lastActiveHandlers.Remove(handler))
                 {
                     handler.OnPointerLeave(pointerEvent);
                 }

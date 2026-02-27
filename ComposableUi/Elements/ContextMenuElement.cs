@@ -325,9 +325,9 @@ namespace ComposableUi
             return _columnsRow.CalculatePreferredSize();
         }
 
-        public override void Rebuild(Vector2 size)
+        public override void Rebuild(Vector2 size, bool excludeChildren)
         {
-            base.Rebuild(size);
+            base.Rebuild(size, excludeChildren);
 
             _columnsRow.LocalPosition = _columnsRow.Size * _columnsRow.Pivot - Size * Pivot;
         }

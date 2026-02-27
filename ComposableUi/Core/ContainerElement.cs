@@ -1,8 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -75,9 +74,12 @@ namespace ComposableUi
         public override Element GetChildAt(int index)
             => _children[index];
 
-        public override void Rebuild(Vector2 size)
+        public override void Rebuild(Vector2 size, bool excludeChildren)
         {
             Size = size;
+
+            if (excludeChildren)
+                return;
 
             foreach (var child in _children)
             {

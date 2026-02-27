@@ -265,12 +265,12 @@ namespace ComposableUi
             }
         }
 
-        public override void Rebuild(Vector2 size)
+        public override void Rebuild(Vector2 size, bool excludeChildren)
         {
             Size = size;
             RefreshContentAndScrollBarsVisibility();
 
-            base.Rebuild(size);
+            base.Rebuild(size, excludeChildren);
 
             if (HorizontalScrollBar.IsEnabled || VerticalScrollBar.IsEnabled)
                 RefreshScrollBarsButtons();

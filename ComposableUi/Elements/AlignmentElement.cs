@@ -29,9 +29,9 @@ namespace ComposableUi
             Pivot = pivot ?? Alignment.Center;
         }
 
-        public override void Rebuild(Vector2 size)
+        public override void Rebuild(Vector2 size, bool excludeChildren)
         {
-            base.Rebuild(size);
+            base.Rebuild(size, excludeChildren);
 
             if (Parent != null)
                 LocalPosition = Parent.Size * AlignmentFactor + Offset - Parent.Size * Parent.Pivot;

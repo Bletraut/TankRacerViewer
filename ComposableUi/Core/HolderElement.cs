@@ -42,9 +42,12 @@ namespace ComposableUi
                 Pivot = pivot.Value;
         }
 
-        public override void Rebuild(Vector2 size)
+        public override void Rebuild(Vector2 size, bool excludeChildren)
         {
             Size = size;
+
+            if (excludeChildren)
+                return;
 
             if (!HasActiveInnerElement)
                 return;

@@ -15,11 +15,12 @@ namespace ComposableUi
             return base.CalculatePreferredSize();
         }
 
-        public override void Rebuild(Vector2 size)
+        public override void Rebuild(Vector2 size, bool excludeChildren)
         {
             Size = size;
 
-            if (HasActiveInnerElement)
+            var shouldRebuildInnerElement = !excludeChildren && HasActiveInnerElement;
+            if (shouldRebuildInnerElement)
             {
                 InnerElement.Rebuild(size);
                 InnerElement.LocalPosition = InnerElement.Size * InnerElement.Pivot - Size * Pivot;

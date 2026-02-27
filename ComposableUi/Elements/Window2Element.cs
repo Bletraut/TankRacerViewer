@@ -12,6 +12,8 @@ namespace ComposableUi
     {
         public const int DefaultHeaderHeight = 30;
 
+        private const int EmptyInsertIndex = -1;
+
         private const float SplitSizeFactor = 0.3f;
         private const float SplitAreaSelfThicknessFactor = 0.3f;
         private const float SplitAreaParentThicknessFactor = 0.1f;
@@ -24,6 +26,7 @@ namespace ComposableUi
         // Static.
         private static readonly Stack<Window2Element> _windowPool = new();
 
+        private static readonly Element _insertPreviewPlaceHolder = new();
         private static readonly Window2Element _splitPreviewWindow = CreateNonInteractiveWindow();
 
         internal static Window2Element CreateNonInteractiveWindow()
@@ -37,6 +40,7 @@ namespace ComposableUi
             window.DragHandle.BlockInput = false;
             window.Tab.IsInteractable = false;
             window.Tab.BlockInput = false;
+            window._insertArea.IsEnabled = false;
             window._splitArea.IsEnabled = false;
 
             return window;
@@ -96,7 +100,7 @@ namespace ComposableUi
 
             var splitDirection = EdgeToSplitDirection(edge);
 
-            var shouldAttachToParent = target._containerWindow?._currentSplitDirection == splitDirection;
+            var shouldAttachToParent = target._containerWindow?._splitDirection == splitDirection;
             if (shouldAttachToParent)
             {
                 if (TryAttachToParent(source, target, edge))
@@ -109,18 +113,20 @@ namespace ComposableUi
                 : GetColumn();
 
             var containerWindow = GetContainerWindow();
-            containerWindow._currentSplitDirection = splitDirection;
+            containerWindow._compositionType = CompositionType.Adjacent;
+            containerWindow._splitDirection = splitDirection;
+            containerWindow._viewHolder.PropagateToInnerElementChildren = false;
             containerWindow._viewHolder.InnerElement = splitLayout;
             containerWindow.SetSize(target.Size);
             containerWindow._containerWindow = target._containerWindow;
-            containerWindow.IsInteractable =  target.IsInteractable;
+            containerWindow.IsInteractable = target.IsInteractable;
             containerWindow.LocalPosition = target.LocalPosition 
                 - target.PivotOffset + containerWindow.PivotOffset;
 
             // Replaces the target window with the container window.
             if (target._containerWindow is not null)
             {
-                if (target._containerWindow._viewHolder.InnerElement is LineLayout parentSplitLayout)
+                if (target._containerWindow._viewHolder.InnerElement is ContainerElement parentSplitLayout)
                 {
                     var index = parentSplitLayout.IndexOf(target);
                     parentSplitLayout.InsertChild(index, containerWindow);
@@ -155,6 +161,68 @@ namespace ComposableUi
             containerWindow.RefreshContainerMinSize();
         }
 
+        public static void InsertTo(Window2Element source, Window2Element target)
+        {
+            DetachFromParent(source, Vector2.Zero);
+
+            var shouldInsertToParent = target._containerWindow?._compositionType is CompositionType.Tabbed;
+            if (shouldInsertToParent)
+            {
+                if (TryInsertToParent(source, target, 0))
+                    return;
+            }
+
+            var layout = new ContainerElement();
+
+            var containerWindow = GetContainerWindow();
+            containerWindow._compositionType = CompositionType.Tabbed;
+            containerWindow._splitDirection = SplitDirection.None;
+            containerWindow._viewHolder.PropagateToInnerElementChildren = true;
+            containerWindow._viewHolder.InnerElement = layout;
+            containerWindow.SetSize(target.Size);
+            containerWindow._containerWindow = target._containerWindow;
+            containerWindow.IsInteractable = target.IsInteractable;
+            containerWindow.LocalPosition = target.LocalPosition
+                - target.PivotOffset + containerWindow.PivotOffset;
+
+            // Replaces the target window with the container window.
+            if (target._containerWindow is not null)
+            {
+                if (target._containerWindow._viewHolder.InnerElement is ContainerElement parentSplitLayout)
+                {
+                    var index = parentSplitLayout.IndexOf(target);
+                    parentSplitLayout.InsertChild(index, containerWindow);
+                }
+
+                var targetIndex = target._containerWindow._childWindows.IndexOf(target);
+                target._containerWindow._childWindows.Remove(target);
+                target._containerWindow._childWindows.Insert(targetIndex, containerWindow);
+            }
+            else
+            {
+                target.Parent.AddChild(containerWindow);
+            }
+
+            containerWindow._childWindows ??= [];
+
+            target._containerWindow = containerWindow;
+            target.IsInteractable = false;
+            layout.AddChild(target);
+            containerWindow._childWindows.Add(target);
+
+            source._containerWindow = containerWindow;
+            source.IsInteractable = false;
+            source.BlockInput = false;
+            source._viewHolder.IsEnabled = false;
+            source.SetSize(target.Size);
+            layout.AddChild(source);
+            target._tabsRow.AddChild(source.Tab);
+            containerWindow._childWindows.Insert(0, source);
+
+            containerWindow.ApplyRootWindow(target._rootWindow);
+            containerWindow.RefreshContainerMinSize();
+        }
+
         public static void DetachFromParent(Window2Element source, Vector2 position)
         {
             var containerWindow = source._containerWindow;
@@ -168,6 +236,11 @@ namespace ComposableUi
             source.ApplyRootWindow(null);
             source.IsInteractable = true;
             source.Position = position;
+            // FOR TEST
+            source.BlockInput = true;
+            source._viewHolder.IsEnabled = true;
+            source._tabsRow.AddChild(source.Tab);
+            // end
 
             if (containerWindow._childWindows.Count == 1)
             {
@@ -201,7 +274,8 @@ namespace ComposableUi
                     lastWindow.LocalPosition = localPosition - containerWindow.PivotOffset + lastWindow.PivotOffset;
                 }
 
-                containerWindow._currentSplitDirection = SplitDirection.None;
+                containerWindow._compositionType = CompositionType.None;
+                containerWindow._splitDirection = SplitDirection.None;
                 containerWindow._containerWindow = null;
                 containerWindow.ApplyRootWindow(null);
                 containerWindow._viewHolder.InnerElement = null;
@@ -238,6 +312,11 @@ namespace ComposableUi
 
             target._containerWindow.RefreshContainerMinSize();
 
+            return true;
+        }
+
+        private static bool TryInsertToParent(Window2Element source, Window2Element target, int index)
+        {
             return true;
         }
 
@@ -314,6 +393,8 @@ namespace ComposableUi
         public event ElementEventHandler<Window2Element, PointerEvent> TabPointerDown;
         public event ElementEventHandler<Window2Element, PointerEvent> TabPointerUp;
         public event ElementEventHandler<Window2Element, PointerDragEvent> TabPointerDrag;
+        public event ElementEventHandler<Window2Element, Element> InsertPreviewShown;
+        public event ElementEventHandler<Window2Element> InsertPreviewHidden;
         public event ElementEventHandler<Window2Element> SplitPreviewShown;
         public event ElementEventHandler<Window2Element> SplitPreviewHidden;
 
@@ -323,6 +404,7 @@ namespace ComposableUi
         private readonly RowLayout _tabsRow;
         private readonly ContainerElement _contentContainer;
 
+        private readonly PointerInputHandlerElement _insertArea;
         private readonly PointerInputHandlerElement _splitArea;
         private readonly PointerInputHandlerElement _innerResizeHandle;
 
@@ -335,9 +417,14 @@ namespace ComposableUi
         private Window2Element _rootWindow;
 
         private Vector2 _dragDeltaAccumulator;
+
+        private int _currentInsertIndex = EmptyInsertIndex;
+
         private Window2Element _currentSplitPreviewTarget;
         private Vector2 _currentSplitPreviewEdgeNormal;
-        private SplitDirection _currentSplitDirection;
+
+        private CompositionType _compositionType;
+        private SplitDirection _splitDirection;
 
         private Vector2 _resizeNormal;
         private Vector2 _resizeAxis;
@@ -413,6 +500,21 @@ namespace ComposableUi
                 IsEnabled = false
             };
 
+            _insertArea = new PointerInputHandlerElement(blockInput: false)
+            {
+                Size = new Vector2(DefaultHeaderHeight)
+            };
+            var insertAreaParent = new ExpandedElement(
+                expandHeight: false,
+                innerElement: new AlignmentElement(
+                    alignmentFactor: Alignment.TopCenter,
+                    pivot: Alignment.TopCenter,
+                    innerElement: _insertArea
+                )
+            );
+            _insertArea.PointerMove += OnInsertAreaPointerMove;
+            _insertArea.PointerLeave += OnInsertAreaPointerLeave;
+
             _splitArea = new PointerInputHandlerElement(
                 blockInput: false
             );
@@ -442,6 +544,8 @@ namespace ComposableUi
                     contentContainerParent,
                     headerParent,
                     innerResizeHandleParent,
+                    insertAreaParent,
+                    splitAreaParent
                 ]
             );
             _viewHolder = new ExpandedElement(_view);
@@ -450,10 +554,16 @@ namespace ComposableUi
                 size: size ?? DefaultSize,
                 children: [
                     _viewHolder,
-                    _splitPreviewExpanded,
-                    splitAreaParent,
+                    _splitPreviewExpanded
                 ]
             );
+        }
+
+        internal void Insert(Window2Element source)
+        {
+            InsertTo(source, this);
+
+            HideInsertPreviewIfPossible();
         }
 
         internal void Attach(Window2Element source)
@@ -504,6 +614,55 @@ namespace ComposableUi
                 container.BringToFront(target);
         }
 
+        private bool TryShowInsertPreview(Window2Element source, Point position)
+        {
+            _insertPreviewPlaceHolder.Size = source.Tab.Size;
+
+            var insertIndex = _tabsRow.ChildCount;
+            for (var i = 0; i < _tabsRow.ChildCount; i++)
+            {
+                var child = _tabsRow.GetChildAt(i);
+
+                var shouldSkip = !child.IsEnabled
+                    || child == source.Tab
+                    || (child is LayoutElement layoutElement && layoutElement.IgnoreLayout);
+                if (shouldSkip)
+                    continue;
+
+                var boundingRectangle = child.BoundingRectangle;
+                boundingRectangle.Width = (int)_insertPreviewPlaceHolder.Size.X;
+                if (boundingRectangle.Contains(position))
+                {
+                    insertIndex = i;
+                    break;
+                }
+            }
+
+            if (_currentInsertIndex == insertIndex)
+                return true;
+
+            _currentInsertIndex = insertIndex;
+
+            _tabsRow.RemoveChild(_insertPreviewPlaceHolder);
+            _tabsRow.InsertChild(insertIndex, _insertPreviewPlaceHolder);
+
+            InsertPreviewShown?.Invoke(this, Tab);
+
+            return true;
+        }
+
+        private void HideInsertPreviewIfPossible()
+        {
+            if (_currentInsertIndex == EmptyInsertIndex)
+                return;
+
+            _currentInsertIndex = EmptyInsertIndex;
+
+            _tabsRow.RemoveChild(_insertPreviewPlaceHolder);
+
+            InsertPreviewHidden?.Invoke(this);
+        }
+
         private bool TryShowSplitPreview(Window2Element source, Point position)
         {
             if (TryDetectSplitTarget(position, source, out var edgeNormal, out var target))
@@ -550,7 +709,7 @@ namespace ComposableUi
 
             if (_containerWindow is not null)
             {
-                var thicknessFactor = _containerWindow._currentSplitDirection is SplitDirection.Horizontal
+                var thicknessFactor = _containerWindow._splitDirection is SplitDirection.Horizontal
                     ? Vector2.UnitY 
                     : Vector2.UnitX;
                 var parentThickness = (_splitArea.Size * SplitAreaParentThicknessFactor * thicknessFactor).ToPoint();
@@ -602,7 +761,9 @@ namespace ComposableUi
         private void SetSize(Vector2 size)
         {
             Size = size;
-            InnerElement.Size = Size;
+
+            if (InnerElement is not null)
+                InnerElement.Size = Size;
         }
 
         private void RefreshContainerMinSize()
@@ -616,7 +777,7 @@ namespace ComposableUi
                 maxSize = Vector2.Max(maxSize, window.MinSize);
             }
 
-            MinSize = _currentSplitDirection is SplitDirection.Horizontal
+            MinSize = _splitDirection is SplitDirection.Horizontal
                 ? new Vector2(totalSize.X, maxSize.Y)
                 : new Vector2(maxSize.X, totalSize.Y);
 
@@ -642,7 +803,7 @@ namespace ComposableUi
 
             var target = this;
 
-            if (_containerWindow._currentSplitDirection != splitDirection)
+            if (_containerWindow._splitDirection != splitDirection)
             {
                 _containerWindow.IncreaseSizeInHierarchyIfPossible(splitDirection, axis, axisDelta, delta);
                 return;
@@ -687,7 +848,7 @@ namespace ComposableUi
                         ? containerWindow._childWindows[0]
                         : containerWindow._childWindows[^1];
 
-                    var canResize = containerWindow._currentSplitDirection == splitDirection
+                    var canResize = containerWindow._splitDirection == splitDirection
                         && child != targetChild;
                     if (canResize)
                     {
@@ -741,6 +902,8 @@ namespace ComposableUi
             _isTapPressed = true;
             _dragDeltaAccumulator = Vector2.Zero;
 
+            Tab.InnerElement.IsEnabled = false;
+
             _composableWindowsSolver?.SelectSource(this);
 
             TabPointerDown?.Invoke(this, pointerEvent);
@@ -754,23 +917,32 @@ namespace ComposableUi
 
             _isTapPressed = false;
 
+            Tab.InnerElement.IsEnabled = true;
+
             if (_composableWindowsSolver is not null)
             {
-                if (!_composableWindowsSolver.TryAttach())
+                var result = _composableWindowsSolver.TryCompose();
+                switch(result)
                 {
-                    if (_containerWindow is not null)
-                    {
-                        DetachFromParent(this, Position + _dragDeltaAccumulator);
+                    case CompositionResult.None:
+                        if (_containerWindow is not null)
+                        {
+                            DetachFromParent(this, Position + _dragDeltaAccumulator);
 
-                        var oldSize = Size;
-                        var newSize = Vector2.Max(MinSize, oldSize);
-                        SetSize(newSize);
-                        Position += (newSize - oldSize) * Pivot;
-                    }
-                    else
-                    {
-                        Position += _dragDeltaAccumulator;
-                    }
+                            var oldSize = Size;
+                            var newSize = Vector2.Max(MinSize, oldSize);
+                            SetSize(newSize);
+                            Position += (newSize - oldSize) * Pivot;
+                        }
+                        else
+                        {
+                            Position += _dragDeltaAccumulator;
+                        }
+                        break;
+                    case CompositionResult.Attached:
+                    case CompositionResult.Inserted:
+                    default:
+                        break;
                 }
                 BringToFront();
             }
@@ -787,6 +959,33 @@ namespace ComposableUi
             _dragDeltaAccumulator += pointerEvent.Delta.ToVector2();
 
             TabPointerDrag?.Invoke(this, pointerEvent);
+        }
+
+        private void OnInsertAreaPointerMove(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            if (_composableWindowsSolver is null)
+                return;
+
+            var source = _composableWindowsSolver.Source;
+            if (source is null)
+                return;
+
+            if (TryShowInsertPreview(source, pointerEvent.Position))
+            {
+                _composableWindowsSolver.SelectInsertTarget(this);
+            }
+            else
+            {
+                _composableWindowsSolver.ReleaseInsertTarget(this);
+            }
+        }
+
+        private void OnInsertAreaPointerLeave(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            _composableWindowsSolver?.ReleaseInsertTarget(this);
+            HideInsertPreviewIfPossible();
         }
 
         private void OnSplitAreaPointerDown(PointerInputHandlerElement sender, PointerEvent e)
@@ -806,18 +1005,18 @@ namespace ComposableUi
 
             if (TryShowSplitPreview(source, pointerEvent.Position))
             {
-                _composableWindowsSolver.SelectTarget(this);
+                _composableWindowsSolver.SelectAttachTarget(this);
             }
             else
             {
-                _composableWindowsSolver.ReleaseTarget(this);
+                _composableWindowsSolver.ReleaseAttachTarget(this);
             }
         }
 
         private void OnSplitAreaPointerLeave(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
-            _composableWindowsSolver?.ReleaseTarget(this);
+            _composableWindowsSolver?.ReleaseAttachTarget(this);
             HideSplitPreviewIfPossible();
         }
 
@@ -896,6 +1095,14 @@ namespace ComposableUi
 
             Horizontal,
             Vertical
+        }
+
+        private enum CompositionType
+        {
+            None,
+
+            Adjacent,
+            Tabbed
         }
     }
 }

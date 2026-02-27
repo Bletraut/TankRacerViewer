@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Diagnostics;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -32,18 +34,25 @@ namespace ComposableUi
             set => SetAndChangeState(ref _bottomPadding, value);
         }
 
-        private bool _expandWidth = true;
+        private bool _expandWidth;
         public bool ExpandWidth
         {
             get => _expandWidth;
             set => SetAndChangeState(ref _expandWidth, value);
         }
 
-        private bool _expandHeight = true;
+        private bool _expandHeight;
         public bool ExpandHeight
         {
             get => _expandHeight;
             set => SetAndChangeState(ref _expandHeight, value);
+        }
+
+        private bool _propagateToInnerElementChildren;
+        public bool PropagateToInnerElementChildren
+        {
+            get => _propagateToInnerElementChildren;
+            set => SetAndChangeState(ref _propagateToInnerElementChildren, value);
         }
 
         public ExpandedElement(Element innerElement = default,
@@ -52,8 +61,9 @@ namespace ComposableUi
             float topPadding = default,
             float bottomPadding = default,
             bool expandWidth = true,
-            bool expandHeight = true) 
-            : base(innerElement) 
+            bool expandHeight = true,
+            bool propagateToInnerElementChildren = default)
+            : base(innerElement)
         {
             LeftPadding = leftPadding;
             RightPadding = rightPadding;
@@ -61,6 +71,35 @@ namespace ComposableUi
             BottomPadding = bottomPadding;
             ExpandWidth = expandWidth;
             ExpandHeight = expandHeight;
+            PropagateToInnerElementChildren = propagateToInnerElementChildren;
+        }
+
+        private void ExpandChild(Element child, Vector2 size, bool skipRebuildChildren)
+        {
+            var elementSize = child.CalculatePreferredSize();
+
+            size = new Vector2()
+            {
+                X = ExpandWidth ? size.X : elementSize.X,
+                Y = ExpandHeight ? size.Y : elementSize.Y
+            };
+            if (child is ParentElement parent)
+            {
+                parent.Rebuild(size, skipRebuildChildren);
+            }
+            else
+            {
+                child.Rebuild(size);
+            }
+
+            var elementPosition = child.LocalPosition;
+            var preferredPosition = child.Size * child.Pivot - child.Parent.Size * child.Parent.Pivot;
+
+            child.LocalPosition = new Vector2()
+            {
+                X = ExpandWidth ? preferredPosition.X : elementPosition.X,
+                Y = ExpandHeight ? preferredPosition.Y : elementPosition.Y
+            };
         }
 
         public override Vector2 CalculatePreferredSize()
@@ -76,29 +115,21 @@ namespace ComposableUi
             return Size;
         }
 
-        public override void Rebuild(Vector2 size)
+        public override void Rebuild(Vector2 size, bool excludeChildren)
         {
             Size = size;
 
-            if (HasActiveInnerElement)
+            var shouldRebuildInnerElement = !excludeChildren && HasActiveInnerElement;
+            if (shouldRebuildInnerElement)
             {
-                var elementSize = InnerElement.CalculatePreferredSize();
+                var skipRebuildChildren = PropagateToInnerElementChildren;
+                ExpandChild(InnerElement, size, skipRebuildChildren);
 
-                size = new Vector2()
+                if (PropagateToInnerElementChildren && InnerElement is ParentElement parent)
                 {
-                    X = ExpandWidth ? size.X : elementSize.X,
-                    Y = ExpandHeight ? size.Y : elementSize.Y
-                };
-                InnerElement.Rebuild(size);
-
-                var elementPosition = InnerElement.LocalPosition;
-                var preferredPosition = InnerElement.Size * InnerElement.Pivot - Size * Pivot;
-
-                InnerElement.LocalPosition = new Vector2()
-                {
-                    X = ExpandWidth ? preferredPosition.X : elementPosition.X,
-                    Y = ExpandHeight ? preferredPosition.Y : elementPosition.Y
-                };
+                    for (var i = 0; i < parent.ChildCount; i++)
+                        ExpandChild(parent.GetChildAt(i), size, false);
+                }
             }
 
             if (Parent != null)

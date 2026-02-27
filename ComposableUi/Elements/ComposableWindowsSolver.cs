@@ -1,45 +1,72 @@
-﻿using System.Diagnostics;
-
-namespace ComposableUi
+﻿namespace ComposableUi
 {
     public sealed class ComposableWindowsSolver : IElementSolver
     {
         public Window2Element Source { get; private set; }
-        public Window2Element Target { get; private set; }
+        public Window2Element AttachTarget { get; private set; }
+        public Window2Element InsertTarget { get; private set; }
 
         public void SelectSource(Window2Element window)
         {
             Source = window;
         }
 
-        public void ReleaseSource(Window2Element window)
+        public void SelectInsertTarget(Window2Element window)
         {
-            if (Source == window)
-                Source = null;
+            InsertTarget = window;
         }
 
-        public void SelectTarget(Window2Element window)
+        public void ReleaseInsertTarget(Window2Element window)
         {
-            Target = window;
+            if (InsertTarget == window)
+                InsertTarget = null;
         }
 
-        public void ReleaseTarget(Window2Element window)
+        public void SelectAttachTarget(Window2Element window)
         {
-            if (Target == window)
-                Target = null;
+            AttachTarget = window;
         }
 
-        public bool TryAttach()
+        public void ReleaseAttachTarget(Window2Element window)
         {
-            var canAttach = Source is not null 
-                && Target is not null;
-            if (canAttach)
-                Target.Attach(Source);
+            if (AttachTarget == window)
+                AttachTarget = null;
+        }
+
+        public CompositionResult TryCompose()
+        {
+            var result = Source switch
+            {
+                not null when TryAttach() => CompositionResult.Attached,
+                not null when TryInsert() => CompositionResult.Inserted,
+                _ => CompositionResult.None,
+            };
 
             Source = null;
-            Target = null;
+            AttachTarget = null;
+            InsertTarget = null;
 
-            return canAttach;
+            return result;
+        }
+
+        private bool TryInsert()
+        {
+            if (InsertTarget is null)
+                return false;
+
+            InsertTarget.Insert(Source);
+
+            return true;
+        }
+
+        private bool TryAttach()
+        {
+            if (AttachTarget is null)
+                return false;
+
+            AttachTarget.Attach(Source);
+
+            return true;
         }
 
         void IElementSolver.Handle(Element element)
@@ -51,5 +78,13 @@ namespace ComposableUi
         void IElementSolver.Resolve()
         {
         }
+    }
+
+    public enum CompositionResult
+    {
+        None,
+
+        Attached,
+        Inserted
     }
 }
