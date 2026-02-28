@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Diagnostics;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -58,7 +60,8 @@ namespace ComposableUi
             _tempWindow.InnerElement.Size = newSize;
             _tempWindow.Pivot = source.Pivot;
             _tempWindow.Tab.CopyHeaderFrom(source.Tab);
-            _tempWindow.Position = source.Position + (newSize - oldSize) * source.Pivot;
+            _tempWindow.Position = source.Position + (newSize - oldSize) * source.Pivot
+                + source.CalculateTabOffset();
         }
 
         private void PrepareTempTab(TabElement source)

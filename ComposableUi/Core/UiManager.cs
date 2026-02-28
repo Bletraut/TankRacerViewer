@@ -13,7 +13,7 @@ namespace ComposableUi
         public IPointerInputProvider PointerInputProvider { get; set; }
         public IUiRenderer UiRenderer { get; set; }
 
-        public bool IsOverUi => _currentActiveHandlers.Count > 0;
+        public bool HasAnyActiveInputHandlers => _currentActiveHandlers.Count > 0;
         public bool IsAnyElementPressed => _primaryButtonPressedHandlers.Count > 0 || _secondaryButtonPressedHandlers.Count > 0;
 
         private readonly GraphicsDevice _graphicsDevice;

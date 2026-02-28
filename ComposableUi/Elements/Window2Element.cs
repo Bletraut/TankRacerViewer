@@ -158,17 +158,34 @@ namespace ComposableUi
             containerWindow._childWindows.Insert(insertIndex, source);
 
             containerWindow.ApplyRootWindow(target._rootWindow);
-            containerWindow.RefreshContainerMinSize();
+            containerWindow.RecalculateContainerMinSize();
         }
 
         public static void InsertTo(Window2Element source, Window2Element target)
         {
+            var areSame = target._containerWindow is not null
+                && target._containerWindow._compositionType == CompositionType.Tabbed
+                && source._containerWindow == target._containerWindow;
+            if (areSame)
+            {
+                target._containerWindow._childWindows.Remove(target);
+                target._containerWindow._childWindows.Insert(target._currentInsertIndex, target);
+
+                target._tabsRow.RemoveChild(source.Tab);
+                target._tabsRow.InsertChild(target._currentInsertIndex, source.Tab);
+
+                return;
+            }
+
+            if (source == target)
+                return;
+
             DetachFromParent(source, Vector2.Zero);
 
             var shouldInsertToParent = target._containerWindow?._compositionType is CompositionType.Tabbed;
             if (shouldInsertToParent)
             {
-                if (TryInsertToParent(source, target, 0))
+                if (TryInsertToParent(source, target))
                     return;
             }
 
@@ -216,11 +233,11 @@ namespace ComposableUi
             source._viewHolder.IsEnabled = false;
             source.SetSize(target.Size);
             layout.AddChild(source);
-            target._tabsRow.AddChild(source.Tab);
-            containerWindow._childWindows.Insert(0, source);
+            target._tabsRow.InsertChild(target._currentInsertIndex, source.Tab);
+            containerWindow._childWindows.Insert(target._currentInsertIndex, source);
 
             containerWindow.ApplyRootWindow(target._rootWindow);
-            containerWindow.RefreshContainerMinSize();
+            containerWindow.RecalculateContainerMinSize();
         }
 
         public static void DetachFromParent(Window2Element source, Vector2 position)
@@ -236,11 +253,39 @@ namespace ComposableUi
             source.ApplyRootWindow(null);
             source.IsInteractable = true;
             source.Position = position;
-            // FOR TEST
+            // For inserted tab.
             source.BlockInput = true;
             source._viewHolder.IsEnabled = true;
             source._tabsRow.AddChild(source.Tab);
-            // end
+
+            if (containerWindow._compositionType == CompositionType.Tabbed)
+            {
+                Window2Element firstWindow = null;
+                foreach ( var child in containerWindow._childWindows)
+                {
+                    if (child != source)
+                    {
+                        firstWindow = child;
+                        break;
+                    }
+                }
+                firstWindow.BlockInput = true;
+                firstWindow._viewHolder.IsEnabled = true;
+                firstWindow._tabsRow.AddChild(firstWindow.Tab);
+
+                foreach ( var child in containerWindow._childWindows)
+                {
+                    if (child == firstWindow)
+                        continue;
+
+                    if (child == source)
+                        continue;
+
+                    child.BlockInput = false;
+                    child._viewHolder.IsEnabled = false;
+                    firstWindow._tabsRow.AddChild(child.Tab);
+                }
+            }    
 
             if (containerWindow._childWindows.Count == 1)
             {
@@ -251,6 +296,10 @@ namespace ComposableUi
                 lastWindow._containerWindow = containerWindow._containerWindow;
                 lastWindow.ApplyRootWindow(containerWindow._rootWindow);
                 lastWindow.IsInteractable = containerWindow.IsInteractable;
+                // For inserted tab.
+                lastWindow.BlockInput = true;
+                lastWindow._viewHolder.IsEnabled = true;
+                lastWindow._tabsRow.AddChild(lastWindow.Tab);
 
                 if (containerWindow._containerWindow is not null)
                 {
@@ -265,7 +314,7 @@ namespace ComposableUi
                     var containerIndex = parentContainerWindow._childWindows.IndexOf(containerWindow);
                     parentContainerWindow._childWindows.Remove(containerWindow);
                     parentContainerWindow._childWindows.Insert(containerIndex, lastWindow);
-                    parentContainerWindow.RefreshContainerMinSize();
+                    parentContainerWindow.RecalculateContainerMinSize();
                 }
                 else
                 {
@@ -285,7 +334,7 @@ namespace ComposableUi
             }
             else
             {
-                containerWindow.RefreshContainerMinSize();
+                containerWindow.RecalculateContainerMinSize();
             }
         }
 
@@ -310,13 +359,28 @@ namespace ComposableUi
             targetIndex = target._containerWindow._childWindows.IndexOf(target);
             target._containerWindow._childWindows.Insert(targetIndex + insertIndex, source);
 
-            target._containerWindow.RefreshContainerMinSize();
+            target._containerWindow.RecalculateContainerMinSize();
 
             return true;
         }
 
-        private static bool TryInsertToParent(Window2Element source, Window2Element target, int index)
+        private static bool TryInsertToParent(Window2Element source, Window2Element target)
         {
+            if (target._containerWindow._viewHolder.InnerElement is not ContainerElement splitLayout)
+                return false;
+
+            source._containerWindow = target._containerWindow;
+            source.ApplyRootWindow(target._rootWindow);
+            source.IsInteractable = false;
+            source.BlockInput = false;
+            source._viewHolder.IsEnabled = false;
+            source.SetSize(target.Size);
+            splitLayout.AddChild(source);
+            target._tabsRow.InsertChild(target._currentInsertIndex, source.Tab);
+            target._containerWindow._childWindows.Insert(target._currentInsertIndex, source);
+
+            target._containerWindow.RecalculateContainerMinSize();
+
             return true;
         }
 
@@ -607,6 +671,18 @@ namespace ComposableUi
             _composableWindowsSolver = solver;
         }
 
+        public Vector2 CalculateTabOffset()
+        {
+            if (Tab.Parent is not LineLayout parent)
+                return Vector2.Zero;
+
+            if (parent.ChildCount <= 1)
+                return Vector2.Zero;
+
+            var offset = Tab.Position - parent.GetChildAt(0).Position;
+            return offset;
+        }
+
         public void BringToFront()
         {
             var target = _rootWindow ?? this;
@@ -616,26 +692,37 @@ namespace ComposableUi
 
         private bool TryShowInsertPreview(Window2Element source, Point position)
         {
-            _insertPreviewPlaceHolder.Size = source.Tab.Size;
+            var areSame = _containerWindow is not null
+                && _containerWindow._compositionType is CompositionType.Tabbed
+                && _containerWindow == source._containerWindow;
+            var placeHolder = areSame ? source.Tab : _insertPreviewPlaceHolder;
+            placeHolder.Size = source.Tab.Size;
 
-            var insertIndex = _tabsRow.ChildCount;
-            for (var i = 0; i < _tabsRow.ChildCount; i++)
+            var insertIndex = 0;
+            if (_containerWindow is not null)
             {
-                var child = _tabsRow.GetChildAt(i);
-
-                var shouldSkip = !child.IsEnabled
-                    || child == source.Tab
-                    || (child is LayoutElement layoutElement && layoutElement.IgnoreLayout);
-                if (shouldSkip)
-                    continue;
-
-                var boundingRectangle = child.BoundingRectangle;
-                boundingRectangle.Width = (int)_insertPreviewPlaceHolder.Size.X;
-                if (boundingRectangle.Contains(position))
+                insertIndex = _containerWindow._childWindows.Count;
+                for (var i = 0; i < _containerWindow._childWindows.Count; i++)
                 {
-                    insertIndex = i;
-                    break;
+                    var child = _containerWindow._childWindows[i];
+                    if (IsContained(child.Tab, position.X))
+                    {
+                        insertIndex = i;
+                        break;
+                    }
                 }
+                if (IsContained(placeHolder, position.X))
+                {
+                    insertIndex = 0;
+                }
+            }
+            else if (IsContained(Tab, position.X))
+            {
+                insertIndex = 1;
+            }
+            else if (IsContained(placeHolder, position.X))
+            {
+                insertIndex = 0;
             }
 
             if (_currentInsertIndex == insertIndex)
@@ -643,12 +730,22 @@ namespace ComposableUi
 
             _currentInsertIndex = insertIndex;
 
-            _tabsRow.RemoveChild(_insertPreviewPlaceHolder);
-            _tabsRow.InsertChild(insertIndex, _insertPreviewPlaceHolder);
+            _tabsRow.RemoveChild(placeHolder);
+            _tabsRow.InsertChild(insertIndex, placeHolder);
 
             InsertPreviewShown?.Invoke(this, Tab);
 
             return true;
+
+            bool IsContained(Element element, int positionX)
+            {
+                var boundingRectangle = element.BoundingRectangle;
+
+                var isContained = position.X < boundingRectangle.X
+                    || (position.X - boundingRectangle.X <= placeHolder.Size.X);
+
+                return isContained;
+            }
         }
 
         private void HideInsertPreviewIfPossible()
@@ -766,22 +863,29 @@ namespace ComposableUi
                 InnerElement.Size = Size;
         }
 
-        private void RefreshContainerMinSize()
+        private void RecalculateContainerMinSize()
         {
             var totalSize = Vector2.Zero;
-            var maxSize = Vector2.Zero;
+            var maxMinSize = Vector2.Zero;
 
             foreach (var window in _childWindows)
             {
                 totalSize += window.MinSize;
-                maxSize = Vector2.Max(maxSize, window.MinSize);
+                maxMinSize = Vector2.Max(maxMinSize, window.MinSize);
             }
 
-            MinSize = _splitDirection is SplitDirection.Horizontal
-                ? new Vector2(totalSize.X, maxSize.Y)
-                : new Vector2(maxSize.X, totalSize.Y);
+            if (_compositionType is CompositionType.Tabbed)
+            {
+                MinSize = maxMinSize;
+            }
+            else
+            {
+                MinSize = _splitDirection is SplitDirection.Horizontal
+                    ? new Vector2(totalSize.X, maxMinSize.Y)
+                    : new Vector2(maxMinSize.X, totalSize.Y);
+            }
 
-            _containerWindow?.RefreshContainerMinSize();
+            _containerWindow?.RecalculateContainerMinSize();
         }
 
         private void ApplyRootWindow(Window2Element window)
@@ -900,7 +1004,7 @@ namespace ComposableUi
                 return;
 
             _isTapPressed = true;
-            _dragDeltaAccumulator = Vector2.Zero;
+            _dragDeltaAccumulator = CalculateTabOffset();
 
             Tab.InnerElement.IsEnabled = false;
 
