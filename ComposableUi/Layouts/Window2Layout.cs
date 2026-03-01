@@ -13,6 +13,7 @@ namespace ComposableUi
 
         private Element _tempTabPlaceHolder;
 
+        private bool _isInsertPreviewShown;
         private bool _isSplitPreviewShown;
 
         public Window2Layout()
@@ -120,6 +121,7 @@ namespace ComposableUi
 
         private void OnInsertPreviewShown(Window2Element sender, Element placeHolder)
         {
+            _isInsertPreviewShown = true;
             _tempTabPlaceHolder = placeHolder;
 
             HideTempWindow();
@@ -128,6 +130,7 @@ namespace ComposableUi
 
         private void OnInsertPreviewHidden(Window2Element sender)
         {
+            _isInsertPreviewShown = false;
             _tempTabPlaceHolder = null;
 
             HideTempTab();
@@ -148,7 +151,8 @@ namespace ComposableUi
         {
             _isSplitPreviewShown = false;
 
-            ShowTempWindow();
+            if (!_isInsertPreviewShown)
+                ShowTempWindow();
         }
     }
 }

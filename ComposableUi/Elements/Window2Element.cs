@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 using ComposableUi.Utilities;
 
@@ -28,6 +29,8 @@ namespace ComposableUi
 
         private static readonly Element _insertPreviewPlaceHolder = new();
         private static readonly Window2Element _splitPreviewWindow = CreateNonInteractiveWindow();
+
+        private static readonly List<Element> _tabList = new();
 
         internal static Window2Element CreateNonInteractiveWindow()
         {
@@ -112,6 +115,11 @@ namespace ComposableUi
                 ? GetRow() 
                 : GetColumn();
 
+            var isTabbed = target._containerWindow is not null
+                && target._containerWindow._compositionType is CompositionType.Tabbed;
+            if (isTabbed)
+                target = target._containerWindow;
+
             var containerWindow = GetContainerWindow();
             containerWindow._compositionType = CompositionType.Adjacent;
             containerWindow._splitDirection = splitDirection;
@@ -161,18 +169,18 @@ namespace ComposableUi
             containerWindow.RecalculateContainerMinSize();
         }
 
-        public static void InsertTo(Window2Element source, Window2Element target)
+        public static void InsertTo(Window2Element source, Window2Element target, int index)
         {
             var areSame = target._containerWindow is not null
                 && target._containerWindow._compositionType == CompositionType.Tabbed
                 && source._containerWindow == target._containerWindow;
             if (areSame)
             {
-                target._containerWindow._childWindows.Remove(target);
-                target._containerWindow._childWindows.Insert(target._currentInsertIndex, target);
+                target._containerWindow._childWindows.Remove(source);
+                target._containerWindow._childWindows.Insert(index, source);
 
-                target._tabsRow.RemoveChild(source.Tab);
-                target._tabsRow.InsertChild(target._currentInsertIndex, source.Tab);
+                target._tabRow.RemoveChild(source.Tab);
+                target._tabRow.InsertChild(index, source.Tab);
 
                 return;
             }
@@ -207,8 +215,8 @@ namespace ComposableUi
             {
                 if (target._containerWindow._viewHolder.InnerElement is ContainerElement parentSplitLayout)
                 {
-                    var index = parentSplitLayout.IndexOf(target);
-                    parentSplitLayout.InsertChild(index, containerWindow);
+                    var viewIndex = parentSplitLayout.IndexOf(target);
+                    parentSplitLayout.InsertChild(viewIndex, containerWindow);
                 }
 
                 var targetIndex = target._containerWindow._childWindows.IndexOf(target);
@@ -233,8 +241,8 @@ namespace ComposableUi
             source._viewHolder.IsEnabled = false;
             source.SetSize(target.Size);
             layout.AddChild(source);
-            target._tabsRow.InsertChild(target._currentInsertIndex, source.Tab);
-            containerWindow._childWindows.Insert(target._currentInsertIndex, source);
+            target._tabRow.InsertChild(index, source.Tab);
+            containerWindow._childWindows.Insert(index, source);
 
             containerWindow.ApplyRootWindow(target._rootWindow);
             containerWindow.RecalculateContainerMinSize();
@@ -256,7 +264,7 @@ namespace ComposableUi
             // For inserted tab.
             source.BlockInput = true;
             source._viewHolder.IsEnabled = true;
-            source._tabsRow.AddChild(source.Tab);
+            source._tabRow.AddChild(source.Tab);
 
             if (containerWindow._compositionType == CompositionType.Tabbed)
             {
@@ -271,7 +279,7 @@ namespace ComposableUi
                 }
                 firstWindow.BlockInput = true;
                 firstWindow._viewHolder.IsEnabled = true;
-                firstWindow._tabsRow.AddChild(firstWindow.Tab);
+                firstWindow._tabRow.AddChild(firstWindow.Tab);
 
                 foreach ( var child in containerWindow._childWindows)
                 {
@@ -283,7 +291,7 @@ namespace ComposableUi
 
                     child.BlockInput = false;
                     child._viewHolder.IsEnabled = false;
-                    firstWindow._tabsRow.AddChild(child.Tab);
+                    firstWindow._tabRow.AddChild(child.Tab);
                 }
             }    
 
@@ -299,7 +307,7 @@ namespace ComposableUi
                 // For inserted tab.
                 lastWindow.BlockInput = true;
                 lastWindow._viewHolder.IsEnabled = true;
-                lastWindow._tabsRow.AddChild(lastWindow.Tab);
+                lastWindow._tabRow.AddChild(lastWindow.Tab);
 
                 if (containerWindow._containerWindow is not null)
                 {
@@ -376,7 +384,7 @@ namespace ComposableUi
             source._viewHolder.IsEnabled = false;
             source.SetSize(target.Size);
             splitLayout.AddChild(source);
-            target._tabsRow.InsertChild(target._currentInsertIndex, source.Tab);
+            target._tabRow.InsertChild(target._currentInsertIndex, source.Tab);
             target._containerWindow._childWindows.Insert(target._currentInsertIndex, source);
 
             target._containerWindow.RecalculateContainerMinSize();
@@ -465,7 +473,7 @@ namespace ComposableUi
         private readonly Element _view;
         private readonly ExpandedElement _viewHolder;
 
-        private readonly RowLayout _tabsRow;
+        private readonly RowLayout _tabRow;
         private readonly ContainerElement _contentContainer;
 
         private readonly PointerInputHandlerElement _insertArea;
@@ -517,7 +525,7 @@ namespace ComposableUi
             DragHandle.PointerDown += OnDragHandlePointerDown;
             DragHandle.PointerFixedDrag += OnDragHandlePointerFixedDrag;
 
-            _tabsRow = new RowLayout(
+            _tabRow = new RowLayout(
                 alignmentFactor: Alignment.TopLeft,
                 expandChildrenCrossAxis: true
             );
@@ -525,7 +533,7 @@ namespace ComposableUi
             Tab = new TabElement(
                 titleText: titleText
             );
-            _tabsRow.AddChild(Tab);
+            _tabRow.AddChild(Tab);
 
             Tab.PointerDown += OnTabButtonPointerDown;
             Tab.PointerUp += OnTabButtonPointerUp;
@@ -545,7 +553,7 @@ namespace ComposableUi
                     size: new Vector2(DefaultHeaderHeight),
                     children: [
                         new ExpandedElement(DragHandle),
-                        new ExpandedElement(_tabsRow)
+                        new ExpandedElement(_tabRow)
                     ]
                 )
             );
@@ -625,7 +633,7 @@ namespace ComposableUi
 
         internal void Insert(Window2Element source)
         {
-            InsertTo(source, this);
+            InsertTo(source, this, _currentInsertIndex);
 
             HideInsertPreviewIfPossible();
         }
@@ -690,62 +698,79 @@ namespace ComposableUi
                 container.BringToFront(target);
         }
 
-        private bool TryShowInsertPreview(Window2Element source, Point position)
+        private void ShowInsertPreview(Window2Element source, Point position)
         {
-            var areSame = _containerWindow is not null
-                && _containerWindow._compositionType is CompositionType.Tabbed
-                && _containerWindow == source._containerWindow;
-            var placeHolder = areSame ? source.Tab : _insertPreviewPlaceHolder;
-            placeHolder.Size = source.Tab.Size;
+            var isTabbed = _containerWindow is not null
+                && _containerWindow._compositionType is CompositionType.Tabbed;
 
-            var insertIndex = 0;
-            if (_containerWindow is not null)
+            _tabList.Clear();
+            if (isTabbed)
             {
-                insertIndex = _containerWindow._childWindows.Count;
                 for (var i = 0; i < _containerWindow._childWindows.Count; i++)
                 {
                     var child = _containerWindow._childWindows[i];
-                    if (IsContained(child.Tab, position.X))
-                    {
-                        insertIndex = i;
-                        break;
-                    }
+                    _tabList.Add(child.Tab);
                 }
-                if (IsContained(placeHolder, position.X))
+            }
+            else
+            {
+                _tabList.Add(Tab);
+            }
+
+            Element placeHolder;
+            var areSame = isTabbed && _containerWindow == source._containerWindow;
+            if (areSame)
+            {
+                placeHolder = source.Tab;
+            }
+            else
+            {
+                placeHolder = _insertPreviewPlaceHolder;
+                placeHolder.Size = source.Tab.Size;
+
+                if (_currentInsertIndex == EmptyInsertIndex)
                 {
-                    insertIndex = 0;
+                    _tabList.Add(_insertPreviewPlaceHolder);
+                }
+                else
+                {
+                    _tabList.Insert(_currentInsertIndex, placeHolder);
                 }
             }
-            else if (IsContained(Tab, position.X))
+
+            var insertIndex = _tabList.Count - 1;
+            var insertElement = _tabList[insertIndex];
+            for (var i = 0; i < _tabList.Count; i++)
             {
-                insertIndex = 1;
-            }
-            else if (IsContained(placeHolder, position.X))
-            {
-                insertIndex = 0;
-            }
+                var child = _tabList[i];
 
-            if (_currentInsertIndex == insertIndex)
-                return true;
-
-            _currentInsertIndex = insertIndex;
-
-            _tabsRow.RemoveChild(placeHolder);
-            _tabsRow.InsertChild(insertIndex, placeHolder);
-
-            InsertPreviewShown?.Invoke(this, Tab);
-
-            return true;
-
-            bool IsContained(Element element, int positionX)
-            {
-                var boundingRectangle = element.BoundingRectangle;
+                var boundingRectangle = child.BoundingRectangle;
 
                 var isContained = position.X < boundingRectangle.X
                     || (position.X - boundingRectangle.X <= placeHolder.Size.X);
-
-                return isContained;
+                if (isContained)
+                {
+                    insertIndex = i;
+                    insertElement = child;
+                    break;
+                }
             }
+
+            if (_currentInsertIndex == insertIndex)
+                return;
+
+            _currentInsertIndex = insertIndex;
+
+            _tabRow.RemoveChild(placeHolder);
+            _tabRow.InsertChild(insertIndex, placeHolder);
+
+            if (areSame)
+            {
+                _containerWindow._childWindows.Remove(source);
+                _containerWindow._childWindows.Insert(insertIndex, source);
+            }
+
+            InsertPreviewShown?.Invoke(this, Tab);
         }
 
         private void HideInsertPreviewIfPossible()
@@ -755,7 +780,7 @@ namespace ComposableUi
 
             _currentInsertIndex = EmptyInsertIndex;
 
-            _tabsRow.RemoveChild(_insertPreviewPlaceHolder);
+            _tabRow.RemoveChild(_insertPreviewPlaceHolder);
 
             InsertPreviewHidden?.Invoke(this);
         }
@@ -1075,14 +1100,8 @@ namespace ComposableUi
             if (source is null)
                 return;
 
-            if (TryShowInsertPreview(source, pointerEvent.Position))
-            {
-                _composableWindowsSolver.SelectInsertTarget(this);
-            }
-            else
-            {
-                _composableWindowsSolver.ReleaseInsertTarget(this);
-            }
+            ShowInsertPreview(source, pointerEvent.Position);
+            _composableWindowsSolver.SelectInsertTarget(this);
         }
 
         private void OnInsertAreaPointerLeave(PointerInputHandlerElement sender,
