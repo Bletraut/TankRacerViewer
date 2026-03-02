@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Xml.Linq;
 
 using ComposableUi.Utilities;
 
@@ -30,7 +28,7 @@ namespace ComposableUi
         private static readonly Element _insertPreviewPlaceHolder = new();
         private static readonly Window2Element _splitPreviewWindow = CreateNonInteractiveWindow();
 
-        private static readonly List<Element> _tabList = new();
+        private static readonly List<Element> _tabList = [];
 
         internal static Window2Element CreateNonInteractiveWindow()
         {
@@ -1007,7 +1005,8 @@ namespace ComposableUi
             return normal;
         }
 
-        private void OnDragHandlePointerDown(PointerInputHandlerElement sender, PointerEvent e)
+        private void OnDragHandlePointerDown(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
         {
             BringToFront();
         }
@@ -1202,14 +1201,6 @@ namespace ComposableUi
         {
             base.OnPointerDown(pointerEvent);
             BringToFront();
-        }
-
-        public enum Edge
-        {
-            Left,
-            Right,
-            Top,
-            Bottom
         }
 
         private enum SplitDirection
