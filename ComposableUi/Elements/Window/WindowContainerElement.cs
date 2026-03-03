@@ -2,6 +2,8 @@
 
 namespace ComposableUi
 {
+    using Item = WindowNodeElement<WindowContainerElement>;
+
     public sealed class WindowContainerElement : WindowNodeElement<WindowContainerElement>
     {
         // Static.
@@ -51,13 +53,31 @@ namespace ComposableUi
         }
 
         // Class.
-        internal CompositionType CompositionType { get; private set; }
+        internal int ItemCount => _items.Count;
 
-        private readonly List<WindowNodeElement<WindowContainerElement>> _items = [];
+        internal DockingMode DockingMode { get; private set; }
 
-        private void ClearItems()
+        private readonly List<Item> _items = [];
+
+        internal void MoveItem(int index, Item item)
         {
-            _items.Clear();
+            _items.Remove(item);
+            _items.Insert(index, item);
         }
+
+        internal int IndexOfItem(Item item)
+            => _items.IndexOf(item);
+
+        internal Item GetFirstItem()
+            => _items[0];
+
+        internal Item GetLastItem()
+            => _items[^1];
+
+        internal Item GetItemAt(int index) 
+            => _items[index] = this;
+
+        internal void ClearItems()
+            => _items.Clear();
     }
 }

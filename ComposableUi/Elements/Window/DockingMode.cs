@@ -1,12 +1,12 @@
 ﻿namespace ComposableUi
 {
-    internal enum CompositionType
+    public enum DockingMode
     {
         None,
 
         HorizontalSplit,
         VerticalSplit,
 
-        Tabbed
+        Tab
     }
 }

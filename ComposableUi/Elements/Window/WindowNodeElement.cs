@@ -5,7 +5,8 @@ namespace ComposableUi
     public class WindowNodeElement<T> : ResizableElement
         where T : Element
     {
-        protected T Container { get; set; }
+        internal T Container { get; set; }
+
         protected T Root { get; set; }
 
         protected HolderElement ViewHolder { get; }
@@ -32,7 +33,7 @@ namespace ComposableUi
             );
         }
 
-        protected void ShowInOverlayAndAlignToEdge(Element element, Vector2 edgeNormal)
+        internal void ShowInOverlayAndAlignToEdge(Element element, Vector2 edgeNormal)
         {
             var alignmentFactor = Vector2.Max(Vector2.Zero, edgeNormal);
 
@@ -45,9 +46,17 @@ namespace ComposableUi
             _overlayAlignment.Pivot = alignmentFactor;
         }
 
-        protected void HideOverlay()
+        internal void HideOverlay()
         {
             _overlayExpanded.IsEnabled = false;
+        }
+
+        internal void SetSize(Vector2 size)
+        {
+            Size = size;
+
+            if (InnerElement is not null)
+                InnerElement.Size = size;
         }
 
         protected Element ResolveRoot()
