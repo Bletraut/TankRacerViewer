@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 using ComposableUi.Utilities;
 
@@ -52,7 +53,7 @@ namespace ComposableUi
         private bool _isTabPressed;
         private Vector2 _dragDeltaAccumulator;
 
-        private int _currentTabIndex;
+        private int _currentTabIndex = EmptyTabIndex;
 
         private Item _currentSplitPreviewTarget;
         private Vector2 _currentSplitPreviewEdgeNormal;
@@ -184,7 +185,39 @@ namespace ComposableUi
         // Docking.
         internal void Dock(Window3Element source)
         {
+            if (_currentSplitPreviewTarget is not null)
+            {
+                var edge = EdgeNormalToEdge(_currentSplitPreviewEdgeNormal);
 
+                var shouldRemoveTargetAfterDetach = source.Container == Container
+                    && _currentSplitPreviewTarget == Container
+                    && _currentSplitPreviewTarget.Container.ItemCount <= 2;
+                if (shouldRemoveTargetAfterDetach)
+                {
+                    for (var i = 0; i < Container.ItemCount; i++)
+                    {
+                        var item = Container.GetItemAt(i);
+                        if (item == source)
+                            continue;
+
+                        HideSplitPreviewIfPossible();
+
+                        _currentSplitPreviewTarget = item;
+                        if (_currentSplitPreviewTarget is WindowContainerElement container)
+                        {
+                            _currentSplitPreviewTarget = EdgeToInsertIndex(edge) > 0
+                                ? container.GetLastItem()
+                                : container.GetFirstItem();
+                        }
+
+                        break;
+                    }
+                }
+
+                DockTo(source, _currentSplitPreviewTarget, edge);
+            }
+
+            HideSplitPreviewIfPossible();
         }
 
         internal void DockAsTab(Window3Element source)
@@ -202,6 +235,17 @@ namespace ComposableUi
 
             var offset = Tab.Position - parent.GetChildAt(0).Position;
             return offset;
+        }
+
+        internal void SetViewActive(bool value)
+        {
+            BlockInput = value;
+            ViewHolder.IsEnabled = value;
+        }
+
+        internal void RestoreTab()
+        {
+            _tabRow.AddChild(Tab);
         }
 
         public void BringToFront()
@@ -270,8 +314,8 @@ namespace ComposableUi
             {
                 for (var i = 0; i < Container.ItemCount; i++)
                 {
-                    var child = Container.GetItemAt(i);
-                    if (child is not Window3Element window)
+                    var item = Container.GetItemAt(i);
+                    if (item is not Window3Element window)
                         continue;
 
                     _tabList.Add(window.Tab);
@@ -283,8 +327,8 @@ namespace ComposableUi
             }
 
             Element placeHolder;
-            var areSame = isTabbed && Container == source.Container;
-            if (areSame)
+            var shouldUseSourceTabAsPlaceHolder = isTabbed && Container == source.Container;
+            if (shouldUseSourceTabAsPlaceHolder)
             {
                 placeHolder = source.Tab;
             }
@@ -329,7 +373,7 @@ namespace ComposableUi
             _tabRow.RemoveChild(placeHolder);
             _tabRow.InsertChild(insertIndex, placeHolder);
 
-            if (areSame)
+            if (shouldUseSourceTabAsPlaceHolder)
                 Container.MoveItem(insertIndex, source);
 
             TabPreviewShown?.Invoke(this, Tab);
@@ -436,6 +480,14 @@ namespace ComposableUi
             _currentSplitPreviewEdgeNormal = Vector2.Zero;
 
             SplitPreviewHidden?.Invoke(this);
+        }
+
+        internal override void PrepareReplacementWith(Item node)
+        {
+            base.PrepareReplacementWith(node);
+
+            RestoreTab();
+            SetViewActive(true);
         }
     }
 }

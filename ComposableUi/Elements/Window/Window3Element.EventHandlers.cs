@@ -194,7 +194,7 @@ namespace ComposableUi
             var delta = Vector2.Dot(_resizeNormal, deltaVector);
             var dockingMode = EdgeNormalToDockingMode(_resizeNormal);
 
-            IncreaseSizeInHierarchyIfPossible(this, dockingMode, _resizeAxis, axisDelta, delta);
+            WindowContainerElement.IncreaseSizeInHierarchyIfPossible(this, dockingMode, _resizeAxis, axisDelta, delta);
         }
 
         protected override void OnPointerDown(in PointerEvent pointerEvent)

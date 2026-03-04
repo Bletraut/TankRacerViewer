@@ -5,11 +5,11 @@ namespace ComposableUi
     public class WindowNodeElement<T> : ResizableElement
         where T : Element
     {
-        internal T Container { get; set; }
+        internal T Container { get; private set; }
 
-        protected T Root { get; set; }
+        internal T Root { get; private set; }
 
-        protected HolderElement ViewHolder { get; }
+        internal ExpandedElement ViewHolder { get; }
 
         private readonly AlignmentElement _overlayAlignment;
         private readonly ExpandedElement _overlayExpanded;
@@ -61,5 +61,23 @@ namespace ComposableUi
 
         protected Element ResolveRoot()
             => Root is not null ? Root : this;
+
+        internal virtual void ApplyContainer(T container)
+        {
+            Container = container;
+        }
+
+        internal virtual void ApplyRoot(T root)
+        {
+            Root = root;
+        }
+
+        internal virtual void PrepareReplacementWith(WindowNodeElement<T> node)
+        {
+            node.SetSize(Size);
+            node.ApplyContainer(Container);
+            node.ApplyRoot(Root);
+            node.IsInteractable = IsInteractable;
+        }
     }
 }
