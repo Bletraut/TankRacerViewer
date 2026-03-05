@@ -197,9 +197,7 @@ namespace ComposableUi
             if (index < 0)
                 return;
 
-            var inLayoutIndex = ViewHolder.InnerElement is ContainerElement layout
-                ? layout.IndexOf(oldItem)
-                : 0;
+            var inLayoutIndex = Layout.IndexOf(oldItem);
 
             RemoveItem(oldItem);
             InsertItem(index, inLayoutIndex, newItem);
@@ -213,9 +211,7 @@ namespace ComposableUi
             item.ApplyRoot(Root ?? this);
             item.IsInteractable = false;
 
-            if (ViewHolder.InnerElement is ContainerElement layout)
-                layout.InsertChild(inLayoutIndex, item);
-
+            Layout.InsertChild(inLayoutIndex, item);
             _items.Insert(index, item);
 
             RecalculateMinSize();
@@ -234,8 +230,7 @@ namespace ComposableUi
                 item.IsInteractable = true;
                 item.ApplyContainer(null);
 
-                if (ViewHolder.InnerElement is ContainerElement layout)
-                    layout.RemoveChild(item);
+                Layout.RemoveChild(item);
             }
         }
 
