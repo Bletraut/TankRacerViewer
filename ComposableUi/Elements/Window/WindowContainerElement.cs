@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 using Microsoft.Xna.Framework;
 
@@ -14,12 +13,27 @@ namespace ComposableUi
         private static readonly Stack<WindowContainerElement> _pool = new();
 
         // Pool.
-        internal static WindowContainerElement Rent()
+        internal static WindowContainerElement Rent(DockingMode dockingMode)
         {
             if (!_pool.TryPop(out var container))
                 container = new WindowContainerElement();
 
             container.IsEnabled = true;
+            container.DockingMode = dockingMode;
+
+            switch (dockingMode)
+            {
+                case DockingMode.HorizontalSplit:
+                    container.ApplyLayout(GetRow());
+                    break;
+                case DockingMode.VerticalSplit:
+                    container.ApplyLayout(GetColumn());
+                    break;
+                case DockingMode.Tab:
+                    container.ApplyLayout(new ContainerElement());
+                    container.ViewHolder.PropagateToInnerElementChildren = true;
+                    break;
+            }
 
             return container;
         }
@@ -28,37 +42,13 @@ namespace ComposableUi
         {
             container.IsEnabled = false;
             container.DockingMode = DockingMode.None;
+            container.ViewHolder.PropagateToInnerElementChildren = false;
             container.ApplyContainer(null);
             container.ApplyRoot(null);
-            container.ViewHolder.InnerElement = null;
+            container.ApplyLayout(null);
             container.ClearItems();
 
             _pool.Push(container);
-        }
-
-        // Layout.
-        internal static LineLayout GetRow()
-            => ApplyLineLayoutParameters(new RowLayout());
-
-        internal static LineLayout GetColumn()
-            => ApplyLineLayoutParameters(new ColumnLayout());
-
-        internal static LineLayout ApplyLineLayoutParameters(LineLayout layout)
-        {
-            layout.ExpandChildrenCrossAxis = true;
-            layout.ExpandChildrenMainAxis = true;
-            layout.MainAxisChildrenExpandingMode = ExpandingMode.Size;
-
-            layout.AddChild(new LayoutElement(
-                ignoreLayout: true,
-                innerElement: new ExpandedElement(
-                    innerElement: new SpriteElement(
-                        skin: StandardSkin.SolidDarkPixel
-                    )
-                )
-            ));
-
-            return layout;
         }
 
         // Inner resizing.
@@ -133,10 +123,42 @@ namespace ComposableUi
             target.SetSize(target.Size + new Vector2(increaseDelta));
         }
 
+        // Layout.
+        private static LineLayout GetRow()
+            => ApplyLineLayoutParameters(new RowLayout());
+
+        private static LineLayout GetColumn()
+            => ApplyLineLayoutParameters(new ColumnLayout());
+
+        private static LineLayout ApplyLineLayoutParameters(LineLayout layout)
+        {
+            layout.ExpandChildrenCrossAxis = true;
+            layout.ExpandChildrenMainAxis = true;
+            layout.MainAxisChildrenExpandingMode = ExpandingMode.Size;
+
+            // debug
+            layout.LeftPadding = layout.RightPadding = layout.TopPadding = layout.BottomPadding = 4;
+
+            layout.AddChild(new LayoutElement(
+                ignoreLayout: true,
+                innerElement: new ExpandedElement(
+                    innerElement: new SpriteElement(
+                        //skin: StandardSkin.SolidDarkPixel
+                        skin: StandardSkin.WhitePixel, // debug
+                        color: new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle()) // debug
+                    )
+                )
+            ));
+
+            return layout;
+        }
+
         // Class.
+        internal ContainerElement Layout { get; private set; }
+
         internal int ItemCount => _items.Count;
 
-        internal DockingMode DockingMode { get; set; }
+        internal DockingMode DockingMode { get; private set; }
 
         private readonly List<Item> _items = [];
 
@@ -231,6 +253,12 @@ namespace ComposableUi
 
         internal void ClearItems()
             => _items.Clear();
+
+        private void ApplyLayout(ContainerElement layout)
+        {
+            Layout = layout;
+            ViewHolder.InnerElement = layout;
+        }
 
         internal override void ApplyRoot(WindowContainerElement root)
         {

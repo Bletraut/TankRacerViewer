@@ -40,11 +40,8 @@ namespace ComposableUi
             var parentContainer = oldItem.Container;
             if (parentContainer is not null)
             {
-                if (parentContainer.ViewHolder.InnerElement is ContainerElement layout)
-                {
-                    var index = layout.IndexOf(oldItem);
-                    layout.InsertChild(index, newItem);
-                }
+                var index = parentContainer.Layout.IndexOf(oldItem);
+                parentContainer.Layout.InsertChild(index, newItem);
 
                 parentContainer.ReplaceItem(oldItem, newItem);
             }
@@ -70,32 +67,25 @@ namespace ComposableUi
                 && target.Container.DockingMode == dockingMode;
             if (shouldAttachToParent)
             {
-                if (TryDockToParent(source, target, edge))
-                    return;
+                DockToParent(source, target, edge);
+                return;
             }
-
-            var insertIndex = EdgeToInsertIndex(edge);
-            var layout = dockingMode is DockingMode.HorizontalSplit
-                ? WindowContainerElement.GetRow()
-                : WindowContainerElement.GetColumn();
 
             var isTabbed = target.Container is not null
                 && target.Container.DockingMode is DockingMode.Tab;
             Item currentTarget = isTabbed ? target.Container : target;
 
-            var container = WindowContainerElement.Rent();
-            container.DockingMode = dockingMode;
-            container.ViewHolder.PropagateToInnerElementChildren = false;
-            container.ViewHolder.InnerElement = layout;
+            var container = WindowContainerElement.Rent(dockingMode);
             Replace(currentTarget, container);
 
             var sourceSize = container.Size * SplitPreviewSizeFactor;
             var targetSize = container.Size - sourceSize;
 
-            container.InsertItem(0, layout.ChildCount, currentTarget);
+            container.InsertItem(0, container.Layout.ChildCount, currentTarget);
             currentTarget.SetSize(targetSize);
 
-            var inLayoutIndex = layout.IndexOf(currentTarget) + insertIndex;
+            var insertIndex = EdgeToInsertIndex(edge);
+            var inLayoutIndex = container.Layout.IndexOf(currentTarget) + insertIndex;
             container.InsertItem(insertIndex, inLayoutIndex, source);
             source.SetSize(sourceSize);
         }
@@ -263,31 +253,19 @@ namespace ComposableUi
         }
 
         // Docking.
-        private static bool TryDockToParent(Window3Element source, Item target, Edge edge)
+        private static void DockToParent(Window3Element source, Item target, Edge edge)
         {
-            return true;
-            //if (target._containerWindow._viewHolder.InnerElement is not ContainerElement splitLayout)
-            //    return false;
+            var insertIndex = EdgeToInsertIndex(edge);
+            var targetIndex = target.Container.IndexOfItem(target) + insertIndex;
+            var inLayoutIndex = target.Container.Layout.IndexOf(target) + insertIndex;
 
-            //var insertIndex = EdgeToInsertIndex(edge);
-            //var targetIndex = splitLayout.IndexOf(target);
+            var sourceSize = target.Size * SplitPreviewSizeFactor;
+            var targetSize = target.Size - sourceSize;
 
-            //var sourceSize = target.Size * SplitSizeFactor;
-            //var targetSize = target.Size - sourceSize;
+            target.SetSize(targetSize);
+            source.SetSize(sourceSize);
 
-            //target.SetSize(targetSize);
-
-            //source._containerWindow = target._containerWindow;
-            //source.ApplyRootWindow(target._rootWindow);
-            //source.IsInteractable = false;
-            //source.SetSize(sourceSize);
-            //splitLayout.InsertChild(targetIndex + insertIndex, source);
-            //targetIndex = target._containerWindow._childWindows.IndexOf(target);
-            //target._containerWindow._childWindows.Insert(targetIndex + insertIndex, source);
-
-            //target._containerWindow.RecalculateContainerMinSize();
-
-            //return true;
+            target.Container.InsertItem(targetIndex, inLayoutIndex, source);
         }
     }
 }
