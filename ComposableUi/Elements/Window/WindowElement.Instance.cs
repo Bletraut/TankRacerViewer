@@ -403,8 +403,12 @@ namespace ComposableUi
 
                 var boundingRectangle = child.BoundingRectangle;
 
+                var width = placeHolder.Size.X > boundingRectangle.Width
+                    ? boundingRectangle.Width
+                    : placeHolder.Size.X;
                 var isContained = position.X < boundingRectangle.X
-                    || (position.X - boundingRectangle.X <= placeHolder.Size.X);
+                    || (position.X - boundingRectangle.X <= width);
+
                 if (isContained)
                 {
                     insertIndex = i;
