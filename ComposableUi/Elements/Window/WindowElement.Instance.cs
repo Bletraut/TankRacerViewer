@@ -9,7 +9,7 @@ namespace ComposableUi
 {
     using Item = WindowNodeElement<WindowContainerElement>;
 
-    public partial class Window3Element : WindowNodeElement<WindowContainerElement>
+    public partial class WindowElement : WindowNodeElement<WindowContainerElement>
     {
         public const int DefaultHeaderHeight = 30;
 
@@ -32,13 +32,14 @@ namespace ComposableUi
         private bool IsResizingInternally => _resizeNormal != Vector2.Zero;
 
         // Events.
-        public event ElementEventHandler<Window3Element, PointerEvent> TabPointerDown;
-        public event ElementEventHandler<Window3Element, PointerEvent> TabPointerUp;
-        public event ElementEventHandler<Window3Element, PointerDragEvent> TabPointerDrag;
-        public event ElementEventHandler<Window3Element, Element> TabPreviewShown;
-        public event ElementEventHandler<Window3Element> TabPreviewHidden;
-        public event ElementEventHandler<Window3Element> SplitPreviewShown;
-        public event ElementEventHandler<Window3Element> SplitPreviewHidden;
+        public event ElementEventHandler<WindowElement, PointerEvent> TabPointerDown;
+        public event ElementEventHandler<WindowElement, PointerEvent> TabPointerUp;
+        public event ElementEventHandler<WindowElement, PointerDragEvent> TabPointerDrag;
+        public event ElementEventHandler<WindowElement, Element> TabPreviewShown;
+        public event ElementEventHandler<WindowElement> TabPreviewHidden;
+        public event ElementEventHandler<WindowElement> SplitPreviewShown;
+        public event ElementEventHandler<WindowElement> SplitPreviewHidden;
+        public event ElementEventHandler<WindowElement> Focused;
 
         // Fields.
         private readonly Element _view;
@@ -61,9 +62,9 @@ namespace ComposableUi
         private Vector2 _resizeNormal;
         private Vector2 _resizeAxis;
 
-        private ComposableWindows3Solver _composableWindowsSolver;
+        private ComposableWindowsSolver _composableWindowsSolver;
 
-        public Window3Element(string titleText = default,
+        public WindowElement(string titleText = default,
             Element content = default,
             Vector2? size = default,
             Vector2? minSize = default) 
@@ -72,13 +73,13 @@ namespace ComposableUi
         {
             var background = new ExpandedElement(
                 innerElement: new SpriteElement(
-                    skin: StandardSkin.TabBody,
+                    skin: StandardSkin.WindowBody,
                     color: new Color(Color.White, 0.8f)
                 )
             );
 
             DragHandle = new PointerInputHandlerElement(
-                innerElement: new SpriteElement(skin: StandardSkin.TabInactiveHeader)
+                innerElement: new SpriteElement(skin: StandardSkin.InactiveTab)
             );
             DragHandle.PointerDown += OnDragHandlePointerDown;
             DragHandle.PointerFixedDrag += OnDragHandlePointerFixedDrag;
@@ -177,13 +178,13 @@ namespace ComposableUi
             ViewHolder.InnerElement = _view;
         }
 
-        internal void AttachSolver(ComposableWindows3Solver solver)
+        internal void AttachSolver(ComposableWindowsSolver solver)
         {
             _composableWindowsSolver = solver;
         }
 
         // Docking.
-        internal void Dock(Window3Element source)
+        internal void Dock(WindowElement source)
         {
             if (_currentSplitPreviewTarget is not null)
             {
@@ -191,7 +192,7 @@ namespace ComposableUi
 
                 var shouldRemoveTargetAfterDetach = source.Container == Container
                     && _currentSplitPreviewTarget == Container
-                    && _currentSplitPreviewTarget.Container.ItemCount <= 2;
+                    && Container.ItemCount <= 2;
                 if (shouldRemoveTargetAfterDetach)
                 {
                     for (var i = 0; i < Container.ItemCount; i++)
@@ -220,9 +221,27 @@ namespace ComposableUi
             HideSplitPreviewIfPossible();
         }
 
-        internal void DockAsTab(Window3Element source)
+        internal void DockAsTab(WindowElement source)
         {
+            DockAsTab(source, this, _currentTabIndex);
 
+            HideTabPreviewIfPossible();
+        }
+
+        internal void AddTab(TabElement tab)
+        {
+            _tabRow.AddChild(tab);
+        }
+
+        internal void InsertTab(int index, TabElement tab)
+        {
+            _tabRow.InsertChild(index, tab);
+        }
+
+        internal void MoveTab(int index, TabElement tab)
+        {
+            _tabRow.RemoveChild(tab);
+            _tabRow.InsertChild(index, tab);
         }
 
         internal Vector2 CalculateTabOffset()
@@ -246,6 +265,35 @@ namespace ComposableUi
         internal void RestoreTab()
         {
             _tabRow.AddChild(Tab);
+        }
+
+        public void Focus()
+        {
+            var isTabbed = Container is not null
+                && Container.DockingMode is DockingMode.Tab;
+            if (isTabbed)
+            {
+                _tabRow.Clear();
+                for (var i = 0; i < Container.ItemCount; i++)
+                {
+                    var item = Container.GetItemAt(i);
+                    if (item is not WindowElement window)
+                        continue;
+
+                    AddTab(window.Tab);
+
+                    if (window != this)
+                    {
+                        window.Tab.SetState(TabState.Inactive);
+                        window.SetViewActive(false);
+                    }    
+                }
+            }
+
+            Tab.SetState(TabState.Focused);
+            SetViewActive(true);
+
+            Focused?.Invoke(this);
         }
 
         public void BringToFront()
@@ -304,7 +352,7 @@ namespace ComposableUi
         }
 
         // Tab preview.
-        private void ShowTabPreview(Window3Element source, Point position)
+        private void ShowTabPreview(WindowElement source, Point position)
         {
             var isTabbed = Container is not null
                 && Container.DockingMode is DockingMode.Tab;
@@ -315,7 +363,7 @@ namespace ComposableUi
                 for (var i = 0; i < Container.ItemCount; i++)
                 {
                     var item = Container.GetItemAt(i);
-                    if (item is not Window3Element window)
+                    if (item is not WindowElement window)
                         continue;
 
                     _tabList.Add(window.Tab);
@@ -392,7 +440,7 @@ namespace ComposableUi
         }
 
         // Split preview.
-        private bool TryShowSplitPreview(Window3Element source, Point position)
+        private bool TryShowSplitPreview(WindowElement source, Point position)
         {
             if (TryDetectSplitTarget(position, source, out var edgeNormal, out var target))
             {
@@ -420,7 +468,7 @@ namespace ComposableUi
             return false;
         }
 
-        private bool TryDetectSplitTarget(Point position, Window3Element source,
+        private bool TryDetectSplitTarget(Point position, WindowElement source,
             out Vector2 edgeNormal, out Item splitTarget)
         {
             splitTarget = default;
@@ -461,7 +509,7 @@ namespace ComposableUi
             return isValidSplitTarget;
         }
 
-        private void ShowSplitPreview(Window3Element source, Vector2 edgeNormal)
+        private void ShowSplitPreview(WindowElement source, Vector2 edgeNormal)
         {
             _currentSplitPreviewTarget.ShowInOverlayAndAlignToEdge(_splitPreviewWindow, edgeNormal);
 

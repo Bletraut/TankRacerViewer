@@ -12,12 +12,33 @@ namespace ComposableUi
         public SpriteElement Icon { get; }
         public TextElement Title { get; }
 
+        public Sprite InactiveSprite { get; set; }
+        public Sprite ActiveSprite { get; set; }
+        public Sprite FocusedSprite { get; set; }
+
+        public StandardSkin InactiveSkin { get; set; }
+        public StandardSkin ActiveSkin { get; set; }
+        public StandardSkin FocusedSkin { get; set; }
+
+        public TabState CurrentState { get; private set; }
+
         public TabElement(string titleText = default,
-            Sprite iconSprite = default) 
+            Sprite iconSprite = default,
+            Sprite inactiveSprite = default,
+            Sprite activeSprite = default,
+            Sprite focusedSprite = default,
+            StandardSkin inactiveSkin = StandardSkin.InactiveTab, 
+            StandardSkin activeSkin = StandardSkin.ActiveTab, 
+            StandardSkin focusedSkin = StandardSkin.FocusedTab) 
         {
-            Background = new SpriteElement(
-                skin: StandardSkin.TabNormalHeader
-            );
+            InactiveSprite = inactiveSprite;
+            ActiveSprite = activeSprite;
+            FocusedSprite = focusedSprite;
+            InactiveSkin = inactiveSkin;
+            ActiveSkin = activeSkin;
+            FocusedSkin = focusedSkin;
+
+            Background = new SpriteElement();
             var backgroundParent = new LayoutElement(
                 ignoreLayout: true,
                 innerElement: new ExpandedElement(
@@ -46,6 +67,26 @@ namespace ComposableUi
                 sizeMainAxisToContent: true,
                 children: [backgroundParent, Icon, Title]
             );
+
+            SetState(TabState.Active);
+        }
+
+        internal void SetState(TabState state)
+        {
+            if (CurrentState == state)
+                return;
+
+            CurrentState = state;
+
+            (Sprite Sprite, StandardSkin Skin) = CurrentState switch
+            {
+                TabState.Inactive => (InactiveSprite, InactiveSkin),
+                TabState.Active => (ActiveSprite, ActiveSkin),
+                TabState.Focused => (FocusedSprite, FocusedSkin),
+                _ => (InactiveSprite, InactiveSkin),
+            };
+            Background.Sprite = Sprite;
+            Background.Skin = Skin;
         }
 
         public void CopyHeaderFrom(TabElement tab)
@@ -53,5 +94,12 @@ namespace ComposableUi
             Icon.Sprite = tab.Icon.Sprite;
             Title.Text = tab.Title.Text;
         }
+    }
+
+    public enum TabState
+    {
+        Inactive,
+        Active,
+        Focused
     }
 }

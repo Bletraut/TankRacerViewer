@@ -98,7 +98,7 @@ namespace TankRacerViewer.Core
             var innerScroll = new ScrollViewElement(
                 size: new Vector2(300, 500),
                 content: innerColumn);
-            innerScroll.Background.Skin = StandardSkin.TabNormalHeader;
+            innerScroll.Background.Skin = StandardSkin.InactiveTab;
             //column.AddChild(new SpriteElement(
             //    size: new Vector2(Random.Shared.Next(500, 800), Random.Shared.Next(50, 200)),
             //    skin: StandardSkin.RectangleButton,
@@ -120,22 +120,12 @@ namespace TankRacerViewer.Core
             //_contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Male"));
             //_contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Female"));
 
-            var tabLayout = new Window2Layout();
-            tabLayout.AddWindow(new Window2Element("Game_view")
-            {
-                Position = new Vector2(-200, 0)
-            });
-            tabLayout.AddWindow(new Window2Element("Hierarchy_test")
-            {
-                Position = new Vector2(-100, 50)
-            });
-
-            var tabLayout3 = new Window3Layout();
-            tabLayout3.AddWindow(new Window3Element("Game_view_T")
+            var tabLayout = new WindowLayout();
+            tabLayout.AddWindow(new WindowElement("Game_view_T")
             {
                 Position = new Vector2(0, 0)
             });
-            tabLayout3.AddWindow(new Window3Element("Hierarchy_test_T")
+            tabLayout.AddWindow(new WindowElement("Hierarchy_test_T")
             {
                 Position = new Vector2(100, 50)
             });
@@ -145,18 +135,9 @@ namespace TankRacerViewer.Core
                 Pivot = Alignment.TopLeft,
                 IsEnabled = false
             };
-            _contextMenu.AddItem(new ContextMenuItemElement(name: " Add New Tab 3", clickAction: _ =>
-            {
-                var window = new Window3Element(titleText: $"TEST_{Random.Shared.Next(0, 1000)}")
-                {
-                    Pivot = Alignment.TopLeft,
-                    LocalPosition = Vector2.Transform(Input.MousePosition.ToVector2(), tabLayout.GlobalInverseTransformationMatrix)
-                };
-                tabLayout3.AddWindow(window);
-            }));
             _contextMenu.AddItem(new ContextMenuItemElement(name: " Add New Tab", clickAction: _ =>
             {
-                var window = new Window2Element(titleText: $"TEST_{Random.Shared.Next(0, 1000)}")
+                var window = new WindowElement(titleText: $"TEST_{Random.Shared.Next(0, 1000)}")
                 {
                     Pivot = Alignment.TopLeft,
                     LocalPosition = Vector2.Transform(Input.MousePosition.ToVector2(), tabLayout.GlobalInverseTransformationMatrix)
@@ -178,7 +159,7 @@ namespace TankRacerViewer.Core
                     //    Position = new Vector2(200, 300)
                     //},
                     new ExpandedElement(tabLayout),
-                    new ExpandedElement(tabLayout3),
+                    new ExpandedElement(tabLayout),
                     _contextMenu,
                 ]));
 

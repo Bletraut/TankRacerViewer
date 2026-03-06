@@ -4,13 +4,14 @@ using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
-    public partial class Window3Element
+    public partial class WindowElement
     {
         // Drag handle.
         private void OnDragHandlePointerDown(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
             BringToFront();
+            Focus();
         }
 
         private void OnDragHandlePointerFixedDrag(PointerInputHandlerElement sender,
@@ -34,6 +35,7 @@ namespace ComposableUi
             _dragDeltaAccumulator = CalculateTabOffset();
 
             Tab.InnerElement.IsEnabled = false;
+            Focus();
 
             _composableWindowsSolver?.SetSource(this);
 
@@ -112,6 +114,7 @@ namespace ComposableUi
             PointerEvent pointerEvent)
         {
             BringToFront();
+            Focus();
         }
 
         private void OnSplitPreviewInputAreaPointerMove(PointerInputHandlerElement sender,

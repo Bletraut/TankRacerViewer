@@ -64,7 +64,6 @@ namespace ComposableUi
 
             AddElementSolver(new HierarchyWheelScrollSolver());
             AddElementSolver(new ComposableWindowsSolver());
-            AddElementSolver(new ComposableWindows3Solver());
         }
 
         public void AddElementSolver(IElementSolver elementSolver)

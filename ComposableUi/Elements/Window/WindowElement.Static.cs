@@ -8,16 +8,16 @@ namespace ComposableUi
 {
     using Item = WindowNodeElement<WindowContainerElement>;
 
-    public partial class Window3Element
+    public partial class WindowElement
     {
         private static readonly Element _tabPreviewPlaceHolder = new();
-        private static readonly Window3Element _splitPreviewWindow = CreateNonInteractiveWindow();
+        private static readonly WindowElement _splitPreviewWindow = CreateNonInteractiveWindow();
 
         private static readonly List<Element> _tabList = [];
 
-        internal static Window3Element CreateNonInteractiveWindow()
+        internal static WindowElement CreateNonInteractiveWindow()
         {
-            var window = new Window3Element()
+            var window = new WindowElement()
             {
                 IsInteractable = false,
                 BlockInput = false
@@ -57,15 +57,15 @@ namespace ComposableUi
         }
 
         // Docking.
-        public static void DockTo(Window3Element source, Item target, Edge edge)
+        public static void DockTo(WindowElement source, Item target, Edge edge)
         {
             Undock(source, Vector2.Zero);
 
             var dockingMode = EdgeToDockingMode(edge);
 
-            var shouldAttachToParent = target.Container is not null
+            var shouldDockToParent = target.Container is not null
                 && target.Container.DockingMode == dockingMode;
-            if (shouldAttachToParent)
+            if (shouldDockToParent)
             {
                 DockToParent(source, target, edge);
                 return;
@@ -88,88 +88,50 @@ namespace ComposableUi
             var inLayoutIndex = container.Layout.IndexOf(currentTarget) + insertIndex;
             container.InsertItem(insertIndex, inLayoutIndex, source);
             source.SetSize(sourceSize);
+
+            source.Focus();
         }
 
-        public static void DockAsTab(Window3Element source, Window3Element target, int index)
+        public static void DockAsTab(WindowElement source, WindowElement target, int index)
         {
-            //var areSame = target._containerWindow is not null
-            //    && target._containerWindow._compositionType == CompositionType.Tabbed
-            //    && source._containerWindow == target._containerWindow;
-            //if (areSame)
-            //{
-            //    target._containerWindow._childWindows.Remove(source);
-            //    target._containerWindow._childWindows.Insert(index, source);
+            var isSameContainer = target.Container is not null
+                && target.Container.DockingMode is DockingMode.Tab
+                && source.Container == target.Container;
+            if (isSameContainer)
+            {
+                target.Container.MoveItem(index, source);
+                target.MoveTab(index, source.Tab);
 
-            //    target._tabRow.RemoveChild(source.Tab);
-            //    target._tabRow.InsertChild(index, source.Tab);
+                return;
+            }
 
-            //    return;
-            //}
+            if (source == target)
+                return;
 
-            //if (source == target)
-            //    return;
+            Undock(source, Vector2.Zero);
 
-            //DetachFromParent(source, Vector2.Zero);
+            var shouldDockAsTabToParent = target.Container?.DockingMode is DockingMode.Tab;
+            if (shouldDockAsTabToParent)
+            {
+                DockAsTabToParent(source, target, index);
+                return;
+            }
 
-            //var shouldInsertToParent = target._containerWindow?._compositionType is CompositionType.Tabbed;
-            //if (shouldInsertToParent)
-            //{
-            //    if (TryInsertToParent(source, target))
-            //        return;
-            //}
+            var container = WindowContainerElement.Rent(DockingMode.Tab);
+            container.ViewHolder.PropagateToInnerElementChildren = true;
+            Replace(target, container);
 
-            //var layout = new ContainerElement();
+            target.SetViewActive(false);
+            target.InsertTab(index, source.Tab);
+            container.InsertItem(0, 0, target);
 
-            //var containerWindow = GetContainerWindow();
-            //containerWindow._compositionType = CompositionType.Tabbed;
-            //containerWindow._splitDirection = SplitDirection.None;
-            //containerWindow._viewHolder.PropagateToInnerElementChildren = true;
-            //containerWindow._viewHolder.InnerElement = layout;
-            //containerWindow.SetSize(target.Size);
-            //containerWindow._containerWindow = target._containerWindow;
-            //containerWindow.IsInteractable = target.IsInteractable;
-            //containerWindow.LocalPosition = target.LocalPosition
-            //    - target.PivotOffset + containerWindow.PivotOffset;
+            source.SetViewActive(false);
+            container.InsertItem(index, index, source);
 
-            //// Replaces the target window with the container window.
-            //if (target._containerWindow is not null)
-            //{
-            //    if (target._containerWindow._viewHolder.InnerElement is ContainerElement parentSplitLayout)
-            //    {
-            //        var viewIndex = parentSplitLayout.IndexOf(target);
-            //        parentSplitLayout.InsertChild(viewIndex, containerWindow);
-            //    }
-
-            //    var targetIndex = target._containerWindow._childWindows.IndexOf(target);
-            //    target._containerWindow._childWindows.Remove(target);
-            //    target._containerWindow._childWindows.Insert(targetIndex, containerWindow);
-            //}
-            //else
-            //{
-            //    target.Parent.AddChild(containerWindow);
-            //}
-
-            //containerWindow._childWindows ??= [];
-
-            //target._containerWindow = containerWindow;
-            //target.IsInteractable = false;
-            //layout.AddChild(target);
-            //containerWindow._childWindows.Add(target);
-
-            //source._containerWindow = containerWindow;
-            //source.IsInteractable = false;
-            //source.BlockInput = false;
-            //source._viewHolder.IsEnabled = false;
-            //source.SetSize(target.Size);
-            //layout.AddChild(source);
-            //target._tabRow.InsertChild(index, source.Tab);
-            //containerWindow._childWindows.Insert(index, source);
-
-            //containerWindow.ApplyRootWindow(target._rootWindow);
-            //containerWindow.RecalculateContainerMinSize();
+            source.Focus();
         }
 
-        public static void Undock(Window3Element source, Vector2 position)
+        public static void Undock(WindowElement source, Vector2 position)
         {
             var container = source.Container;
             if (container is null)
@@ -187,29 +149,14 @@ namespace ComposableUi
 
             if (container.DockingMode is DockingMode.Tab)
             {
-                Window3Element firstWindow = null;
                 for (var i = 0; i < container.ItemCount; i++)
                 {
                     var item = container.GetItemAt(i);
-                    if (item is not Window3Element window)
+                    if (item is not WindowElement window)
                         continue;
 
-                    firstWindow = window;
+                    window.Focus();
                     break;
-                }
-                firstWindow.RestoreTab();
-                firstWindow.SetViewActive(true);
-
-                for (var i = 0; i < container.ItemCount; i++)
-                {
-                    var item = container.GetItemAt(i);
-                    if (item == firstWindow)
-                        continue;
-
-                    if (item is not Window3Element window)
-                        continue;
-
-                    window.SetViewActive(false);
                 }
             }
 
@@ -223,6 +170,8 @@ namespace ComposableUi
             {
                 container.RecalculateMinSize();
             }
+
+            source.Focus();
         }
 
         // Conversions.
@@ -253,7 +202,7 @@ namespace ComposableUi
         }
 
         // Docking.
-        private static void DockToParent(Window3Element source, Item target, Edge edge)
+        private static void DockToParent(WindowElement source, Item target, Edge edge)
         {
             var insertIndex = EdgeToInsertIndex(edge);
             var targetIndex = target.Container.IndexOfItem(target) + insertIndex;
@@ -266,6 +215,17 @@ namespace ComposableUi
             source.SetSize(sourceSize);
 
             target.Container.InsertItem(targetIndex, inLayoutIndex, source);
+        }
+
+        private static void DockAsTabToParent(WindowElement source, WindowElement target, int index)
+        {
+            source.SetViewActive(false);
+            target.Container.InsertItem(index, index, source);
+
+            target.InsertTab(index, source.Tab);
+            target.SetViewActive(false);
+
+            source.Focus();
         }
     }
 }

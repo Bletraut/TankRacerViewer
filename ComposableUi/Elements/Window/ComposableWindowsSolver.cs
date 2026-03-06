@@ -2,89 +2,77 @@
 {
     public sealed class ComposableWindowsSolver : IElementSolver
     {
-        public Window2Element Source { get; private set; }
-        public Window2Element AttachTarget { get; private set; }
-        public Window2Element InsertTarget { get; private set; }
+        public WindowElement Source { get; private set; }
+        public WindowElement SplitTarget { get; private set; }
+        public WindowElement TabTarget { get; private set; }
 
-        public void SelectSource(Window2Element window)
+        internal void SetSource(WindowElement window)
         {
             Source = window;
         }
 
-        public void SelectInsertTarget(Window2Element window)
+        internal void SetTabTarget(WindowElement window)
         {
-            InsertTarget = window;
+            TabTarget = window;
         }
 
-        public void ReleaseInsertTarget(Window2Element window)
+        internal void ClearTabTarget(WindowElement window)
         {
-            if (InsertTarget == window)
-                InsertTarget = null;
+            if (TabTarget == window)
+                TabTarget = null;
         }
 
-        public void SelectAttachTarget(Window2Element window)
+        internal void SetSplitTarget(WindowElement window)
         {
-            AttachTarget = window;
+            SplitTarget = window;
         }
 
-        public void ReleaseAttachTarget(Window2Element window)
+        public void ClearSplitTarget(WindowElement window)
         {
-            if (AttachTarget == window)
-                AttachTarget = null;
+            if (SplitTarget == window)
+                SplitTarget = null;
         }
 
-        public CompositionResult TryCompose()
+        internal bool TryDock()
         {
-            var result = Source switch
-            {
-                not null when TryAttach() => CompositionResult.Attached,
-                not null when TryInsert() => CompositionResult.Inserted,
-                _ => CompositionResult.None,
-            };
+            var result = Source is not null
+                && (TryDockTo() || TryDockAsTab());
 
             Source = null;
-            AttachTarget = null;
-            InsertTarget = null;
+            SplitTarget = null;
+            TabTarget = null;
 
             return result;
         }
 
-        private bool TryInsert()
+        private bool TryDockAsTab()
         {
-            if (InsertTarget is null)
+            if (TabTarget is null)
                 return false;
 
-            InsertTarget.Insert(Source);
+            TabTarget.DockAsTab(Source);
 
             return true;
         }
 
-        private bool TryAttach()
+        private bool TryDockTo()
         {
-            if (AttachTarget is null)
+            if (SplitTarget is null)
                 return false;
 
-            AttachTarget.Attach(Source);
+            SplitTarget.Dock(Source);
 
             return true;
         }
 
         void IElementSolver.Handle(Element element)
         {
-            if (element is Window2Element tab)
+            if (element is WindowElement tab)
                 tab.AttachSolver(this);
         }
 
         void IElementSolver.Resolve()
         {
         }
-    }
-
-    public enum CompositionResult
-    {
-        None,
-
-        Attached,
-        Inserted
     }
 }

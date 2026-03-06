@@ -65,6 +65,15 @@ namespace ComposableUi
             }
         }
 
+        public void Clear()
+        {
+            foreach (var child in _children)
+                child.Parent = null;
+
+            _children.Clear();
+            OnSizeChanged();
+        }
+
         public void BringToFront(Element child)
         {
             RemoveChild(child);

@@ -136,16 +136,11 @@ namespace ComposableUi
             layout.ExpandChildrenMainAxis = true;
             layout.MainAxisChildrenExpandingMode = ExpandingMode.Size;
 
-            // debug
-            layout.LeftPadding = layout.RightPadding = layout.TopPadding = layout.BottomPadding = 4;
-
             layout.AddChild(new LayoutElement(
                 ignoreLayout: true,
                 innerElement: new ExpandedElement(
                     innerElement: new SpriteElement(
-                        //skin: StandardSkin.SolidDarkPixel
-                        skin: StandardSkin.WhitePixel, // debug
-                        color: new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle()) // debug
+                        skin: StandardSkin.SolidDarkPixel
                     )
                 )
             ));

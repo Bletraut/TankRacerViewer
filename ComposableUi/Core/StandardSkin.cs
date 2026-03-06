@@ -20,20 +20,20 @@
         TextField,
 
         RoundedButton,
-        RoundedButtonHover,
-        RoundedButtonPressed,
-        RoundedButtonDisabled,
+        HoverRoundedButton,
+        PressedRoundedButton,
+        DisabledRoundedButton,
 
         RectangleButton,
-        RectangleButtonHover,
-        RectangleButtonPressed,
-        RectangleButtonDisabled,
+        HoverRectangleButton,
+        PressedRectangleButton,
+        DisabledRectangleButton,
 
-        TabNormalHeader,
-        TabActiveHeader,
-        TabInactiveHeader,
-        TabHeaderButtonsBody,
-        TabBody,
+        InactiveTab,
+        ActiveTab,
+        FocusedTab,
+        TabButtonsBackground,
+        WindowBody,
 
         // Icons.
         LeftArrowIcon,
