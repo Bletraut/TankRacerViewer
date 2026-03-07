@@ -20,6 +20,9 @@ namespace ComposableUi
             if (IsResizingInternally)
                 return;
 
+            if (IsMaximized)
+                return;
+
             var root = ResolveRoot();
             root.Position += pointerEvent.Delta.ToVector2();
         }
@@ -31,15 +34,19 @@ namespace ComposableUi
             if (IsResizingInternally)
                 return;
 
+            if (IsMaximized)
+                return;
+
             _isTabPressed = true;
             _dragDeltaAccumulator = CalculateTabOffset();
 
             Tab.InnerElement.IsEnabled = false;
-            Focus();
 
             _composableWindowsSolver?.SetSource(this);
 
             TabPointerDown?.Invoke(this, pointerEvent);
+
+            Focus();
         }
 
         private void OnTabButtonPointerUp(PointerInputHandlerElement sender,
@@ -91,6 +98,9 @@ namespace ComposableUi
         private void OnTabPreviewInputAreaPointerMove(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
+            if (IsMaximized)
+                return;
+
             if (_composableWindowsSolver is null)
                 return;
 
@@ -120,6 +130,9 @@ namespace ComposableUi
         private void OnSplitPreviewInputAreaPointerMove(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
+            if (IsMaximized)
+                return;
+
             if (_composableWindowsSolver is null)
                 return;
 
@@ -198,6 +211,25 @@ namespace ComposableUi
             var dockingMode = EdgeNormalToDockingMode(_resizeNormal);
 
             WindowContainerElement.IncreaseSizeInHierarchyIfPossible(this, dockingMode, _resizeAxis, axisDelta, delta);
+        }
+
+        // Buttons.
+        private void OnCloseButtonPointerClick(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            Close();
+        }
+
+        private void OnMaximizeButtonPointerClick(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            Maximize();
+        }
+
+        private void OnRestoreButtonPointerClick(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            Restore();
         }
 
         protected override void OnPointerDown(in PointerEvent pointerEvent)

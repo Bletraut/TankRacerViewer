@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
@@ -40,9 +39,6 @@ namespace ComposableUi
             var parentContainer = oldItem.Container;
             if (parentContainer is not null)
             {
-                var index = parentContainer.Layout.IndexOf(oldItem);
-                parentContainer.Layout.InsertChild(index, newItem);
-
                 parentContainer.ReplaceItem(oldItem, newItem);
             }
             else
@@ -57,8 +53,16 @@ namespace ComposableUi
         }
 
         // Docking.
-        public static void DockTo(WindowElement source, Item target, Edge edge)
+        public static void Dock(WindowElement source, Item target, Edge edge)
         {
+            if (source.IsMaximized)
+                return;
+
+            var isTargetMaximized = target is WindowElement window
+                && window.IsMaximized;
+            if (isTargetMaximized)
+                return;
+
             Undock(source, Vector2.Zero);
 
             var dockingMode = EdgeToDockingMode(edge);
@@ -94,6 +98,12 @@ namespace ComposableUi
 
         public static void DockAsTab(WindowElement source, WindowElement target, int index)
         {
+            if (source.IsMaximized)
+                return;
+
+            if (target.IsMaximized)
+                return;
+
             var isSameContainer = target.Container is not null
                 && target.Container.DockingMode is DockingMode.Tab
                 && source.Container == target.Container;
@@ -133,6 +143,9 @@ namespace ComposableUi
 
         public static void Undock(WindowElement source, Vector2 position)
         {
+            if (source.IsMaximized)
+                return;
+
             var container = source.Container;
             if (container is null)
                 return;
@@ -143,7 +156,6 @@ namespace ComposableUi
             source.IsInteractable = true;
             source.RestoreTab();
             source.SetViewActive(true);
-            source.ApplyRoot(null);
             source.Position = position;
             container.RemoveItem(source);
 
@@ -226,6 +238,30 @@ namespace ComposableUi
             target.SetViewActive(false);
 
             source.Focus();
+        }
+
+        // Buttons.
+        private static ButtonElement CreateButtonWithIcon(Vector2 size,
+            StandardSkin icon)
+        {
+            var button = new ButtonElement(
+                size: size,
+                innerElement: new HolderElement(
+                    size: size,
+                    innerElement: new ExpandedElement(
+                        leftPadding: 4,
+                        rightPadding: 4,
+                        topPadding: 4,
+                        bottomPadding: 8,
+                        innerElement: new SpriteElement(
+                            skin: icon,
+                            color: Color.Black
+                        )
+                    )
+                )
+            );
+
+            return button;
         }
     }
 }

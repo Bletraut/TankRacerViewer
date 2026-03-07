@@ -12,6 +12,9 @@ namespace ComposableUi
     public partial class WindowElement : WindowNodeElement<WindowContainerElement>
     {
         public const int DefaultHeaderHeight = 30;
+        public const int DefaultBackgroundTopPadding = 2;
+
+        public const int DefaultButtonsSpacing = 2;
 
         private const int EmptyTabIndex = -1;
 
@@ -24,10 +27,23 @@ namespace ComposableUi
         public static readonly Vector2 DefaultMinSize = new(80, 100);
         public static readonly Vector2 DefaultContentPadding = new(10, 10);
 
+        public static readonly Vector2 DefaultButtonSize = new(18, 22);
+        public static readonly Vector2 DefaultButtonsPaddings = new(6, 6);
+
         // Properties.
         public Element Header { get; }
         public PointerInputHandlerElement DragHandle { get; }
         public TabElement Tab { get; }
+
+        public SpriteElement ButtonsBackground { get; }
+
+        public ButtonElement CloseButton { get; }
+        public ButtonElement MaximizeButton { get; }
+        public ButtonElement RestoreButton { get; }
+
+        private bool IsFocused => Tab.CurrentState is TabState.Focused;
+
+        private bool IsMaximized => _placeHolder is not null;
 
         private bool IsResizingInternally => _resizeNormal != Vector2.Zero;
 
@@ -40,11 +56,15 @@ namespace ComposableUi
         public event ElementEventHandler<WindowElement> SplitPreviewShown;
         public event ElementEventHandler<WindowElement> SplitPreviewHidden;
         public event ElementEventHandler<WindowElement> Focused;
+        public event ElementEventHandler<WindowElement> Maximized;
+        public event ElementEventHandler<WindowElement> Restored;
+        public event ElementEventHandler<WindowElement> Closed;
 
         // Fields.
         private readonly Element _view;
 
         private readonly RowLayout _tabRow;
+        private readonly RowLayout _buttonRow;
         private readonly ContainerElement _contentContainer;
 
         private readonly PointerInputHandlerElement _tabPreviewInputArea;
@@ -62,6 +82,9 @@ namespace ComposableUi
         private Vector2 _resizeNormal;
         private Vector2 _resizeAxis;
 
+        private WindowPlaceHolderElement _placeHolder;
+        private ExpandedElement _maximizedParent;
+
         private ComposableWindowsSolver _composableWindowsSolver;
 
         public WindowElement(string titleText = default,
@@ -72,6 +95,7 @@ namespace ComposableUi
                   minSize ?? DefaultMinSize)
         {
             var background = new ExpandedElement(
+                topPadding: DefaultBackgroundTopPadding,
                 innerElement: new SpriteElement(
                     skin: StandardSkin.WindowBody,
                     color: new Color(Color.White, 0.8f)
@@ -98,6 +122,37 @@ namespace ComposableUi
             Tab.PointerUp += OnTabButtonPointerUp;
             Tab.PointerDrag += OnTabButtonPointerDrag;
 
+            ButtonsBackground = new SpriteElement(
+                skin: StandardSkin.TabButtonsBackground
+            );
+
+            _buttonRow = new RowLayout(
+                alignmentFactor: Alignment.TopLeft,
+                spacing: DefaultButtonsSpacing,
+                leftPadding: DefaultButtonsPaddings.X,
+                rightPadding: DefaultButtonsPaddings.X,
+                topPadding: DefaultButtonsPaddings.Y,
+                sizeMainAxisToContent: true
+            );
+            _buttonRow.Size = new Vector2(100, 10);
+            _buttonRow.AddChild(new LayoutElement(
+                ignoreLayout: true,
+                innerElement: new ExpandedElement(ButtonsBackground)
+            ));
+
+            RestoreButton = CreateButtonWithIcon(DefaultButtonSize, StandardSkin.RestoreWindowIcon);
+            RestoreButton.IsEnabled = false;
+            _buttonRow.AddChild(RestoreButton);
+            RestoreButton.PointerClick += OnRestoreButtonPointerClick;
+
+            MaximizeButton = CreateButtonWithIcon(DefaultButtonSize, StandardSkin.MaximizeWindowIcon);
+            _buttonRow.AddChild(MaximizeButton);
+            MaximizeButton.PointerClick += OnMaximizeButtonPointerClick;
+
+            CloseButton = CreateButtonWithIcon(DefaultButtonSize, StandardSkin.CloseIcon);
+            _buttonRow.AddChild(CloseButton);
+            CloseButton.PointerClick += OnCloseButtonPointerClick;
+
             _contentContainer = new ContainerElement();
             var contentContainerParent = new ExpandedElement(
                 leftPadding: DefaultContentPadding.X,
@@ -114,7 +169,15 @@ namespace ComposableUi
                     size: new Vector2(DefaultHeaderHeight),
                     children: [
                         new ExpandedElement(DragHandle),
-                        new ExpandedElement(_tabRow)
+                        new ExpandedElement(_tabRow),
+                        new ExpandedElement(
+                            expandWidth: false,
+                            innerElement: new AlignmentElement(
+                                alignmentFactor: Alignment.MiddleRight,
+                                pivot: Alignment.MiddleRight,
+                                innerElement: _buttonRow
+                            )
+                        )
                     ]
                 )
             );
@@ -215,7 +278,7 @@ namespace ComposableUi
                     }
                 }
 
-                DockTo(source, _currentSplitPreviewTarget, edge);
+                Dock(source, _currentSplitPreviewTarget, edge);
             }
 
             HideSplitPreviewIfPossible();
@@ -267,6 +330,13 @@ namespace ComposableUi
             _tabRow.AddChild(Tab);
         }
 
+        public void BringToFront()
+        {
+            var root = ResolveRoot();
+            if (root.Parent is ContainerElement container)
+                container.BringToFront(root);
+        }
+
         public void Focus()
         {
             var isTabbed = Container is not null
@@ -277,30 +347,86 @@ namespace ComposableUi
                 for (var i = 0; i < Container.ItemCount; i++)
                 {
                     var item = Container.GetItemAt(i);
-                    if (item is not WindowElement window)
-                        continue;
 
-                    AddTab(window.Tab);
+                    if (item != this)
+                        item.SetFocus(false);
 
-                    if (window != this)
-                    {
-                        window.Tab.SetState(TabState.Inactive);
-                        window.SetViewActive(false);
-                    }    
+                    if (item is WindowElement window)
+                        AddTab(window.Tab);
                 }
             }
 
-            Tab.SetState(TabState.Focused);
-            SetViewActive(true);
+            SetFocus(true);
 
             Focused?.Invoke(this);
         }
 
-        public void BringToFront()
+        public void Maximize()
         {
-            var root = ResolveRoot();
-            if (root.Parent is ContainerElement container)
-                container.BringToFront(root);
+            if (IsMaximized)
+                return;
+
+            MaximizeButton.IsEnabled = false;
+            RestoreButton.IsEnabled = true;
+
+            var parent = ResolveRoot().Parent;
+
+            _placeHolder = WindowPlaceHolderElement.Rent();
+            _placeHolder.MinSize = MinSize;
+            Replace(this, _placeHolder);
+
+            var container = _placeHolder.Container;
+            var isTabbed = container is not null
+                && container.DockingMode is DockingMode.Tab;
+            if (isTabbed)
+            {
+                for (var i = 0; i < container.ItemCount; i++)
+                {
+                    var item = container.GetItemAt(i);
+                    if (item == _placeHolder)
+                        continue;
+
+                    if (item is not WindowElement window)
+                        continue;
+
+                    window.Focus();
+                    break;
+                }
+            }
+
+            _maximizedParent ??= new ExpandedElement();
+            _maximizedParent.InnerElement = this;
+
+            parent?.AddChild(_maximizedParent);
+            Focus();
+        }
+
+        public void Restore()
+        {
+            if (!IsMaximized)
+                return;
+
+            MaximizeButton.IsEnabled = true;
+            RestoreButton.IsEnabled = false;
+
+            Replace(_placeHolder, this);
+
+            _maximizedParent.Parent?.RemoveChild(_maximizedParent);
+
+            WindowPlaceHolderElement.Return(_placeHolder);
+            _placeHolder = null;
+
+            Focus();
+        }
+
+        public void Close()
+        {
+            Restore();
+
+            Undock(this, Vector2.Zero);
+            IsEnabled = false;
+
+            Closed?.Invoke(this);
         }
 
         private void ResolveResizeCursor(IPointer pointer, Point position)
@@ -540,6 +666,14 @@ namespace ComposableUi
 
             RestoreTab();
             SetViewActive(true);
+        }
+
+        internal override void SetFocus(bool value)
+        {
+            base.SetFocus(value);
+
+            Tab.SetState(value ? TabState.Focused : TabState.Inactive);
+            SetViewActive(value);
         }
     }
 }

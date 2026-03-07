@@ -224,6 +224,7 @@ namespace ComposableUi
             {
                 item.IsInteractable = true;
                 item.ApplyContainer(null);
+                item.ApplyRoot(null);
 
                 Layout.RemoveChild(item);
             }

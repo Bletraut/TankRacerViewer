@@ -79,5 +79,7 @@ namespace ComposableUi
             node.ApplyRoot(Root);
             node.IsInteractable = IsInteractable;
         }
+
+        internal virtual void SetFocus(bool value) { }
     }
 }

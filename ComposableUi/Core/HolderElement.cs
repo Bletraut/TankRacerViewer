@@ -34,12 +34,13 @@ namespace ComposableUi
         public override int ChildCount => InnerElement != null ? 1 : 0;
 
         public HolderElement(Element innerElement = default,
+            Vector2? size = default,
             Vector2? pivot = default)
         {
             InnerElement = innerElement;
 
-            if (pivot.HasValue)
-                Pivot = pivot.Value;
+            Size = size ?? Vector2.Zero;
+            Pivot = pivot ?? Alignment.Center;
         }
 
         public override void Rebuild(Vector2 size, bool excludeChildren)

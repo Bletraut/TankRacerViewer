@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Diagnostics;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -50,6 +52,7 @@ namespace ComposableUi
             window.SplitPreviewShown += OnSplitPreviewShown;
             window.SplitPreviewHidden += OnSplitPreviewHidden;
             window.Focused += OnFocused;
+            window.Closed += OnClosed;
 
             _windowContainer.AddChild(window);
         }
@@ -59,7 +62,7 @@ namespace ComposableUi
             var oldSize = source.Size;
             var newSize = Vector2.Max(source.MinSize, oldSize);
 
-            _tempWindow.InnerElement.Size = newSize;
+            _tempWindow.SetSize(newSize);
             _tempWindow.Pivot = source.Pivot;
             _tempWindow.Tab.CopyHeaderFrom(source.Tab);
             _tempWindow.Position = source.Position + (newSize - oldSize) * source.Pivot
@@ -168,6 +171,21 @@ namespace ComposableUi
                     _currentFocusedWindow.Tab.SetState(TabState.Active);
             }
             _currentFocusedWindow = window;
+        }
+
+        private void OnClosed(WindowElement window)
+        {
+            window.TabPointerDown -= OnTabPointerDown;
+            window.TabPointerUp -= OnTabPointerUp;
+            window.TabPointerDrag -= OnTabPointerDrag;
+            window.TabPreviewShown -= OnTabPreviewShown;
+            window.TabPreviewHidden -= OnTabPreviewHidden;
+            window.SplitPreviewShown -= OnSplitPreviewShown;
+            window.SplitPreviewHidden -= OnSplitPreviewHidden;
+            window.Focused -= OnFocused;
+            window.Closed -= OnClosed;
+
+            _windowContainer.RemoveChild(window);
         }
     }
 }

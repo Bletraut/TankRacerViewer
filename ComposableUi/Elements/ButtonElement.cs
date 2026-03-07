@@ -27,6 +27,7 @@ namespace ComposableUi
         private (Sprite Sprite, StandardSkin Skin, Color Color) _currentState;
 
         public ButtonElement(Vector2? size = default,
+            Element innerElement = default,
             Sprite normalSprite = default,
             Sprite hoverSprite = default,
             Sprite pressedSprite = default,
@@ -42,6 +43,12 @@ namespace ComposableUi
             bool isInteractable = true)
         {
             Size = size ?? DefaultSize;
+
+            if (innerElement is not null)
+            {
+                InnerElement = innerElement;
+                InnerElement.Size = Size;
+            }
 
             NormalSprite = normalSprite;
             HoverSprite = hoverSprite;
