@@ -38,7 +38,10 @@ namespace ComposableUi
                 return;
 
             _isTabPressed = true;
-            _dragDeltaAccumulator = CalculateTabOffset();
+            _isDragStarted = false;
+
+            _dragOffset = CalculateTabOffset();
+            _dragDeltaAccumulator = Vector2.Zero;
 
             Tab.InnerElement.IsEnabled = false;
 
@@ -63,6 +66,7 @@ namespace ComposableUi
             {
                 if (!_composableWindowsSolver.TryDock())
                 {
+                    _dragDeltaAccumulator += _dragOffset;
                     if (Container is not null)
                     {
                         Undock(this, Position + _dragDeltaAccumulator);
@@ -76,6 +80,8 @@ namespace ComposableUi
                     {
                         Position += _dragDeltaAccumulator;
                     }
+
+                    MovedByTab?.Invoke(this);
                 }
                 BringToFront();
             }
@@ -90,6 +96,15 @@ namespace ComposableUi
                 return;
 
             _dragDeltaAccumulator += pointerEvent.Delta.ToVector2();
+
+            if (!_isDragStarted)
+            {
+                _isDragStarted = MathF.Abs(_dragDeltaAccumulator.X) + MathF.Abs(_dragDeltaAccumulator.Y) >= DefaultDragThreshold;
+                if (!_isDragStarted)
+                    return;
+
+                _dragDeltaAccumulator = pointerEvent.Delta.ToVector2();
+            }
 
             TabPointerDrag?.Invoke(this, pointerEvent);
         }

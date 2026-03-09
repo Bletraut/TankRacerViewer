@@ -121,11 +121,11 @@ namespace TankRacerViewer.Core
             //_contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Female"));
 
             var tabLayout = new WindowLayout();
-            tabLayout.AddWindow(new WindowElement("Game_view_T")
+            tabLayout.AddFloatWindow(new WindowElement("Game_view_T")
             {
                 Position = new Vector2(0, 0)
             });
-            tabLayout.AddWindow(new WindowElement("Hierarchy_test_T")
+            tabLayout.AddFloatWindow(new WindowElement("Hierarchy_test_T")
             {
                 Position = new Vector2(100, 50)
             });
@@ -142,7 +142,7 @@ namespace TankRacerViewer.Core
                     Pivot = Alignment.TopLeft,
                     LocalPosition = Vector2.Transform(Input.MousePosition.ToVector2(), tabLayout.GlobalInverseTransformationMatrix)
                 };
-                tabLayout.AddWindow(window);
+                tabLayout.AddFloatWindow(window);
             }));
 
             _uiManager.Root.AddChild(new CanvasElement(Window,

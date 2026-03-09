@@ -184,6 +184,8 @@ namespace ComposableUi
             }
 
             source.Focus();
+
+            source.Undocked?.Invoke(source);
         }
 
         // Conversions.

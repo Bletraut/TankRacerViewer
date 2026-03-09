@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-
-using ComposableUi.Utilities;
+﻿using ComposableUi.Utilities;
 
 using Microsoft.Xna.Framework;
 
@@ -9,12 +6,14 @@ namespace ComposableUi
 {
     using Item = WindowNodeElement<WindowContainerElement>;
 
-    public partial class WindowElement : WindowNodeElement<WindowContainerElement>
+    public partial class WindowElement : Item
     {
         public const int DefaultHeaderHeight = 30;
         public const int DefaultBackgroundTopPadding = 2;
 
         public const int DefaultButtonsSpacing = 2;
+
+        private const int DefaultDragThreshold = 4;
 
         private const int EmptyTabIndex = -1;
 
@@ -55,6 +54,8 @@ namespace ComposableUi
         public event ElementEventHandler<WindowElement> TabPreviewHidden;
         public event ElementEventHandler<WindowElement> SplitPreviewShown;
         public event ElementEventHandler<WindowElement> SplitPreviewHidden;
+        public event ElementEventHandler<WindowElement> MovedByTab;
+        public event ElementEventHandler<WindowElement> Undocked;
         public event ElementEventHandler<WindowElement> Focused;
         public event ElementEventHandler<WindowElement> Maximized;
         public event ElementEventHandler<WindowElement> Restored;
@@ -72,6 +73,8 @@ namespace ComposableUi
         private readonly PointerInputHandlerElement _innerResizeHandle;
 
         private bool _isTabPressed;
+        private bool _isDragStarted;
+        private Vector2 _dragOffset;
         private Vector2 _dragDeltaAccumulator;
 
         private int _currentTabIndex = EmptyTabIndex;
@@ -97,8 +100,7 @@ namespace ComposableUi
             var background = new ExpandedElement(
                 topPadding: DefaultBackgroundTopPadding,
                 innerElement: new SpriteElement(
-                    skin: StandardSkin.WindowBody,
-                    color: new Color(Color.White, 0.8f)
+                    skin: StandardSkin.WindowBody
                 )
             );
 
@@ -315,8 +317,8 @@ namespace ComposableUi
             if (parent.ChildCount <= 1)
                 return Vector2.Zero;
 
-            var offset = Tab.Position - parent.GetChildAt(0).Position;
-            return offset;
+            var offset = Tab.BoundingRectangle.Left - parent.GetChildAt(0).BoundingRectangle.Left;
+            return new Vector2(offset, 0);
         }
 
         internal void SetViewActive(bool value)

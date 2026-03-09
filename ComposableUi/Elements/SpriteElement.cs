@@ -65,12 +65,12 @@ namespace ComposableUi
         {
             if (Sprite != null)
             {
-                renderer.DrawSprite(Sprite, DrawMode.Sliced,
+                renderer.DrawSprite(Sprite, DrawMode,
                     BoundingRectangle, ClipMask, Color);
             }
-            else
+            else if (Skin is not StandardSkin.None)
             {
-                renderer.DrawSkinnedRectangle(Skin, DrawMode.Sliced,
+                renderer.DrawSkinnedRectangle(Skin, DrawMode,
                     BoundingRectangle, ClipMask, Color);
             }
         }

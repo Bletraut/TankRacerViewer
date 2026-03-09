@@ -1,163 +1,328 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
+    using Item = WindowNodeElement<WindowContainerElement>;
+
     public sealed class WindowLayout : ContainerElement
     {
-        private readonly ContainerElement _windowContainer;
-        private readonly WindowElement _tempWindow;
-        private readonly TabElement _tempTab;
-        private readonly HolderElement _overlayWindowHolder;
+        private const float DefaultEmbedPreviewAreaSize = 100;
+        private const int DefaultEmbedPreviewIconPadding = 20;
+
+        private readonly Color DefaultEmbedPreviewBackgroundColor = new(Color.DarkSlateBlue, 0.8f);
+        private readonly Color DefaultEmbedPreviewIconColor = new(Color.DarkBlue, 0.8f);
+
+        public bool HadEmbeddedWindow
+        {
+            get
+            {
+                if (_embeddedLayout.ChildCount <= 0)
+                    return false;
+
+                for (var i = 0; i < _embeddedLayout.ChildCount; i++)
+                {
+                    var child = _embeddedLayout.GetChildAt(i);
+                    if (child is Item)
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
+        private readonly ContainerElement _embeddedLayout;
+        private readonly ContainerElement _floatLayout;
+
+        private readonly SpriteElement _embedPreviewBackground;
+        private readonly SpriteElement _embedPreviewIcon;
+        private readonly PointerInputHandlerElement _embedPreviewInputArea;
+
+        private readonly WindowElement _floatPreviewWindow;
+        private readonly WindowElement _embeddedPreviewWindow;
+        private readonly TabElement _floatPreviewTab;
+
+        private readonly HashSet<WindowElement> _windows = [];
 
         private Element _tempTabPlaceHolder;
 
-        private bool _isInsertPreviewShown;
+        private bool _isTabPreviewShown;
         private bool _isSplitPreviewShown;
+        private bool _isEmbeddedPreviewShown;
 
+        private WindowElement _currentWindow;
         private WindowElement _currentFocusedWindow;
 
         public WindowLayout()
         {
-            _windowContainer = new ContainerElement();
-            AddChild(new ExpandedElement(_windowContainer));
+            _embeddedPreviewWindow = WindowElement.CreateNonInteractiveWindow();
+            _embeddedPreviewWindow.IsEnabled = false;
+            AddChild(new ExpandedElement(_embeddedPreviewWindow));
 
-            _tempWindow = WindowElement.CreateNonInteractiveWindow();
-            _tempWindow.IsEnabled = false;
-            AddChild(_tempWindow);
+            _embeddedLayout = new ContainerElement();
+            AddChild(new ExpandedElement(
+                propagateToInnerElementChildren: true,
+                innerElement: _embeddedLayout
+            ));
 
-            _tempTab = new TabElement
+            _floatLayout = new ContainerElement();
+            AddChild(new ExpandedElement(_floatLayout));
+
+            _floatPreviewWindow = WindowElement.CreateNonInteractiveWindow();
+            _floatPreviewWindow.IsEnabled = false;
+            AddChild(_floatPreviewWindow);
+
+            _floatPreviewTab = new TabElement
             {
                 IsEnabled = false,
                 IsInteractable = false,
                 BlockInput = false
             };
-            AddChild(_tempTab);
+            AddChild(_floatPreviewTab);
 
-            _overlayWindowHolder = new HolderElement()
-            {
-                IsEnabled = false
-            };
-            AddChild(_overlayWindowHolder);
+            _embedPreviewBackground = new SpriteElement(
+                skin: StandardSkin.WhitePixel,
+                color: DefaultEmbedPreviewBackgroundColor
+            );
+            _embedPreviewIcon = new SpriteElement(
+                skin: StandardSkin.MaximizeWindowIcon,
+                color: DefaultEmbedPreviewIconColor
+            );
+            _embedPreviewInputArea = new PointerInputHandlerElement(
+                innerElement: new ContainerElement(
+                    size: new Vector2(DefaultEmbedPreviewAreaSize),
+                    children: [
+                        new ExpandedElement(_embedPreviewBackground),
+                        new ExpandedElement(
+                            leftPadding: DefaultEmbedPreviewIconPadding,
+                            rightPadding: DefaultEmbedPreviewIconPadding,
+                            topPadding: DefaultEmbedPreviewIconPadding,
+                            bottomPadding: DefaultEmbedPreviewIconPadding,
+                            innerElement: _embedPreviewIcon
+                        )
+                    ]
+                )
+            );
+            AddChild(_embedPreviewInputArea);
+            HideEmbedPreviewArea();
+
+            _embedPreviewInputArea.PointerEnter += OnEmbedPreviewInputAreaPointerEnter;
+            _embedPreviewInputArea.PointerLeave += OnEmbedPreviewInputAreaPointerLeave;
         }
 
-        public void AddWindow(WindowElement window)
+        public void AddFloatWindow(WindowElement window) 
+            => AddWindow(window, _floatLayout);
+
+        public void EmbedWindow(WindowElement window)
         {
-            window.TabPointerDown += OnTabPointerDown;
-            window.TabPointerUp += OnTabPointerUp;
-            window.TabPointerDrag += OnTabPointerDrag;
-            window.TabPreviewShown += OnTabPreviewShown;
-            window.TabPreviewHidden += OnTabPreviewHidden;
-            window.SplitPreviewShown += OnSplitPreviewShown;
-            window.SplitPreviewHidden += OnSplitPreviewHidden;
-            window.Focused += OnFocused;
-            window.Closed += OnClosed;
+            if (HadEmbeddedWindow)
+                return;
 
-            _windowContainer.AddChild(window);
+            AddWindow(window, _embeddedLayout);
         }
 
-        private void PrepareTempWindow(WindowElement source)
+        public void RemoveWindow(WindowElement window)
+        {
+            if (_windows.Remove(window))
+            {
+                window.TabPointerDown -= OnTabPointerDown;
+                window.TabPointerUp -= OnTabPointerUp;
+                window.TabPointerDrag -= OnTabPointerDrag;
+                window.TabPreviewShown -= OnTabPreviewShown;
+                window.TabPreviewHidden -= OnTabPreviewHidden;
+                window.SplitPreviewShown -= OnSplitPreviewShown;
+                window.SplitPreviewHidden -= OnSplitPreviewHidden;
+                window.MovedByTab -= OnMovedByTab;
+                window.Undocked -= OnUndocked;
+                window.Focused -= OnFocused;
+                window.Closed -= OnClosed;
+
+                WindowElement.Undock(window, Vector2.Zero);
+                window.Parent?.RemoveChild(window);
+            }
+        }
+
+        private void AddWindow(WindowElement window, ContainerElement layout)
+        {
+            RemoveWindow(window);
+
+            if (_windows.Add(window))
+            {
+                window.TabPointerDown += OnTabPointerDown;
+                window.TabPointerUp += OnTabPointerUp;
+                window.TabPointerDrag += OnTabPointerDrag;
+                window.TabPreviewShown += OnTabPreviewShown;
+                window.TabPreviewHidden += OnTabPreviewHidden;
+                window.SplitPreviewShown += OnSplitPreviewShown;
+                window.SplitPreviewHidden += OnSplitPreviewHidden;
+                window.MovedByTab += OnMovedByTab;
+                window.Undocked += OnUndocked;
+                window.Focused += OnFocused;
+                window.Closed += OnClosed;
+
+                layout.AddChild(window);
+            }
+        }
+
+        private void PrepareFloatPreviewWindow(WindowElement source)
         {
             var oldSize = source.Size;
             var newSize = Vector2.Max(source.MinSize, oldSize);
 
-            _tempWindow.SetSize(newSize);
-            _tempWindow.Pivot = source.Pivot;
-            _tempWindow.Tab.CopyHeaderFrom(source.Tab);
-            _tempWindow.Position = source.Position + (newSize - oldSize) * source.Pivot
+            _floatPreviewWindow.SetSize(newSize);
+            _floatPreviewWindow.Pivot = source.Pivot;
+            _floatPreviewWindow.Tab.CopyHeaderFrom(source.Tab);
+            _floatPreviewWindow.Position = source.Position + (newSize - oldSize) * source.Pivot
                 + source.CalculateTabOffset();
         }
 
-        private void PrepareTempTab(TabElement source)
+        private void PrepareEmbeddedPreviewWindow(WindowElement source)
         {
-            _tempTab.InnerElement.Size = source.InnerElement.Size;
-            _tempTab.SetState(TabState.Focused);
-            _tempTab.CopyHeaderFrom(source);
-            _tempTab.Position = source.Position;
+            _embeddedPreviewWindow.Tab.CopyHeaderFrom(source.Tab);
         }
 
-        private void ShowTempWindow()
+        private void PrepareFloatPreviewTab(TabElement source)
         {
-            _tempWindow.IsEnabled = true;
+            _floatPreviewTab.InnerElement.Size = source.InnerElement.Size;
+            _floatPreviewTab.SetState(TabState.Focused);
+            _floatPreviewTab.CopyHeaderFrom(source);
+            _floatPreviewTab.Position = source.Position;
         }
 
-        private void HideTempWindow()
+        private void ShowFloatPreviewWindow()
         {
-            _tempWindow.IsEnabled = false;
+            _floatPreviewWindow.IsEnabled = true;
         }
 
-        private void ShowTempTab()
+        private void HideFloatPreviewWindow()
         {
-            _tempTab.IsEnabled = true;
+            _floatPreviewWindow.IsEnabled = false;
         }
 
-        private void HideTempTab()
+        private void ShowEmbeddedPreviewWindow()
         {
-            _tempTab.IsEnabled = false;
+            _embeddedPreviewWindow.IsEnabled = true;
+        }
+
+        private void HideEmbeddedPreviewWindow()
+        {
+            _embeddedPreviewWindow.IsEnabled = false;
+        }
+
+        private void ShowFloatPreviewTab()
+        {
+            _floatPreviewTab.IsEnabled = true;
+        }
+
+        private void HideFloatPreviewTab()
+        {
+            _floatPreviewTab.IsEnabled = false;
+        }
+
+        private void ShowEmbedPreviewAreaIfPossible()
+        {
+            if (_embedPreviewInputArea.IsEnabled)
+                return;
+
+            if (HadEmbeddedWindow)
+                return;
+
+            _embedPreviewInputArea.IsEnabled = true;
+        }
+
+        private void HideEmbedPreviewArea()
+        {
+            _isEmbeddedPreviewShown = false;
+            _embedPreviewInputArea.IsEnabled = false;
+        }
+
+        private void MoveToFloatLayoutIfPossible(WindowElement window)
+        {
+            if (window.Parent == _embeddedLayout)
+                _floatLayout.AddChild(window);
         }
 
         private void OnTabPointerDown(WindowElement window, PointerEvent pointerEvent)
         {
-            PrepareTempWindow(window);
-            PrepareTempTab(window.Tab);
+            _currentWindow = window;
 
-            ShowTempTab();
+            PrepareFloatPreviewWindow(_currentWindow);
+            PrepareEmbeddedPreviewWindow(_currentWindow);
+            PrepareFloatPreviewTab(_currentWindow.Tab);
+
+            ShowFloatPreviewTab();
         }
 
         private void OnTabPointerUp(WindowElement window, PointerEvent pointerEvent)
         {
-            HideTempWindow();
-            HideTempTab();
+            HideFloatPreviewWindow();
+            HideEmbeddedPreviewWindow();
+            HideFloatPreviewTab();
+
+            if (_isEmbeddedPreviewShown)
+                EmbedWindow(_currentWindow);
+            HideEmbedPreviewArea();
+
+            _currentWindow = null;
         }
 
         private void OnTabPointerDrag(WindowElement window, PointerDragEvent pointerEvent)
         {
             var deltaVector = pointerEvent.Delta.ToVector2();
 
-            _tempWindow.Position += deltaVector;
-            _tempTab.Position += deltaVector;
+            _floatPreviewWindow.Position += deltaVector;
+            _floatPreviewTab.Position += deltaVector;
 
             if (_tempTabPlaceHolder is not null)
             {
-                _tempTab.Position = _tempTabPlaceHolder.Position with { X = _tempTab.Position.X };
+                _floatPreviewTab.Position = _tempTabPlaceHolder.Position with { X = _floatPreviewTab.Position.X };
             }
+
+            ShowEmbedPreviewAreaIfPossible();
         }
 
         private void OnTabPreviewShown(WindowElement sender, Element placeHolder)
         {
-            _isInsertPreviewShown = true;
+            _isTabPreviewShown = true;
             _tempTabPlaceHolder = placeHolder;
 
-            HideTempWindow();
-            ShowTempTab();
+            HideFloatPreviewWindow();
+            HideEmbeddedPreviewWindow();
+            ShowFloatPreviewTab();
         }
 
         private void OnTabPreviewHidden(WindowElement sender)
         {
-            _isInsertPreviewShown = false;
+            _isTabPreviewShown = false;
             _tempTabPlaceHolder = null;
 
-            HideTempTab();
+            HideFloatPreviewTab();
 
-            if (!_isSplitPreviewShown)
-                ShowTempWindow();
+            var canShowFloatPreviewWindow = !_isSplitPreviewShown
+                && !_isEmbeddedPreviewShown;
+            if (canShowFloatPreviewWindow)
+                ShowFloatPreviewWindow();
         }
 
         private void OnSplitPreviewShown(WindowElement window)
         {
             _isSplitPreviewShown = true;
 
-            HideTempWindow();
-            HideTempTab();
+            HideFloatPreviewWindow();
+            HideEmbeddedPreviewWindow();
+            HideFloatPreviewTab();
         }
 
         private void OnSplitPreviewHidden(WindowElement window)
         {
             _isSplitPreviewShown = false;
 
-            if (!_isInsertPreviewShown)
-                ShowTempWindow();
+            var canShowFloatPreviewWindow = !_isTabPreviewShown
+                && !_isEmbeddedPreviewShown;
+            if (canShowFloatPreviewWindow)
+                ShowFloatPreviewWindow();
         }
 
         private void OnFocused(WindowElement window)
@@ -175,17 +340,40 @@ namespace ComposableUi
 
         private void OnClosed(WindowElement window)
         {
-            window.TabPointerDown -= OnTabPointerDown;
-            window.TabPointerUp -= OnTabPointerUp;
-            window.TabPointerDrag -= OnTabPointerDrag;
-            window.TabPreviewShown -= OnTabPreviewShown;
-            window.TabPreviewHidden -= OnTabPreviewHidden;
-            window.SplitPreviewShown -= OnSplitPreviewShown;
-            window.SplitPreviewHidden -= OnSplitPreviewHidden;
-            window.Focused -= OnFocused;
-            window.Closed -= OnClosed;
+            RemoveWindow(window);
+        }
 
-            _windowContainer.RemoveChild(window);
+        private void OnMovedByTab(WindowElement window)
+        {
+            MoveToFloatLayoutIfPossible(window);
+        }
+
+        private void OnUndocked(WindowElement window)
+        {
+            MoveToFloatLayoutIfPossible(window);
+        }
+
+        private void OnEmbedPreviewInputAreaPointerEnter(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            _isEmbeddedPreviewShown = true;
+
+            HideFloatPreviewWindow();
+            HideFloatPreviewTab();
+            ShowEmbeddedPreviewWindow();
+        }
+
+        private void OnEmbedPreviewInputAreaPointerLeave(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            _isEmbeddedPreviewShown = false;
+
+            HideEmbeddedPreviewWindow();
+
+            var canShowFloatPreviewWindow = !_isTabPreviewShown
+                && !_isEmbeddedPreviewShown;
+            if (canShowFloatPreviewWindow)
+                ShowFloatPreviewWindow();
         }
     }
 }

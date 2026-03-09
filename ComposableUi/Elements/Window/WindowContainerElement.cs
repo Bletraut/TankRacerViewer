@@ -7,7 +7,7 @@ namespace ComposableUi
 {
     using Item = WindowNodeElement<WindowContainerElement>;
 
-    public sealed class WindowContainerElement : WindowNodeElement<WindowContainerElement>
+    public sealed class WindowContainerElement : Item
     {
         // Static.
         private static readonly Stack<WindowContainerElement> _pool = new();
