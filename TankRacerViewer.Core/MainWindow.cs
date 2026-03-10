@@ -1,18 +1,12 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
-
-using ComposableUi;
 
 using FastFileUnpacker;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-
-using TankRacerViewer.Core.Views;
 
 namespace TankRacerViewer.Core
 {
@@ -23,6 +17,7 @@ namespace TankRacerViewer.Core
 
         private SpriteFont _mainFont;
 
+        private UiComponent _uiComponent;
         private WorldRenderer _renderer;
 
         private FastFile _dataFastFile;
@@ -39,9 +34,6 @@ namespace TankRacerViewer.Core
         private CameraController _cameraController;
         private Vector3 _cameraDefaultPosition = new(0, 5, 30);
         private Vector3 _cameraDefaultRotation = new(0, 0, 0);
-
-        private UiManager _uiManager;
-        private ContextMenuElement _contextMenu;
 
         private readonly StringBuilder _info = new();
 
@@ -73,95 +65,8 @@ namespace TankRacerViewer.Core
             // TODO: use this.Content to load your game content here
             _mainFont = Content.Load<SpriteFont>("Fonts\\MainFont");
 
-            var column = new ColumnLayout(
-                spacing: 10,
-                sizeMainAxisToContent: true,
-                sizeCrossAxisToContent: true
-                );
-
-            // FOR TEST
-            var innerColumn = new ColumnLayout(
-                spacing: 5,
-                sizeMainAxisToContent: true,
-                sizeCrossAxisToContent: true);
-            for (var i = 0; i < 30; i++)
-            {
-                var color = new Color(Random.Shared.NextSingle(),
-                    Random.Shared.NextSingle(), Random.Shared.NextSingle());
-                var button = new SpriteElement(
-                    size: new Vector2(Random.Shared.Next(50, 400), Random.Shared.Next(50, 200)),
-                    skin: StandardSkin.RectangleButton,
-                    drawMode: DrawMode.Simple,
-                    color: color);
-                innerColumn.AddChild(button);
-            }
-            var innerScroll = new ScrollViewElement(
-                size: new Vector2(300, 500),
-                content: innerColumn);
-            innerScroll.Background.Skin = StandardSkin.InactiveTab;
-            //column.AddChild(new SpriteElement(
-            //    size: new Vector2(Random.Shared.Next(500, 800), Random.Shared.Next(50, 200)),
-            //    skin: StandardSkin.RectangleButton,
-            //    drawMode: DrawMode.Simple));
-            // end;
-
-            _uiManager = new UiManager(GraphicsDevice, Content, _spriteBatch);
-
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Gaygin?", name: "MAAAAAX"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Virgin?", name: "MAAAAAX"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAX"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAAX"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Who is\\Baka\\Ebaka?", name: "MAAAX"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Ilusha"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Tolya", keyBindings: "Alt+Gay"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "Gay", name: "Hemul", keyBindings: "Alt+Alt"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(name: "Epstein Files", isInteractable: false));
-            //_contextMenu.AddItem(new ContextMenuItemElement(name: "Item 228", keyBindings: "Alt+F4"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Male"));
-            //_contextMenu.AddItem(new ContextMenuItemElement(key: "There are only two genders", name: "Female"));
-
-            var tabLayout = new WindowLayout();
-            tabLayout.AddFloatWindow(new WindowElement("Game_view_T")
-            {
-                Position = new Vector2(0, 0)
-            });
-            tabLayout.AddFloatWindow(new WindowElement("Hierarchy_test_T")
-            {
-                Position = new Vector2(100, 50)
-            });
-
-            _contextMenu = new ContextMenuElement()
-            {
-                Pivot = Alignment.TopLeft,
-                IsEnabled = false
-            };
-            _contextMenu.AddItem(new ContextMenuItemElement(name: " Add New Tab", clickAction: _ =>
-            {
-                var window = new WindowElement(titleText: $"TEST_{Random.Shared.Next(0, 1000)}")
-                {
-                    Pivot = Alignment.TopLeft,
-                    LocalPosition = Vector2.Transform(Input.MousePosition.ToVector2(), tabLayout.GlobalInverseTransformationMatrix)
-                };
-                tabLayout.AddFloatWindow(window);
-            }));
-
-            _uiManager.Root.AddChild(new CanvasElement(Window,
-                children: [
-                    //new WindowElement(
-                    //    content: new ExpandedElement(
-                    //        innerElement: new ScrollViewElement(
-                    //            //expandContentWidth: true,
-                    //            content: column
-                    //        )
-                    //    )
-                    //)
-                    //{
-                    //    Position = new Vector2(200, 300)
-                    //},
-                    new ExpandedElement(tabLayout),
-                    new ExpandedElement(tabLayout),
-                    _contextMenu,
-                ]));
+            _uiComponent = new UiComponent(this, _spriteBatch);
+            Components.Add(_uiComponent);
 
             _renderer = new WorldRenderer(GraphicsDevice, _spriteBatch, Content);
 
@@ -181,24 +86,6 @@ namespace TankRacerViewer.Core
             //using var levelFileStream = File.OpenRead("Content\\FastFiles\\THEME.DAT");
             var levelFastFile = new FastFile(levelFileStream);
             _levelAssetViewContainer = new AssetViewContainer(GraphicsDevice, levelFastFile);
-
-            var col = 0;
-            foreach (var (key, textureAssetView) in _levelAssetViewContainer.TextureAssetViews)
-            {
-                var sprite = new SpriteElement(
-                    sprite: new Sprite()
-                    {
-                        Texture = textureAssetView.Texture,
-                        SourceRectangle = new Rectangle(0, 0, textureAssetView.Texture.Width, textureAssetView.Texture.Height)
-                    },
-                    drawMode: DrawMode.Simple,
-                    sizeToSource: true);
-                column.AddChild(sprite);
-
-                col++;
-                if (col == 16)
-                    column.AddChild(innerScroll);
-            }
 
             var levelViewName = levelFastFile.Assets.FirstOrDefault(asset => asset is MapAsset)?.FullName ?? string.Empty;
             _levelView = new LevelView(levelViewName, _commonAssetViewContainer, _levelAssetViewContainer);
@@ -220,15 +107,7 @@ namespace TankRacerViewer.Core
             // TODO: Add your update logic here
             Input.Update();
 
-            if (Input.IsMouseButtonUp(MouseButton.Left))
-                _contextMenu.Hide();
-            if (Input.IsMouseButtonDown(MouseButton.Right))
-                _contextMenu.Show(Input.MousePosition.ToVector2());
-
-            _uiManager.Update(gameTime);
-
-            if (!_uiManager.IsAnyElementPressed)
-                _cameraController.Update(gameTime);
+            _cameraController.Update(gameTime);
 
             if (Input.IsKeyDown(Keys.R))
             {
@@ -287,8 +166,6 @@ namespace TankRacerViewer.Core
             //{
             //    _tankView.Draw(_renderer, _camera);
             //}
-
-            _uiManager.Draw(gameTime);
 
             _info.AppendLine($"Draw Calls: {GraphicsDevice.Metrics.DrawCount}");
             _info.Append($"Fps: {1 / gameTime.ElapsedGameTime.TotalSeconds:00.0}");

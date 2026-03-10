@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
@@ -8,7 +7,7 @@ using FastFileUnpacker;
 
 using Microsoft.Xna.Framework;
 
-namespace TankRacerViewer.Core.Views
+namespace TankRacerViewer.Core
 {
     public sealed class TankView : AssetView
     {

@@ -10,7 +10,7 @@ using FastFileUnpacker;
 
 using Microsoft.Xna.Framework;
 
-namespace TankRacerViewer.Core.Views
+namespace TankRacerViewer.Core
 {
     public sealed class LevelView : AssetView
     {

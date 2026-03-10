@@ -2,7 +2,7 @@
 
 using Microsoft.Xna.Framework;
 
-namespace TankRacerViewer.Core.Views
+namespace TankRacerViewer.Core
 {
     public sealed class LevelObject(string type, string id, IReadOnlyDictionary<string, IReadOnlyList<string>> properties)
     {

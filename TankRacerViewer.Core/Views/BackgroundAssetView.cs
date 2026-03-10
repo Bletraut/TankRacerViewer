@@ -4,7 +4,7 @@ using FastFileUnpacker;
 
 using Microsoft.Xna.Framework.Graphics;
 
-namespace TankRacerViewer.Core.Views
+namespace TankRacerViewer.Core
 {
     public sealed class BackgroundAssetView : AssetView
     {

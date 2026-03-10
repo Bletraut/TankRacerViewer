@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TankRacerViewer.Core.Views
+namespace TankRacerViewer.Core
 {
     public sealed class LevelObjectContainer(string fullName,
         IReadOnlyList<LevelObject> levelObjects)
