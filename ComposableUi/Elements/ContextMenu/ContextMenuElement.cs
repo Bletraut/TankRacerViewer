@@ -99,18 +99,18 @@ namespace ComposableUi
 
             AddChild(_columnsRow);
 
+            _onItemPointerEnter = OnItemPointerEnter;
+            _onItemPointerLeave = OnItemPointerLeave;
+            _onItemClicked = OnItemClicked;
+
             _items = [];
             Items = _items.AsReadOnly();
 
             if (items is not null)
             {
                 foreach (var item in items)
-                    AddChild(item);
+                    AddItem(item);
             }
-
-            _onItemPointerEnter = OnItemPointerEnter;
-            _onItemPointerLeave = OnItemPointerLeave;
-            _onItemClicked = OnItemClicked;
         }
 
         public void AddItem(ContextMenuItemElement item)

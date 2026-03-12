@@ -241,6 +241,8 @@ namespace ComposableUi
                 ]
             );
             ViewHolder.InnerElement = _view;
+
+            SetSize(size ?? DefaultSize);
         }
 
         internal void AttachSolver(ComposableWindowsSolver solver)

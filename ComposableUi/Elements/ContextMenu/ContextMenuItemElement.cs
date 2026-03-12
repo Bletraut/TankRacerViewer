@@ -9,6 +9,11 @@ namespace ComposableUi
         public const float DefaultHeight = 22;
         public const float DefaultArrowWidth = 10;
 
+        public static readonly Color DefaultHoverColor = Color.DarkSlateBlue;
+        public static readonly Color DefaultContentNormalColor = Color.Black;
+        public static readonly Color DefaultContentHoverColor = Color.White;
+        public static readonly Color DefaultContentDisabledColor = Color.DimGray;
+
         internal Element ExtraContent { get; }
         internal SpriteElement Arrow { get; }
 
@@ -85,9 +90,9 @@ namespace ComposableUi
             Key = key ?? string.Empty;
             ClickAction = clickAction;
 
-            ContentNormalColor = contentNormalColor ?? Color.Black;
-            ContentHoverColor = contentHoverColor ?? Color.White;
-            ContentDisabledColor = contentDisabledColor ?? Color.DimGray;
+            ContentNormalColor = contentNormalColor ?? DefaultContentNormalColor;
+            ContentHoverColor = contentHoverColor ?? DefaultContentHoverColor;
+            ContentDisabledColor = contentDisabledColor ?? DefaultContentDisabledColor;
 
             NameText = new TextElement(
                 size: new Vector2(height),
@@ -128,7 +133,7 @@ namespace ComposableUi
 
             _buttonBackground = new SpriteElement(
                 skin: StandardSkin.None);
-            HoverColor = hoverColor ?? Color.DarkSlateBlue;
+            HoverColor = hoverColor ?? DefaultHoverColor;
 
             Button = new PointerInputHandlerElement(_buttonBackground);
             IsInteractable = isInteractable;

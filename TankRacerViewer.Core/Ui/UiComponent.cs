@@ -5,45 +5,39 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace TankRacerViewer.Core
 {
-    public sealed class UiComponent : DrawableGameComponent
+    public sealed partial class UiComponent : DrawableGameComponent
     {
-        private readonly UiManager _uiManager;
+        public UiManager UiManager { get; }
 
         private readonly CanvasElement _canvas;
-
-        private MenuBar _menuBar;
+        private readonly ContainerElement _mainLayer;
+        private readonly ContainerElement _overlayLayer;
 
         public UiComponent(Game game, SpriteBatch spriteBatch) : base(game)
         {
-            _uiManager = new UiManager(game.GraphicsDevice, game.Content, spriteBatch);
+            UiManager = new UiManager(game.GraphicsDevice, game.Content, spriteBatch);
 
             _canvas = new CanvasElement(game.Window);
-            _uiManager.Root.AddChild(_canvas);
+            UiManager.Root.AddChild(_canvas);
 
+            _mainLayer = new ContainerElement();
+            _canvas.AddChild(new ExpandedElement(_mainLayer));
+
+            _overlayLayer = new ContainerElement();
+            _canvas.AddChild(new ExpandedElement(_overlayLayer));
+
+            CreateWindows();
             CreateMenuBar();
-        }
-
-        private void CreateMenuBar()
-        {
-            _menuBar = new MenuBar();
-            _canvas.AddChild(new ExpandedElement(
-                expandHeight: false,
-                innerElement: new AlignmentElement(
-                    alignmentFactor: Alignment.TopCenter,
-                    pivot: Alignment.TopCenter,
-                    innerElement: _menuBar
-                )
-            ));
         }
 
         public override void Update(GameTime gameTime)
         {
-            _uiManager.Update(gameTime);
+            UiManager.Update(gameTime);
         }
 
         public override void Draw(GameTime gameTime)
         {
-            _uiManager.Draw(gameTime);
+            UiManager.Draw(gameTime);
         }
     }
 }

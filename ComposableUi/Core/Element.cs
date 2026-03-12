@@ -277,5 +277,5 @@ namespace ComposableUi
     }
 
     public delegate void ElementEventHandler<TElement>(TElement sender);
-    public delegate void ElementEventHandler<TElement, TEventArgs>(TElement sender, TEventArgs e);
+    public delegate void ElementEventHandler<TElement, TEventArgs>(TElement sender, TEventArgs arguments);
 }

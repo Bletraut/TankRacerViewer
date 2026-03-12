@@ -107,7 +107,8 @@ namespace TankRacerViewer.Core
             // TODO: Add your update logic here
             Input.Update();
 
-            _cameraController.Update(gameTime);
+            if (!_uiComponent.UiManager.IsAnyElementPressed)
+                _cameraController.Update(gameTime);
 
             if (Input.IsKeyDown(Keys.R))
             {
