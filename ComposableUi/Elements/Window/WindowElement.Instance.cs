@@ -36,15 +36,20 @@ namespace ComposableUi
 
         public SpriteElement ButtonsBackground { get; }
 
+        public ContainerElement ContentContainer { get; private set; }
+
         public ButtonElement CloseButton { get; }
         public ButtonElement MaximizeButton { get; }
         public ButtonElement RestoreButton { get; }
 
-        private bool IsFocused => Tab.CurrentState is TabState.Focused;
+        public bool IsFocused => Tab.CurrentState is TabState.Focused;
 
-        private bool IsMaximized => _placeHolder is not null;
+        public bool IsMaximized => _placeHolder is not null;
 
-        private bool IsResizingInternally => _resizeNormal != Vector2.Zero;
+        protected bool IsResizingInternally => _resizeNormal != Vector2.Zero;
+
+        protected bool IsTabPressed { get; private set; }
+        protected bool IsDragHandlePressed { get; private set; }
 
         // Events.
         public event ElementEventHandler<WindowElement, PointerEvent> TabPointerDown;
@@ -66,13 +71,11 @@ namespace ComposableUi
 
         private readonly RowLayout _tabRow;
         private readonly RowLayout _buttonRow;
-        private readonly ContainerElement _contentContainer;
 
         private readonly PointerInputHandlerElement _tabPreviewInputArea;
         private readonly PointerInputHandlerElement _splitPreviewInputArea;
         private readonly PointerInputHandlerElement _innerResizeHandle;
 
-        private bool _isTabPressed;
         private bool _isDragStarted;
         private Vector2 _dragOffset;
         private Vector2 _dragDeltaAccumulator;
@@ -108,6 +111,7 @@ namespace ComposableUi
                 innerElement: new SpriteElement(skin: StandardSkin.InactiveTab)
             );
             DragHandle.PointerDown += OnDragHandlePointerDown;
+            DragHandle.PointerUp += OnDragHandlePointerUp;
             DragHandle.PointerFixedDrag += OnDragHandlePointerFixedDrag;
 
             _tabRow = new RowLayout(
@@ -155,16 +159,16 @@ namespace ComposableUi
             _buttonRow.AddChild(CloseButton);
             CloseButton.PointerClick += OnCloseButtonPointerClick;
 
-            _contentContainer = new ContainerElement();
+            ContentContainer = new ContainerElement();
             var contentContainerParent = new ExpandedElement(
                 leftPadding: DefaultContentPadding.X,
                 rightPadding: DefaultContentPadding.X,
                 topPadding: DefaultContentPadding.Y + DefaultHeaderHeight,
                 bottomPadding: DefaultContentPadding.Y,
-                innerElement: _contentContainer
+                innerElement: ContentContainer
             );
             if (content is not null)
-                _contentContainer.AddChild(content);
+                ContentContainer.AddChild(content);
 
             Header = new ClipMaskElement(
                 innerElement: new ContainerElement(

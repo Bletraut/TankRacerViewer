@@ -22,7 +22,8 @@ namespace TankRacerViewer.Core
                 innerElement: _windowLayout
             ));
 
-            ViewerWindow = new ViewerWindow();
+            Debug.WriteLine(GraphicsDevice);
+            ViewerWindow = new ViewerWindow(GraphicsDevice);
             _windowLayout.EmbedWindow(ViewerWindow);
 
             ExplorerWindow = new ExplorerWindow();

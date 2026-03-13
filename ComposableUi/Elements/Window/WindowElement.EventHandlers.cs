@@ -10,8 +10,16 @@ namespace ComposableUi
         private void OnDragHandlePointerDown(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
+            IsDragHandlePressed = true;
+
             BringToFront();
             Focus();
+        }
+
+        private void OnDragHandlePointerUp(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            IsDragHandlePressed = false;
         }
 
         private void OnDragHandlePointerFixedDrag(PointerInputHandlerElement sender,
@@ -37,7 +45,7 @@ namespace ComposableUi
             if (IsMaximized)
                 return;
 
-            _isTabPressed = true;
+            IsTabPressed = true;
             _isDragStarted = false;
 
             _dragOffset = CalculateTabOffset();
@@ -55,10 +63,10 @@ namespace ComposableUi
         private void OnTabButtonPointerUp(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
-            if (!_isTabPressed)
+            if (!IsTabPressed)
                 return;
 
-            _isTabPressed = false;
+            IsTabPressed = false;
 
             Tab.InnerElement.IsEnabled = true;
 
@@ -92,7 +100,7 @@ namespace ComposableUi
         private void OnTabButtonPointerDrag(PointerInputHandlerElement sender,
             PointerDragEvent pointerEvent)
         {
-            if (!_isTabPressed)
+            if (!IsTabPressed)
                 return;
 
             _dragDeltaAccumulator += pointerEvent.Delta.ToVector2();

@@ -21,6 +21,10 @@ namespace TankRacerViewer.Core
         private static Texture2D _grayPixelTexture;
 
         // Class.
+        public IRenderContext RenderContext { get; private set; }
+
+        private bool HasRenderContext => RenderContext != null;
+
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
 
@@ -29,14 +33,14 @@ namespace TankRacerViewer.Core
         private readonly Effect _backgroundEffect;
         private readonly Effect _clearEffect;
 
-        private readonly RenderTarget2D _opaqueRenderTarget;
-        private readonly RenderTarget2D _depthRenderTarget;
-        private readonly RenderTarget2D[] _transparentLayerRenderTargets;
+        private RenderTarget2D _opaqueRenderTarget;
+        private RenderTarget2D _depthRenderTarget;
+        private RenderTarget2D[] _transparentLayerRenderTargets;
         private RenderTarget2D _currentTransparentDepthRenderTarget;
         private RenderTarget2D _nextTransparentDepthRenderTarget;
         private RenderTarget2D _tempTransparentDepthRenderTarget;
 
-        private readonly RenderTargetBinding[] _renderTargetBindings;
+        private readonly RenderTargetBinding[] _renderTargetBindings = new RenderTargetBinding[2];
 
         private readonly Matrix _worldScaleMatrix;
         private readonly List<(ModelAssetView modelAssetView, Matrix matrix, Camera Camera)> _renderQueue = [];
@@ -64,33 +68,28 @@ namespace TankRacerViewer.Core
                 _grayPixelTexture.SetData([Color.Gray]);
             }
 
-            var width = _graphicsDevice.Viewport.Width;
-            var height = _graphicsDevice.Viewport.Height;
-            _opaqueRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
-                false, SurfaceFormat.Color, DepthFormat.Depth24);
-            _depthRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
-                false, SurfaceFormat.Single, DepthFormat.None);
-
-            _transparentLayerRenderTargets = new RenderTarget2D[TransparentLayerCount];
-            for (var i = 0; i < TransparentLayerCount; i++)
-            {
-                _transparentLayerRenderTargets[i] = new RenderTarget2D(_graphicsDevice, width, height,
-                    false, SurfaceFormat.Color, DepthFormat.Depth24);
-            }
-            _currentTransparentDepthRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
-                false, SurfaceFormat.Single, DepthFormat.None);
-            _nextTransparentDepthRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
-                false, SurfaceFormat.Single, DepthFormat.None);
-            _tempTransparentDepthRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
-                false, SurfaceFormat.Single, DepthFormat.None);
-
-            _renderTargetBindings = [_opaqueRenderTarget, _depthRenderTarget];
-
             _worldScaleMatrix = Matrix.CreateScale(DefaultWorldScale);
+        }
+
+        public void ApplyRenderContext(IRenderContext context)
+        {
+            if (RenderContext == context)
+                return;
+
+            if (RenderContext is not null)
+                RenderContext.SizeChanged -= OnRenderContextSizeChanged;
+
+            RenderContext = context;
+            RenderContext.SizeChanged += OnRenderContextSizeChanged;
+
+            RecreateRenderTargets();
         }
 
         public void Begin(Color clearColor = default, float depth = 1)
         {
+            if (!HasRenderContext)
+                return;
+
             _renderTargetBindings[0] = _opaqueRenderTarget;
             _renderTargetBindings[1] = _depthRenderTarget;
 
@@ -104,12 +103,18 @@ namespace TankRacerViewer.Core
 
         public void End()
         {
+            if (!HasRenderContext)
+                return;
+
             DrawRenderQueue();
             Present();
         }
 
         public void Draw(BackgroundAssetView backgroundAssetView, Camera camera)
         {
+            if (!HasRenderContext)
+                return;
+
             _graphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
 
             var yaw = camera.Yaw;
@@ -152,6 +157,9 @@ namespace TankRacerViewer.Core
 
         public void Draw(LevelObjectContainer levelObjectContainer, Camera camera)
         {
+            if (!HasRenderContext)
+                return;
+
             for (int i = 0; i < levelObjectContainer.LevelObjects.Count; i++)
             {
                 var levelObject = levelObjectContainer.LevelObjects[i];
@@ -165,6 +173,9 @@ namespace TankRacerViewer.Core
 
         public void Draw(ModelAssetView modelAssetView, Matrix modelMatrix, Camera camera)
         {
+            if (!HasRenderContext)
+                return;
+
             _renderQueue.Add((modelAssetView, modelMatrix * _worldScaleMatrix, camera));
         }
 
@@ -211,7 +222,7 @@ namespace TankRacerViewer.Core
 
         private void Present()
         {
-            _graphicsDevice.SetRenderTarget(null);
+            _graphicsDevice.SetRenderTarget(RenderContext.RenderTarget);
 
             _spriteBatch.Begin();
             _spriteBatch.Draw(_opaqueRenderTarget, Vector2.Zero, Color.White);
@@ -284,6 +295,48 @@ namespace TankRacerViewer.Core
 
                 _graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshPart.PrimitiveCount);
             }
+        }
+
+        private void RecreateRenderTargets()
+        {
+            var width = RenderContext.Size.X;
+            var height = RenderContext.Size.Y;
+
+            _opaqueRenderTarget?.Dispose();
+            _depthRenderTarget?.Dispose();
+
+            _opaqueRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
+                false, SurfaceFormat.Color, DepthFormat.Depth24);
+            _depthRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
+                false, SurfaceFormat.Single, DepthFormat.None);
+
+            _transparentLayerRenderTargets = new RenderTarget2D[TransparentLayerCount];
+            for (var i = 0; i < TransparentLayerCount; i++)
+            {
+                _transparentLayerRenderTargets[i]?.Dispose();
+
+                _transparentLayerRenderTargets[i] = new RenderTarget2D(_graphicsDevice, width, height,
+                    false, SurfaceFormat.Color, DepthFormat.Depth24);
+            }
+
+            _currentTransparentDepthRenderTarget?.Dispose();
+            _nextTransparentDepthRenderTarget?.Dispose();
+            _tempTransparentDepthRenderTarget?.Dispose();
+
+            _currentTransparentDepthRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
+                false, SurfaceFormat.Single, DepthFormat.None);
+            _nextTransparentDepthRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
+                false, SurfaceFormat.Single, DepthFormat.None);
+            _tempTransparentDepthRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
+                false, SurfaceFormat.Single, DepthFormat.None);
+
+            _renderTargetBindings[0] = _opaqueRenderTarget;
+            _renderTargetBindings[1] = _depthRenderTarget;
+        }
+
+        private void OnRenderContextSizeChanged(object sender, Point size)
+        {
+            RecreateRenderTargets();
         }
     }
 }

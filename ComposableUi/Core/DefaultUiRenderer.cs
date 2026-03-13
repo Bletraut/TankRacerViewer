@@ -198,7 +198,7 @@ namespace ComposableUi
         // IUiRenderer.
         public void Begin()
         {
-
+            _spriteBatch.GraphicsDevice.SetRenderTarget(null);
         }
 
         public void End()

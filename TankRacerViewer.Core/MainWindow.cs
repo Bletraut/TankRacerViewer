@@ -18,6 +18,9 @@ namespace TankRacerViewer.Core
         private SpriteFont _mainFont;
 
         private UiComponent _uiComponent;
+
+        private GameWindowRenderContext _gameWindowRenderContext;
+        private IRenderContext _currentRenderContext;
         private WorldRenderer _renderer;
 
         private FastFile _dataFastFile;
@@ -68,7 +71,11 @@ namespace TankRacerViewer.Core
             _uiComponent = new UiComponent(this, _spriteBatch);
             Components.Add(_uiComponent);
 
+            _gameWindowRenderContext = new GameWindowRenderContext(Window);
+            _currentRenderContext = _uiComponent.ViewerWindow.RenderContext;
+
             _renderer = new WorldRenderer(GraphicsDevice, _spriteBatch, Content);
+            _renderer.ApplyRenderContext(_currentRenderContext);
 
             using var dataFileStream = File.OpenRead("Content\\FastFiles\\DATA.DAT");
             _dataFastFile = new FastFile(dataFileStream);
@@ -94,6 +101,7 @@ namespace TankRacerViewer.Core
 
             _camera = new Camera(GraphicsDevice);
             _camera.Position = _cameraDefaultPosition;
+            _camera.ApplyRenderContext(_currentRenderContext);
 
             _cameraController = new CameraController(_camera);
             _cameraController.EulerAngles = _cameraDefaultRotation;
@@ -106,9 +114,6 @@ namespace TankRacerViewer.Core
 
             // TODO: Add your update logic here
             Input.Update();
-
-            if (!_uiComponent.UiManager.IsAnyElementPressed)
-                _cameraController.Update(gameTime);
 
             if (Input.IsKeyDown(Keys.R))
             {
@@ -147,6 +152,17 @@ namespace TankRacerViewer.Core
             }
 
             base.Update(gameTime);
+
+            if (_renderer.RenderContext == _gameWindowRenderContext)
+            {
+                if (!_uiComponent.UiManager.IsAnyElementPressed)
+                    _cameraController.Update(gameTime);
+            }
+            else
+            {
+                if (_uiComponent.ViewerWindow.IsInputAvailable)
+                    _cameraController.Update(gameTime);
+            }
         }
 
         protected override void Draw(GameTime gameTime)
