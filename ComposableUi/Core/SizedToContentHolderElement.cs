@@ -23,7 +23,7 @@ namespace ComposableUi
             if (shouldRebuildInnerElement)
             {
                 InnerElement.Rebuild(size);
-                InnerElement.LocalPosition = InnerElement.Size * InnerElement.Pivot - Size * Pivot;
+                InnerElement.LocalPosition = InnerElement.PivotOffset - PivotOffset;
             }
         }
     }

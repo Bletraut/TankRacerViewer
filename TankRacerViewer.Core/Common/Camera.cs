@@ -131,7 +131,7 @@ namespace TankRacerViewer.Core
 
                 if (!_projectionMatrix.HasValue)
                 {
-                    var aspectRatio = _currentRenderContext.Size.X / (float)_currentRenderContext.Size.Y;
+                    var aspectRatio = _currentRenderContext.Resolution.X / (float)_currentRenderContext.Resolution.Y;
                     _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(FieldOfView, aspectRatio, NearPlane, FarPlane);
                 }
 
@@ -166,10 +166,10 @@ namespace TankRacerViewer.Core
                 return;
 
             if (_currentRenderContext is not null)
-                _currentRenderContext.SizeChanged -= OnRenderContextSizeChanged;
+                _currentRenderContext.ResolutionChanged -= OnRenderContextResolutionChanged;
 
             _currentRenderContext = context;
-            _currentRenderContext.SizeChanged += OnRenderContextSizeChanged;
+            _currentRenderContext.ResolutionChanged += OnRenderContextResolutionChanged;
 
             _projectionMatrix = null;
         }
@@ -186,7 +186,7 @@ namespace TankRacerViewer.Core
             return direction;
         }
 
-        private void OnRenderContextSizeChanged(object sender, Point size)
+        private void OnRenderContextResolutionChanged(object sender, Point size)
         {
             _projectionMatrix = null;
             _viewProjectionMatrix = null;

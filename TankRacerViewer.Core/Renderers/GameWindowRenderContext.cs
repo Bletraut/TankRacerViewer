@@ -8,9 +8,10 @@ namespace TankRacerViewer.Core
     public sealed class GameWindowRenderContext : IRenderContext
     {
         public RenderTarget2D RenderTarget => null;
-        public Point Size => _window.ClientBounds.Size;
+        public Point Resolution => _window.ClientBounds.Size;
+        public float AspectRatio => (float)Resolution.X / Resolution.Y;
 
-        public event EventHandler<Point> SizeChanged;
+        public event EventHandler<Point> ResolutionChanged;
 
         private readonly GameWindow _window;
 
@@ -22,7 +23,7 @@ namespace TankRacerViewer.Core
 
         private void OnClientSizeChanged(object sender, EventArgs arguments)
         {
-            SizeChanged?.Invoke(this, Size);
+            ResolutionChanged?.Invoke(this, Resolution);
         }
     }
 }

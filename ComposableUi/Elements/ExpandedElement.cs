@@ -93,7 +93,7 @@ namespace ComposableUi
             }
 
             var elementPosition = child.LocalPosition;
-            var preferredPosition = child.Size * child.Pivot - child.Parent.Size * child.Parent.Pivot;
+            var preferredPosition = child.PivotOffset - child.Parent.PivotOffset;
 
             child.LocalPosition = new Vector2()
             {
@@ -104,7 +104,7 @@ namespace ComposableUi
 
         public override Vector2 CalculatePreferredSize()
         {
-            if (Parent != null)
+            if (Parent is not null)
             {
                 var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
                 var preferredSize = Parent.Size - paddings;
@@ -132,8 +132,8 @@ namespace ComposableUi
                 }
             }
 
-            if (Parent != null)
-                LocalPosition = new Vector2(LeftPadding, TopPadding) + Size * Pivot - Parent.Size * Parent.Pivot;
+            if (Parent is not null)
+                LocalPosition = new Vector2(LeftPadding, TopPadding) + PivotOffset - Parent.PivotOffset;
         }
     }
 }

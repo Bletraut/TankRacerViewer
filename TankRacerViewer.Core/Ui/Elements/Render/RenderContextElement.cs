@@ -25,11 +25,14 @@ namespace TankRacerViewer.Core
             }
         }
 
+        public float AspectRatio => (float)_resolution.X / _resolution.Y;
+
         RenderTarget2D IRenderContext.RenderTarget => _renderTarget;
 
-        Point IRenderContext.Size => Resolution;
+        Point IRenderContext.Resolution => Resolution;
+        float IRenderContext.AspectRatio => AspectRatio;
 
-        event EventHandler<Point> IRenderContext.SizeChanged
+        event EventHandler<Point> IRenderContext.ResolutionChanged
         {
             add => _eventHandlers.Add(value);
             remove => _eventHandlers.Remove(value);

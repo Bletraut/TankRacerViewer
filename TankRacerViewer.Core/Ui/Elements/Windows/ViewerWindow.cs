@@ -15,6 +15,7 @@ namespace TankRacerViewer.Core
 
         private readonly GraphicsDevice _graphicsDevice;
 
+        private readonly AspectRatioFitterElement _aspectRatioFitter;
         private readonly PointerInputHandlerElement _inputArea;
 
         private bool _isPointerInInputArea;
@@ -25,7 +26,20 @@ namespace TankRacerViewer.Core
             _graphicsDevice = graphicsDevice;
 
             RenderContext = new RenderContextElement(_graphicsDevice);
-            ContentContainer.AddChild(new ExpandedElement(RenderContext));
+            _aspectRatioFitter = new AspectRatioFitterElement(
+                aspectRatioMode: AspectRatioMode.FitInParent,
+                aspectRatio: RenderContext.AspectRatio,
+                innerElement: RenderContext
+            );
+            ContentContainer.AddChild(_aspectRatioFitter);
+
+            var aspectRatioMode = InsertButton(1, null, StandardSkin.HoverRectangleButton);
+            aspectRatioMode.PointerClick += (_, _) =>
+            {
+                _aspectRatioFitter.AspectRatioMode = _aspectRatioFitter.AspectRatioMode is AspectRatioMode.FitInParent
+                    ? AspectRatioMode.EnvelopeParent
+                    : AspectRatioMode.FitInParent;
+            };
 
             _inputArea = new PointerInputHandlerElement(blockInput: false);
             ContentContainer.AddChild(new ExpandedElement(_inputArea));

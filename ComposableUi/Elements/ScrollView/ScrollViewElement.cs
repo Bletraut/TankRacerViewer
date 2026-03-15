@@ -150,7 +150,7 @@ namespace ComposableUi
 
         private void RefreshContentAndScrollBarsVisibility()
         {
-            if (Content == null)
+            if (Content is null)
             {
                 HorizontalScrollBar.IsEnabled = false;
                 VerticalScrollBar.IsEnabled = false;
@@ -255,7 +255,7 @@ namespace ComposableUi
                 return;
 
             var multipliedDelta = (int)(delta * ScrollWheelMultiplier);
-            if (_hierarchyWheelScrollSolver != null)
+            if (_hierarchyWheelScrollSolver is not null)
             {
                 _hierarchyWheelScrollSolver.AddScrollIntent(axis, multipliedDelta, _wheelScrollAction);
             }
@@ -283,7 +283,7 @@ namespace ComposableUi
 
         private void OnHorizontalScrollValueChanged(Element sender, float value)
         {
-            if (Content == null)
+            if (Content is null)
                 return;
 
             _contentParent.Offset = _contentParent.Offset with
@@ -294,7 +294,7 @@ namespace ComposableUi
 
         private void OnVerticalScrollValueChanged(Element sender, float value)
         {
-            if (Content == null)
+            if (Content is null)
                 return;
 
             _contentParent.Offset = _contentParent.Offset with

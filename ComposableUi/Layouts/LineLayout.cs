@@ -245,7 +245,7 @@ namespace ComposableUi
             var mainAxisPreferredChildrenSize = MainAxis * (!ExpandChildrenMainAxis
                 ? CalculatePreferredChildrenSize()
                 : Size);
-            var totalMainAxisLayoutOffset = MainAxis * (Size * Pivot - AlignmentFactor * (Size - mainAxisPreferredChildrenSize));
+            var totalMainAxisLayoutOffset = MainAxis * (PivotOffset - AlignmentFactor * (Size - mainAxisPreferredChildrenSize));
 
 #warning Implement offset correctly. For now it works only for left alignment.
             var offset = new Vector2(LeftPadding, TopPadding);
@@ -263,7 +263,7 @@ namespace ComposableUi
                         continue;
 
                     layoutElement.Rebuild(size);
-                    layoutElement.LocalPosition = layoutElement.Size * layoutElement.Pivot - Size * Pivot;
+                    layoutElement.LocalPosition = layoutElement.PivotOffset - PivotOffset;
 
                     if (layoutElement.IgnoreLayout)
                     {
@@ -297,8 +297,8 @@ namespace ComposableUi
                 }
                 child.Rebuild(childSize);
 
-                var crossAxisLayoutOffset = CrossAxis * (Size * Pivot - AlignmentFactor * (Size - childSize));
-                child.LocalPosition = offset + child.Size * child.Pivot
+                var crossAxisLayoutOffset = CrossAxis * (PivotOffset - AlignmentFactor * (Size - childSize));
+                child.LocalPosition = offset + child.PivotOffset
                     - (totalMainAxisLayoutOffset + crossAxisLayoutOffset);
 
                 totalMainAxisLayoutOffset -= MainAxis * (childSize + new Vector2(Spacing));

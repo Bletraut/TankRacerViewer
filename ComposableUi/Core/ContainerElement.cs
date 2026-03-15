@@ -20,7 +20,7 @@ namespace ComposableUi
 
             _children = new List<Element>(children?.Count ?? 0);
 
-            if (children == null)
+            if (children is null)
                 return;
 
             foreach (var child in children)

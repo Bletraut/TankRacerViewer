@@ -15,11 +15,11 @@ namespace ComposableUi
                 if (_innerElement == value)
                     return;
 
-                if (_innerElement != null)
+                if (_innerElement is not null)
                     _innerElement.Parent = null;
 
                 _innerElement = value;
-                if (_innerElement != null)
+                if (_innerElement is not null)
                 {
                     _innerElement.Parent?.RemoveChild(_innerElement);
                     _innerElement.Parent = this;
@@ -29,9 +29,9 @@ namespace ComposableUi
             }
         }
 
-        public bool HasActiveInnerElement => InnerElement != null && InnerElement.IsEnabled;
+        public bool HasActiveInnerElement => InnerElement is not null && InnerElement.IsEnabled;
 
-        public override int ChildCount => InnerElement != null ? 1 : 0;
+        public override int ChildCount => InnerElement is not null ? 1 : 0;
 
         public HolderElement(Element innerElement = default,
             Vector2? size = default,
@@ -59,7 +59,7 @@ namespace ComposableUi
 
         public override Element GetChildAt(int index)
         {
-            if (InnerElement == null)
+            if (InnerElement is null)
                 throw new IndexOutOfRangeException();
 
             if (index != 0)

@@ -9,7 +9,7 @@ namespace ComposableUi
             var maskPosition = element.Position - element.Size * element.Pivot;
             var clipMask = new Rectangle(maskPosition.ToPoint(), element.Size.ToPoint());
 
-            if (element.Parent == null)
+            if (element.Parent is null)
                 return clipMask;
 
             var parentMask = element.Parent.ClipMask;

@@ -201,13 +201,13 @@ namespace TankRacerViewer.Core
         {
             renderer.Begin(Color.Black);
 
-            if (BackgroundAssetView != null)
+            if (BackgroundAssetView is not null)
                 renderer.Draw(BackgroundAssetView, camera);
 
-            if (MapModelAssetView != null)
+            if (MapModelAssetView is not null)
                 renderer.Draw(MapModelAssetView, Matrix.Identity, camera);
 
-            if (CurrentLevelObjectContainer != null)
+            if (CurrentLevelObjectContainer is not null)
                 renderer.Draw(CurrentLevelObjectContainer, camera);
 
             renderer.End();
@@ -215,7 +215,7 @@ namespace TankRacerViewer.Core
 
         private void RefreshLevelObjects()
         {
-            if (CurrentLevelObjectContainer == null)
+            if (CurrentLevelObjectContainer is null)
                 return;
 
             foreach (var levelObject in CurrentLevelObjectContainer.LevelObjects)

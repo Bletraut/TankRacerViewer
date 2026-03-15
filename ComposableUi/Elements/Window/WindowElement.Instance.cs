@@ -146,16 +146,16 @@ namespace ComposableUi
                 innerElement: new ExpandedElement(ButtonsBackground)
             ));
 
-            RestoreButton = CreateButtonWithIcon(DefaultButtonSize, StandardSkin.RestoreWindowIcon);
+            RestoreButton = AddButton(null, StandardSkin.RestoreWindowIcon);
             RestoreButton.IsEnabled = false;
             _buttonRow.AddChild(RestoreButton);
             RestoreButton.PointerClick += OnRestoreButtonPointerClick;
 
-            MaximizeButton = CreateButtonWithIcon(DefaultButtonSize, StandardSkin.MaximizeWindowIcon);
+            MaximizeButton = AddButton(null, StandardSkin.MaximizeWindowIcon);
             _buttonRow.AddChild(MaximizeButton);
             MaximizeButton.PointerClick += OnMaximizeButtonPointerClick;
 
-            CloseButton = CreateButtonWithIcon(DefaultButtonSize, StandardSkin.CloseIcon);
+            CloseButton = AddButton(null, StandardSkin.CloseIcon);
             _buttonRow.AddChild(CloseButton);
             CloseButton.PointerClick += OnCloseButtonPointerClick;
 
@@ -165,7 +165,7 @@ namespace ComposableUi
                 rightPadding: DefaultContentPadding.X,
                 topPadding: DefaultContentPadding.Y + DefaultHeaderHeight,
                 bottomPadding: DefaultContentPadding.Y,
-                innerElement: ContentContainer
+                innerElement: new ClipMaskElement(ContentContainer)
             );
             if (content is not null)
                 ContentContainer.AddChild(content);
@@ -336,6 +336,22 @@ namespace ComposableUi
         internal void RestoreTab()
         {
             _tabRow.AddChild(Tab);
+        }
+
+        public ButtonElement AddButton(Sprite sprite, StandardSkin skin)
+            => InsertButton(_buttonRow.ChildCount, sprite, skin);
+
+        public ButtonElement InsertButton(int index, Sprite sprite, StandardSkin skin)
+        {
+            var button = CreateButtonWithIcon(DefaultButtonSize, sprite, skin);
+            _buttonRow.InsertChild(index, button);
+
+            return button;
+        }
+
+        public void RemoveButton(ButtonElement button)
+        {
+            _buttonRow.RemoveChild(button);
         }
 
         public void BringToFront()

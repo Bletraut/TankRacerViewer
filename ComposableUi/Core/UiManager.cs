@@ -93,7 +93,7 @@ namespace ComposableUi
 
         public void Draw(GameTime gameTime)
         {
-            if (UiRenderer == null)
+            if (UiRenderer is null)
                 return;
 
             UiRenderer.Begin();
@@ -106,7 +106,7 @@ namespace ComposableUi
 
         private void HandlePointerInput()
         {
-            if (PointerInputProvider == null)
+            if (PointerInputProvider is null)
                 return;
 
             (_lastActiveHandlers, _currentActiveHandlers) = (_currentActiveHandlers, _lastActiveHandlers);

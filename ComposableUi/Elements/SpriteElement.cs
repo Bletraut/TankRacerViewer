@@ -63,7 +63,7 @@ namespace ComposableUi
 
         void IDrawableElement.Draw(IUiRenderer renderer)
         {
-            if (Sprite != null)
+            if (Sprite is not null)
             {
                 renderer.DrawSprite(Sprite, DrawMode,
                     BoundingRectangle, ClipMask, Color);

@@ -140,7 +140,7 @@ namespace ComposableUi
             if (string.IsNullOrEmpty(Text))
                 return;
 
-            var localPosition = Size * TextAlignmentFactor - Size * Pivot
+            var localPosition = Size * TextAlignmentFactor - PivotOffset
                 - TextSize * TextAlignmentFactor;
 
             renderer.DrawString(SpriteFont, Text, localPosition + Position, ClipMask, Color);

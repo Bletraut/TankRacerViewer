@@ -23,7 +23,7 @@ namespace TankRacerViewer.Core
         // Class.
         public IRenderContext RenderContext { get; private set; }
 
-        private bool HasRenderContext => RenderContext != null;
+        private bool HasRenderContext => RenderContext is not null;
 
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
@@ -57,12 +57,12 @@ namespace TankRacerViewer.Core
             _backgroundEffect = contentManager.Load<Effect>("Effects\\BackgroundEffect");
             _clearEffect = contentManager.Load<Effect>("Effects\\ClearEffect");
 
-            if (_whitePixelTexture == null)
+            if (_whitePixelTexture is null)
             {
                 _whitePixelTexture = new Texture2D(_graphicsDevice, 1, 1);
                 _whitePixelTexture.SetData([Color.White]);
             }
-            if (_grayPixelTexture == null)
+            if (_grayPixelTexture is null)
             {
                 _grayPixelTexture = new Texture2D(_graphicsDevice, 1, 1);
                 _grayPixelTexture.SetData([Color.Gray]);
@@ -77,10 +77,10 @@ namespace TankRacerViewer.Core
                 return;
 
             if (RenderContext is not null)
-                RenderContext.SizeChanged -= OnRenderContextSizeChanged;
+                RenderContext.ResolutionChanged -= OnRenderContextResolutionChanged;
 
             RenderContext = context;
-            RenderContext.SizeChanged += OnRenderContextSizeChanged;
+            RenderContext.ResolutionChanged += OnRenderContextResolutionChanged;
 
             RecreateRenderTargets();
         }
@@ -299,8 +299,8 @@ namespace TankRacerViewer.Core
 
         private void RecreateRenderTargets()
         {
-            var width = RenderContext.Size.X;
-            var height = RenderContext.Size.Y;
+            var width = RenderContext.Resolution.X;
+            var height = RenderContext.Resolution.Y;
 
             _opaqueRenderTarget?.Dispose();
             _depthRenderTarget?.Dispose();
@@ -334,7 +334,7 @@ namespace TankRacerViewer.Core
             _renderTargetBindings[1] = _depthRenderTarget;
         }
 
-        private void OnRenderContextSizeChanged(object sender, Point size)
+        private void OnRenderContextResolutionChanged(object sender, Point size)
         {
             RecreateRenderTargets();
         }

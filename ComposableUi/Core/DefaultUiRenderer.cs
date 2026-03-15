@@ -35,7 +35,7 @@ namespace ComposableUi
             _contentManager = contentManager;
             _spriteBatch = spriteBatch;
 
-            if (_fallbackTexture == null)
+            if (_fallbackTexture is null)
             {
                 _fallbackTexture = new Texture2D(spriteBatch.GraphicsDevice, 2, 2);
                 _fallbackTexture.SetData([Color.Pink, Color.DeepPink, Color.DeepPink, Color.Pink]);

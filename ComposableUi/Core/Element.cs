@@ -15,14 +15,14 @@ namespace ComposableUi
                 if (_parent == value)
                     return;
 
-                if (_parent != null)
+                if (_parent is not null)
                 {
                     _parent.SizeChanged -= OnParentSizeChanged;
                     _parent.TransformChanged -= OnParentTransformChanged;
                 }
 
                 _parent = value;
-                if (_parent != null)
+                if (_parent is not null)
                 {
                     _parent.SizeChanged += OnParentSizeChanged;
                     _parent.TransformChanged += OnParentTransformChanged;
@@ -72,7 +72,7 @@ namespace ComposableUi
                 if (Position == value)
                     return;
 
-                LocalPosition = Parent != null
+                LocalPosition = Parent is not null
                     ? Vector2.Transform(value, Parent.GlobalInverseTransformationMatrix)
                     : value;
             }
@@ -171,11 +171,11 @@ namespace ComposableUi
 
         public IEnumerable<ParentElement> GetParentsRecursively()
         {
-            if (Parent == null)
+            if (Parent is null)
                 yield break;
 
             var parent = Parent;
-            while (parent != null)
+            while (parent is not null)
             {
                 yield return parent;
 
@@ -200,7 +200,7 @@ namespace ComposableUi
                 return;
 
             _isBoundingRectangleDirty = false;
-            _boundingRectangle = new Rectangle((Position - Size * Pivot).ToPoint(), Size.ToPoint());
+            _boundingRectangle = new Rectangle((Position - PivotOffset).ToPoint(), Size.ToPoint());
         }
 
         private void RecalculateLocalTransformationMatrixIfDirty()
@@ -220,7 +220,7 @@ namespace ComposableUi
             _isGlobalTransformationMatrixDirty = false;
             _globalTransformationMatrix = LocalTransformationMatrix;
 
-            if (Parent != null)
+            if (Parent is not null)
                 _globalTransformationMatrix *= Parent.GlobalTransformationMatrix;
 
             _globalTransformationMatrix.Decompose(out _, out _, out var position);

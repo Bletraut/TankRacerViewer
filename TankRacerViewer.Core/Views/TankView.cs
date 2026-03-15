@@ -73,7 +73,7 @@ namespace TankRacerViewer.Core
                 if (propertyName == AerialNodeName)
                 {
                     var turretNode = tankNodes.Find(node => node.Id == TurretNodeName);
-                    if (turretNode != null)
+                    if (turretNode is not null)
                         position += turretNode.Position;
                 }
 
@@ -85,7 +85,7 @@ namespace TankRacerViewer.Core
                             break;
                     }
                 }
-                if (modelAssetView == null)
+                if (modelAssetView is null)
                     continue;
 
                 tankNodes.Add(new LevelObject(string.Empty, propertyName, _emptyProperties)
@@ -103,7 +103,7 @@ namespace TankRacerViewer.Core
         {
             renderer.Begin(Color.CornflowerBlue);
 
-            if (TankNodeContainer != null)
+            if (TankNodeContainer is not null)
                 renderer.Draw(TankNodeContainer, camera);
 
             renderer.End();

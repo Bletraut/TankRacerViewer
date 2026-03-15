@@ -8,8 +8,9 @@ namespace TankRacerViewer.Core
     public interface IRenderContext
     {
         public RenderTarget2D RenderTarget { get; }
-        public Point Size { get; }
+        public Point Resolution { get; }
+        public float AspectRatio { get; }
 
-        public event EventHandler<Point> SizeChanged;
+        public event EventHandler<Point> ResolutionChanged;
     }
 }

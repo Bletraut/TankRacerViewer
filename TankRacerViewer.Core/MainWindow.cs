@@ -172,14 +172,14 @@ namespace TankRacerViewer.Core
             // TODO: Add your drawing code here
             _info.Clear();
 
-            if (_levelView != null)
+            if (_levelView is not null)
             {
                 _levelView.Draw(_renderer, _camera);
 
                 _info.AppendLine($"Current Container: {_levelView.CurrentLevelObjectContainer.FullName}");
                 _info.AppendLine($"Current Lap: {_levelView.CurrentLap}");
             }
-            //if (_tankView != null)
+            //if (_tankView is not null)
             //{
             //    _tankView.Draw(_renderer, _camera);
             //}

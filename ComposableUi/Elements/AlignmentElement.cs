@@ -33,8 +33,8 @@ namespace ComposableUi
         {
             base.Rebuild(size, excludeChildren);
 
-            if (Parent != null)
-                LocalPosition = Parent.Size * AlignmentFactor + Offset - Parent.Size * Parent.Pivot;
+            if (Parent is not null)
+                LocalPosition = Parent.Size * AlignmentFactor + Offset - Parent.PivotOffset;
         }
     }
 }

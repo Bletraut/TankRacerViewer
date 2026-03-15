@@ -244,7 +244,8 @@ namespace ComposableUi
 
         // Buttons.
         private static ButtonElement CreateButtonWithIcon(Vector2 size,
-            StandardSkin icon)
+            Sprite sprite,
+            StandardSkin skin)
         {
             var button = new ButtonElement(
                 size: size,
@@ -256,7 +257,8 @@ namespace ComposableUi
                         topPadding: 4,
                         bottomPadding: 8,
                         innerElement: new SpriteElement(
-                            skin: icon,
+                            sprite: sprite,
+                            skin: skin,
                             color: Color.Black
                         )
                     )

@@ -289,10 +289,11 @@ namespace ComposableUi
                 return position;
 
             var size = CalculatePreferredSize();
-            var boundingRectangle = new Rectangle((position - size * Pivot).ToPoint(), size.ToPoint());
+            var pivotOffset = size * Pivot;
+            var boundingRectangle = new Rectangle((position - pivotOffset).ToPoint(), size.ToPoint());
             var parentBoundingRectangle = root.Parent.BoundingRectangle;
 
-            var fallbackTopLeftPosition = fallbackPosition - size * Pivot;
+            var fallbackTopLeftPosition = fallbackPosition - pivotOffset;
 
             if (root.ClampPositionToParentWidth)
             {
@@ -329,7 +330,7 @@ namespace ComposableUi
         {
             base.Rebuild(size, excludeChildren);
 
-            _columnsRow.LocalPosition = _columnsRow.Size * _columnsRow.Pivot - Size * Pivot;
+            _columnsRow.LocalPosition = _columnsRow.PivotOffset - PivotOffset;
         }
 
         private void OnItemPointerEnter(ContextMenuItemElement item,
