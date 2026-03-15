@@ -12,7 +12,7 @@ namespace TankRacerViewer.Core
         IDrawableElement,
         IRenderContext
     {
-        public readonly Point DefaultResolution = new(1920, 1080);
+        public static readonly Point DefaultResolution = new(1920, 1080);
 
         private Point _resolution;
         public Point Resolution
@@ -21,24 +21,18 @@ namespace TankRacerViewer.Core
             set
             {
                 if (SetAndChangeState(ref _resolution, value))
+                {
                     RecreateRenderTarget();
+                    ResolutionChanged?.Invoke(this, Resolution);
+                }
             }
         }
 
         public float AspectRatio => (float)_resolution.X / _resolution.Y;
 
-        RenderTarget2D IRenderContext.RenderTarget => _renderTarget;
+        public RenderTarget2D RenderTarget => _renderTarget;
 
-        Point IRenderContext.Resolution => Resolution;
-        float IRenderContext.AspectRatio => AspectRatio;
-
-        event EventHandler<Point> IRenderContext.ResolutionChanged
-        {
-            add => _eventHandlers.Add(value);
-            remove => _eventHandlers.Remove(value);
-        }
-
-        private readonly List<EventHandler<Point>> _eventHandlers = [];
+        public event EventHandler<Point> ResolutionChanged;
 
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Sprite _sprite = new();
