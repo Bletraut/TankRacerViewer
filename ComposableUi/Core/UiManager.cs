@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -18,12 +19,16 @@ namespace ComposableUi
 
         private readonly GraphicsDevice _graphicsDevice;
 
-        private readonly Stack<Element> _stack = new();
+        private Stack<(uint Layer, Element Element)> _stack = new();
+        private Stack<(uint Layer, Element Element)> _nextStack = new();
+
         private readonly List<(Rectangle InputArea, IPointerInputHandler handler)> _pointerInputHandlers = [];
         private readonly List<IDrawableElement> _renderQueue = [];
 
         private HashSet<IPointerInputHandler> _lastActiveHandlers = [];
         private HashSet<IPointerInputHandler> _currentActiveHandlers = [];
+        private HashSet<IPointerInputHandler> _lastFocusedHandlers = [];
+        private HashSet<IPointerInputHandler> _currentFocusedHandlers = [];
         private readonly HashSet<IPointerInputHandler> _primaryButtonPressedHandlers = [];
         private readonly HashSet<IPointerInputHandler> _secondaryButtonPressedHandlers = [];
 
@@ -118,6 +123,14 @@ namespace ComposableUi
             var isPrimaryButtonPressed = PointerInputProvider.IsPrimaryButtonPressed;
             var isSecondaryButtonPressed = PointerInputProvider.IsSecondaryButtonPressed;
 
+            var anyButtonDown = PointerInputProvider.IsPrimaryButtonDown 
+                || PointerInputProvider.IsSecondaryButtonDown;
+            if (anyButtonDown)
+            {
+                (_lastFocusedHandlers, _currentFocusedHandlers) = (_currentFocusedHandlers, _lastFocusedHandlers);
+                _currentFocusedHandlers.Clear();
+            }
+
             var pointer = PointerInputProvider.Pointer;
             var pointerEvent = new PointerEvent(pointer, _currentPointerPosition,
                 isPrimaryButtonPressed, isSecondaryButtonPressed);
@@ -134,6 +147,11 @@ namespace ComposableUi
             var pointerDragEvent = new PointerDragEvent(pointer, _currentPointerPosition,
                 isPrimaryButtonPressed, isSecondaryButtonPressed, pointerPositionDelta);
 
+            var pointerFocusedEvent = new PointerFocusEvent(pointer, _currentPointerPosition,
+                isPrimaryButtonPressed, isSecondaryButtonPressed, true);
+            var pointerUnfocusedEvent = new PointerFocusEvent(pointer, _currentPointerPosition,
+                isPrimaryButtonPressed, isSecondaryButtonPressed, false);
+
             var isInputBlocked = false;
             for (var i = _pointerInputHandlers.Count - 1; i >= 0; i--)
             {
@@ -145,6 +163,7 @@ namespace ComposableUi
                     if (!handler.IsInteractable)
                     {
                         _currentActiveHandlers.Add(handler);
+                        _lastFocusedHandlers.Remove(handler);
                         _primaryButtonPressedHandlers.Remove(handler);
                         _secondaryButtonPressedHandlers.Remove(handler);
 
@@ -165,6 +184,12 @@ namespace ComposableUi
 
                     if (PointerInputProvider.IsPrimaryButtonDown)
                     {
+                        if (_currentFocusedHandlers.Add(handler))
+                        {
+                            if(!_lastFocusedHandlers.Contains(handler))
+                                handler.OnFocusChanged(pointerFocusedEvent);
+                        }
+
                         if (_primaryButtonPressedHandlers.Add(handler))
                             handler.OnPointerDown(pointerEvent);
                     }
@@ -184,6 +209,12 @@ namespace ComposableUi
 
                     if (PointerInputProvider.IsSecondaryButtonDown)
                     {
+                        if (_currentFocusedHandlers.Add(handler))
+                        {
+                            if (!_lastFocusedHandlers.Contains(handler))
+                                handler.OnFocusChanged(pointerFocusedEvent);
+                        }
+
                         if (_secondaryButtonPressedHandlers.Add(handler))
                             handler.OnPointerSecondaryDown(pointerEvent);
                     }
@@ -225,6 +256,15 @@ namespace ComposableUi
 
                 _secondaryButtonPressedHandlers.Clear();
             }
+
+            if (anyButtonDown)
+            {
+                foreach (var handler in _lastFocusedHandlers)
+                {
+                    if (!_currentFocusedHandlers.Contains(handler))
+                        handler.OnFocusChanged(pointerUnfocusedEvent);
+                }
+            }
         }
 
         private void RebuildIfDirty()
@@ -246,39 +286,60 @@ namespace ComposableUi
             _renderQueue.Clear();
 
             _stack.Clear();
-            _stack.Push(Root);
+            _nextStack.Clear();
+            _stack.Push((0, Root));
+
+            uint currentLayer = 0;
+            uint nextMinLayer = uint.MaxValue;
 
             var viewportBounds = _graphicsDevice.Viewport.Bounds;
 
-            while (_stack.Count > 0)
+            do
             {
-                var element = _stack.Pop();
-                if (!element.IsEnabled)
-                    continue;   
-
-                if (element is ParentElement parentElement)
+                while (_stack.Count > 0)
                 {
-                    for (var i = parentElement.ChildCount - 1; i >= 0; i--)
-                        _stack.Push(parentElement.GetChildAt(i));
-                }
-
-                var clipMask = element.ClipMask;
-                if (clipMask.HasValue)
-                {
-                    var isClipped = clipMask.Value.Width <= 0 
-                        && clipMask.Value.Height <= 0;
-                    if (isClipped)
+                    var (parentLayer, element) = _stack.Pop();
+                    if (!element.IsEnabled)
                         continue;
 
-                    if (!clipMask.Value.Intersects(element.BoundingRectangle))
+                    var layer = parentLayer + element.Layer;
+                    if (layer > currentLayer)
+                    {
+                        nextMinLayer = Math.Min(nextMinLayer, layer);
+                        _nextStack.Push((parentLayer, element));
+
                         continue;
+                    }
+
+                    if (element is ParentElement parentElement)
+                    {
+                        for (var i = parentElement.ChildCount - 1; i >= 0; i--)
+                            _stack.Push((layer, parentElement.GetChildAt(i)));
+                    }
+
+                    var clipMask = element.ClipMask;
+                    if (clipMask.HasValue)
+                    {
+                        var isClipped = clipMask.Value.Width <= 0
+                            && clipMask.Value.Height <= 0;
+                        if (isClipped)
+                            continue;
+
+                        if (!clipMask.Value.Intersects(element.BoundingRectangle))
+                            continue;
+                    }
+
+                    if (!viewportBounds.Intersects(element.BoundingRectangle))
+                        continue;
+
+                    HandleElement(element);
                 }
 
-                if (!viewportBounds.Intersects(element.BoundingRectangle))
-                    continue;
-
-                HandleElement(element);
-            }
+                currentLayer = nextMinLayer;
+                nextMinLayer = uint.MaxValue;
+                (_stack, _nextStack) = (_nextStack, _stack);
+            } 
+            while (_stack.Count > 0);
         }
 
         private void HandleElement(Element element)

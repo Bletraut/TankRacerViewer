@@ -52,7 +52,7 @@ namespace ComposableUi
         private bool _isEmbeddedPreviewShown;
 
         private WindowElement _currentWindow;
-        private WindowElement _currentFocusedWindow;
+        private WindowElement _currentSelectedWindow;
 
         public WindowLayout()
         {
@@ -135,7 +135,7 @@ namespace ComposableUi
                 window.SplitPreviewHidden -= OnSplitPreviewHidden;
                 window.MovedByTab -= OnMovedByTab;
                 window.Undocked -= OnUndocked;
-                window.Focused -= OnFocused;
+                window.Selected -= OnSelected;
                 window.Closed -= OnClosed;
 
                 WindowElement.Undock(window, Vector2.Zero);
@@ -158,7 +158,7 @@ namespace ComposableUi
                 window.SplitPreviewHidden += OnSplitPreviewHidden;
                 window.MovedByTab += OnMovedByTab;
                 window.Undocked += OnUndocked;
-                window.Focused += OnFocused;
+                window.Selected += OnSelected;
                 window.Closed += OnClosed;
 
                 layout.AddChild(window);
@@ -185,7 +185,7 @@ namespace ComposableUi
         private void PrepareFloatPreviewTab(TabElement source)
         {
             _floatPreviewTab.InnerElement.Size = source.InnerElement.Size;
-            _floatPreviewTab.SetState(TabState.Focused);
+            _floatPreviewTab.SetState(TabState.Selected);
             _floatPreviewTab.CopyHeaderFrom(source);
             _floatPreviewTab.Position = source.Position;
         }
@@ -324,17 +324,17 @@ namespace ComposableUi
                 ShowFloatPreviewWindow();
         }
 
-        private void OnFocused(WindowElement window)
+        private void OnSelected(WindowElement window)
         {
-            if (_currentFocusedWindow == window)
+            if (_currentSelectedWindow == window)
                 return;
 
-            if (_currentFocusedWindow is not null)
+            if (_currentSelectedWindow is not null)
             {
-                if (_currentFocusedWindow.Tab.CurrentState is TabState.Focused)
-                    _currentFocusedWindow.Tab.SetState(TabState.Active);
+                if (_currentSelectedWindow.Tab.CurrentState is TabState.Selected)
+                    _currentSelectedWindow.Tab.SetState(TabState.Normal);
             }
-            _currentFocusedWindow = window;
+            _currentSelectedWindow = window;
         }
 
         private void OnClosed(WindowElement window)

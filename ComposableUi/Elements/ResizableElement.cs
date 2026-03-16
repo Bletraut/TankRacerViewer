@@ -124,7 +124,7 @@ namespace ComposableUi
             base.OnPointerFixedDrag(pointerEvent);
 
             var deltaVector = pointerEvent.Delta.ToVector2();
-            if (HasActiveInnerElement)
+            if (HasEnabledInnerElement)
             {
                 var size = InnerElement.Size;
                 // Prevents a sudden jump in size if the

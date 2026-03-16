@@ -29,7 +29,7 @@ namespace ComposableUi
             }
         }
 
-        public bool HasActiveInnerElement => InnerElement is not null && InnerElement.IsEnabled;
+        public bool HasEnabledInnerElement => InnerElement is not null && InnerElement.IsEnabled;
 
         public override int ChildCount => InnerElement is not null ? 1 : 0;
 
@@ -50,7 +50,7 @@ namespace ComposableUi
             if (excludeChildren)
                 return;
 
-            if (!HasActiveInnerElement)
+            if (!HasEnabledInnerElement)
                 return;
 
             var childSize = InnerElement.CalculatePreferredSize();

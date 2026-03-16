@@ -13,7 +13,7 @@ namespace ComposableUi
             IsDragHandlePressed = true;
 
             BringToFront();
-            Focus();
+            Select();
         }
 
         private void OnDragHandlePointerUp(PointerInputHandlerElement sender,
@@ -57,7 +57,7 @@ namespace ComposableUi
 
             TabPointerDown?.Invoke(this, pointerEvent);
 
-            Focus();
+            Select();
         }
 
         private void OnTabButtonPointerUp(PointerInputHandlerElement sender,
@@ -147,7 +147,7 @@ namespace ComposableUi
             PointerEvent pointerEvent)
         {
             BringToFront();
-            Focus();
+            Select();
         }
 
         private void OnSplitPreviewInputAreaPointerMove(PointerInputHandlerElement sender,

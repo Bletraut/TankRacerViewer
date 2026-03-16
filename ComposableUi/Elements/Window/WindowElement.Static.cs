@@ -93,7 +93,7 @@ namespace ComposableUi
             container.InsertItem(insertIndex, inLayoutIndex, source);
             source.SetSize(sourceSize);
 
-            source.Focus();
+            source.Select();
         }
 
         public static void DockAsTab(WindowElement source, WindowElement target, int index)
@@ -138,7 +138,7 @@ namespace ComposableUi
             source.SetViewActive(false);
             container.InsertItem(index, index, source);
 
-            source.Focus();
+            source.Select();
         }
 
         public static void Undock(WindowElement source, Vector2 position)
@@ -167,7 +167,7 @@ namespace ComposableUi
                     if (item is not WindowElement window)
                         continue;
 
-                    window.Focus();
+                    window.Select();
                     break;
                 }
             }
@@ -183,7 +183,7 @@ namespace ComposableUi
                 container.RecalculateMinSize();
             }
 
-            source.Focus();
+            source.Select();
 
             source.Undocked?.Invoke(source);
         }
@@ -239,7 +239,7 @@ namespace ComposableUi
             target.InsertTab(index, source.Tab);
             target.SetViewActive(false);
 
-            source.Focus();
+            source.Select();
         }
 
         // Buttons.

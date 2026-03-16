@@ -34,6 +34,13 @@ namespace ComposableUi
             }
         }
 
+        private uint _layer;
+        public uint Layer
+        {
+            get => _layer;
+            set => SetAndChangeState(ref _layer, value);
+        }
+
         private bool _isEnabled = true;
         public virtual bool IsEnabled
         {

@@ -80,6 +80,6 @@ namespace ComposableUi
             node.IsInteractable = IsInteractable;
         }
 
-        internal virtual void SetFocus(bool value) { }
+        internal virtual void SetSelected(bool value) { }
     }
 }

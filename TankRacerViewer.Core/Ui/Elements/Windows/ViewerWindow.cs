@@ -7,7 +7,7 @@ namespace TankRacerViewer.Core
     public sealed class ViewerWindow : WindowElement
     {
         public bool IsInputAvailable 
-            => IsFocused && !IsTabPressed && !IsDragHandlePressed
+            => IsSelected && !IsTabPressed && !IsDragHandlePressed
             && !IsResizingInternally && !IsResizing
             && (_isPointerInInputArea || _isPointerPressedInInputArea);
 

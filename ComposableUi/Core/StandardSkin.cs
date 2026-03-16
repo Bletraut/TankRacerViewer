@@ -31,7 +31,7 @@
 
         InactiveTab,
         ActiveTab,
-        FocusedTab,
+        SelectedTab,
         TabButtonsBackground,
         WindowBody,
 

@@ -9,7 +9,7 @@ namespace ComposableUi
 
         public override Vector2 CalculatePreferredSize()
         {
-            if (HasActiveInnerElement)
+            if (HasEnabledInnerElement)
                 return InnerElement.CalculatePreferredSize();
 
             return base.CalculatePreferredSize();
@@ -19,7 +19,7 @@ namespace ComposableUi
         {
             Size = size;
 
-            var shouldRebuildInnerElement = !excludeChildren && HasActiveInnerElement;
+            var shouldRebuildInnerElement = !excludeChildren && HasEnabledInnerElement;
             if (shouldRebuildInnerElement)
             {
                 InnerElement.Rebuild(size);

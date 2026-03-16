@@ -30,6 +30,8 @@ namespace ComposableUi
             }
         }
 
+        public bool IsFocused { get; private set; }
+
         public event ElementEventHandler<PointerInputHandlerElement, bool> InteractionChanged;
 
         public event ElementEventHandler<PointerInputHandlerElement, PointerScrollEvent> ScrollWheel;
@@ -50,6 +52,8 @@ namespace ComposableUi
 
         public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerClick;
         public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerSecondaryClick;
+
+        public event ElementEventHandler<PointerInputHandlerElement, PointerFocusEvent> FocusChanged;
 
         private Vector2 _pointerDownNormalizedPosition = Vector2.Zero;
 
@@ -92,6 +96,9 @@ namespace ComposableUi
             => OnPointerClick(pointerEvent);
         void IPointerInputHandler.OnPointerSecondaryClick(in PointerEvent pointerEvent)
             => OnPointerSecondaryClick(pointerEvent);
+
+        void IPointerInputHandler.OnFocusChanged(in PointerFocusEvent pointerEvent)
+            => OnFocusChanged(pointerEvent);
 
         protected virtual void OnInteractionChanged(bool value)
             => InteractionChanged?.Invoke(this, value);
@@ -164,5 +171,11 @@ namespace ComposableUi
             => PointerClick?.Invoke(this, pointerEvent);
         protected virtual void OnPointerSecondaryClick(in PointerEvent pointerEvent)
             => PointerSecondaryClick?.Invoke(this, pointerEvent);
+
+        protected virtual void OnFocusChanged(in PointerFocusEvent pointerEvent)
+        {
+            IsFocused = pointerEvent.IsFocused;
+            FocusChanged?.Invoke(this, pointerEvent);
+        }
     }
 }

@@ -55,7 +55,7 @@ namespace ComposableUi
             if (excludeChildren)
                 return;
 
-            if (!HasActiveInnerElement)
+            if (!HasEnabledInnerElement)
                 return;
 
             var elementPreferredSize = InnerElement.CalculatePreferredSize();

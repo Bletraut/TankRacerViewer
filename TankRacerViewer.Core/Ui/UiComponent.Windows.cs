@@ -46,7 +46,7 @@ namespace TankRacerViewer.Core
                 window.IsEnabled = true;
             }
 
-            window.Focus();
+            window.Select();
         }
     }
 }

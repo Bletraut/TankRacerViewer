@@ -159,7 +159,7 @@ namespace ComposableUi
 
                 if (child is LayoutElement layoutElement)
                 {
-                    if (!layoutElement.HasActiveInnerElement)
+                    if (!layoutElement.HasEnabledInnerElement)
                         continue;
 
                     if (layoutElement.IgnoreLayout)
@@ -196,7 +196,7 @@ namespace ComposableUi
                     if (layoutElement.IgnoreLayout)
                         continue;
 
-                    if (!layoutElement.HasActiveInnerElement)
+                    if (!layoutElement.HasEnabledInnerElement)
                         continue;
 
                     totalExpandingFactor += CalculateExpandingFactor(MainAxis,
@@ -259,7 +259,7 @@ namespace ComposableUi
                 float expandingFactor;
                 if (child is LayoutElement layoutElement)
                 {
-                    if (!layoutElement.HasActiveInnerElement)
+                    if (!layoutElement.HasEnabledInnerElement)
                         continue;
 
                     layoutElement.Rebuild(size);

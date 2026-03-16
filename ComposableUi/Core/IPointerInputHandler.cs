@@ -26,6 +26,8 @@ namespace ComposableUi
 
         public void OnPointerClick(in PointerEvent pointerEvent) { }
         public void OnPointerSecondaryClick(in PointerEvent pointerEvent) { }
+
+        public void OnFocusChanged(in PointerFocusEvent pointerEvent);
     }
 
     public readonly struct PointerEvent(IPointer pointer, Point position,
@@ -57,5 +59,16 @@ namespace ComposableUi
         public readonly bool IsPrimaryButtonPressed = isPrimaryButtonPressed;
         public readonly bool IsSecondaryButtonPressed = isSecondaryButtonPressed;
         public readonly Point Delta = delta;
+    }
+
+    public readonly struct PointerFocusEvent(IPointer pointer, Point position,
+        bool isPrimaryButtonPressed, bool isSecondaryButtonPressed,
+        bool isFocused)
+    {
+        public readonly IPointer Pointer = pointer;
+        public readonly Point Position = position;
+        public readonly bool IsPrimaryButtonPressed = isPrimaryButtonPressed;
+        public readonly bool IsSecondaryButtonPressed = isSecondaryButtonPressed;
+        public readonly bool IsFocused = isFocused;
     }
 }

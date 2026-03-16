@@ -119,7 +119,7 @@ namespace ComposableUi
         {
             Size = size;
 
-            var shouldRebuildInnerElement = !excludeChildren && HasActiveInnerElement;
+            var shouldRebuildInnerElement = !excludeChildren && HasEnabledInnerElement;
             if (shouldRebuildInnerElement)
             {
                 var skipRebuildChildren = PropagateToInnerElementChildren;

@@ -42,7 +42,7 @@ namespace ComposableUi
         public ButtonElement MaximizeButton { get; }
         public ButtonElement RestoreButton { get; }
 
-        public bool IsFocused => Tab.CurrentState is TabState.Focused;
+        public bool IsSelected => Tab.CurrentState is TabState.Selected;
 
         public bool IsMaximized => _placeHolder is not null;
 
@@ -61,7 +61,7 @@ namespace ComposableUi
         public event ElementEventHandler<WindowElement> SplitPreviewHidden;
         public event ElementEventHandler<WindowElement> MovedByTab;
         public event ElementEventHandler<WindowElement> Undocked;
-        public event ElementEventHandler<WindowElement> Focused;
+        public event ElementEventHandler<WindowElement> Selected;
         public event ElementEventHandler<WindowElement> Maximized;
         public event ElementEventHandler<WindowElement> Restored;
         public event ElementEventHandler<WindowElement> Closed;
@@ -361,7 +361,7 @@ namespace ComposableUi
                 container.BringToFront(root);
         }
 
-        public void Focus()
+        public void Select()
         {
             var isTabbed = Container is not null
                 && Container.DockingMode is DockingMode.Tab;
@@ -373,16 +373,16 @@ namespace ComposableUi
                     var item = Container.GetItemAt(i);
 
                     if (item != this)
-                        item.SetFocus(false);
+                        item.SetSelected(false);
 
                     if (item is WindowElement window)
                         AddTab(window.Tab);
                 }
             }
 
-            SetFocus(true);
+            SetSelected(true);
 
-            Focused?.Invoke(this);
+            Selected?.Invoke(this);
         }
 
         public void Maximize()
@@ -413,7 +413,7 @@ namespace ComposableUi
                     if (item is not WindowElement window)
                         continue;
 
-                    window.Focus();
+                    window.Select();
                     break;
                 }
             }
@@ -422,7 +422,7 @@ namespace ComposableUi
             _maximizedParent.InnerElement = this;
 
             parent?.AddChild(_maximizedParent);
-            Focus();
+            Select();
         }
 
         public void Restore()
@@ -440,7 +440,7 @@ namespace ComposableUi
             WindowPlaceHolderElement.Return(_placeHolder);
             _placeHolder = null;
 
-            Focus();
+            Select();
         }
 
         public void Close()
@@ -692,11 +692,11 @@ namespace ComposableUi
             SetViewActive(true);
         }
 
-        internal override void SetFocus(bool value)
+        internal override void SetSelected(bool value)
         {
-            base.SetFocus(value);
+            base.SetSelected(value);
 
-            Tab.SetState(value ? TabState.Focused : TabState.Inactive);
+            Tab.SetState(value ? TabState.Selected : TabState.Inactive);
             SetViewActive(value);
         }
     }

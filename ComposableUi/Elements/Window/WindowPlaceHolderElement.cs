@@ -14,7 +14,7 @@ namespace ComposableUi
                 placeHolder = new WindowPlaceHolderElement();
 
             placeHolder.IsEnabled = true;
-            placeHolder.SetFocus(true);
+            placeHolder.SetSelected(true);
 
             return placeHolder;
         }
@@ -36,9 +36,9 @@ namespace ComposableUi
             );
         }
 
-        internal override void SetFocus(bool value)
+        internal override void SetSelected(bool value)
         {
-            base.SetFocus(value);
+            base.SetSelected(value);
             ViewHolder.InnerElement.IsEnabled = value;
         }
     }
