@@ -6,6 +6,8 @@ namespace ComposableUi
     {
         public Rectangle InteractionRectangle { get; }
 
+        public Rectangle ClippedInteractionRectangle { get; }
+
         public bool BlockInput { get; set; }
         public bool IsInteractable { get; set; }
 

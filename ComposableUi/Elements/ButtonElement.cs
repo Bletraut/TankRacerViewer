@@ -6,25 +6,136 @@ namespace ComposableUi
     {
         public static readonly Vector2 DefaultSize = new(200, 50);
 
-        public Sprite NormalSprite { get; set; }
-        public Sprite HoverSprite { get; set; }
-        public Sprite PressedSprite { get; set; }
-        public Sprite DisabledSprite { get; set; }
+        private Sprite _normalSprite;
+        public Sprite NormalSprite
+        {
+            get => _normalSprite;
+            set
+            {
+                _normalSprite = value;
+                MarkVisualStateDirty();
+            }
+        }
+        private Sprite _hoverSprite;
+        public Sprite HoverSprite
+        {
+            get => _hoverSprite;
+            set
+            {
+                _hoverSprite = value;
+                MarkVisualStateDirty();
+            }
+        }
+        private Sprite _pressedSprite;
+        public Sprite PressedSprite
+        {
+            get => _pressedSprite;
+            set
+            {
+                _pressedSprite = value;
+                MarkVisualStateDirty();
+            }
+        }
+        private Sprite _disabledSprite;
+        public Sprite DisabledSprite
+        {
+            get => _disabledSprite;
+            set
+            {
+                _disabledSprite = value;
+                MarkVisualStateDirty();
+            }
+        }
 
-        public StandardSkin NormalSkin { get; set; }
-        public StandardSkin HoverSkin { get; set; }
-        public StandardSkin PressedSkin { get; set; }
-        public StandardSkin DisabledSkin { get; set; }
+        private StandardSkin _normalSkin;
+        public StandardSkin NormalSkin
+        {
+            get => _normalSkin;
+            set
+            {
+                _normalSkin = value;
+                MarkVisualStateDirty();
+            }
+        }
+        private StandardSkin _hoverSkin;
+        public StandardSkin HoverSkin
+        {
+            get => _hoverSkin;
+            set
+            {
+                _hoverSkin = value;
+                MarkVisualStateDirty();
+            }
+        }
+        private StandardSkin _pressedSkin;
+        public StandardSkin PressedSkin
+        {
+            get => _pressedSkin;
+            set
+            {
+                _pressedSkin = value;
+                MarkVisualStateDirty();
+            }
+        }
+        private StandardSkin _disabledSkin;
+        public StandardSkin DisabledSkin
+        {
+            get => _disabledSkin;
+            set
+            {
+                _disabledSkin = value;
+                MarkVisualStateDirty();
+            }
+        }
 
-        public Color NormalColor { get; set; }
-        public Color HoverColor { get; set; }
-        public Color PressedColor { get; set; }
-        public Color DisabledColor { get; set; }
+        private Color _normalColor;
+        public Color NormalColor
+        {
+            get => _normalColor;
+            set
+            {
+                _normalColor = value;
+                MarkVisualStateDirty();
+            }
+        }
+        private Color _hoverColor;
+        public Color HoverColor
+        {
+            get => _hoverColor;
+            set
+            {
+                _hoverColor = value;
+                MarkVisualStateDirty();
+            }
+        }
+        private Color _pressedColor;
+        public Color PressedColor
+        {
+            get => _pressedColor;
+            set
+            {
+                _pressedColor = value;
+                MarkVisualStateDirty();
+            }
+        }
+        private Color _disabledColor;
+        public Color DisabledColor
+        {
+            get => _disabledColor;
+            set
+            {
+                _disabledColor = value;
+                MarkVisualStateDirty();
+            }
+        }
 
         public bool IsHover { get; private set; }
         public bool IsPressed { get; private set; }
 
-        private (Sprite Sprite, StandardSkin Skin, Color Color) _currentState;
+        private InteractionState _currentInteractionState;
+        private (Sprite Sprite, StandardSkin Skin, Color Color) _currentVisualState;
+
+        private bool _isVisualStateDirty = true;
 
         public ButtonElement(Vector2? size = default,
             Element innerElement = default,
@@ -70,23 +181,19 @@ namespace ComposableUi
             OnInteractionStateChanged(isInteractable ? InteractionState.Normal : InteractionState.Disabled);
         }
 
-        void IDrawableElement.Draw(IUiRenderer renderer)
+        public void MarkVisualStateDirty()
         {
-            if (_currentState.Sprite is not null)
-            {
-                renderer.DrawSprite(_currentState.Sprite, DrawMode.Sliced,
-                    BoundingRectangle, ClipMask, _currentState.Color);
-            }
-            else
-            {
-                renderer.DrawSkinnedRectangle(_currentState.Skin, DrawMode.Sliced,
-                    BoundingRectangle, ClipMask, _currentState.Color);
-            }
+            _isVisualStateDirty = true;
         }
 
-        protected virtual void OnInteractionStateChanged(InteractionState state)
+        private void RefreshVisualStateIfDirty()
         {
-            _currentState = state switch
+            if (!_isVisualStateDirty)
+                return;
+
+            _isVisualStateDirty = false;
+
+            _currentVisualState = _currentInteractionState switch
             {
                 InteractionState.Normal => (NormalSprite, NormalSkin, NormalColor),
                 InteractionState.Hover => (HoverSprite, HoverSkin, HoverColor),
@@ -94,6 +201,31 @@ namespace ComposableUi
                 InteractionState.Disabled => (DisabledSprite, DisabledSkin, DisabledColor),
                 _ => (NormalSprite, NormalSkin, NormalColor)
             };
+        }
+
+        void IDrawableElement.Draw(IUiRenderer renderer)
+        {
+            RefreshVisualStateIfDirty();
+
+            if (_currentVisualState.Sprite is not null)
+            {
+                renderer.DrawSprite(_currentVisualState.Sprite, DrawMode.Sliced,
+                    BoundingRectangle, ClipMask, _currentVisualState.Color);
+            }
+            else
+            {
+                renderer.DrawSkinnedRectangle(_currentVisualState.Skin, DrawMode.Sliced,
+                    BoundingRectangle, ClipMask, _currentVisualState.Color);
+            }
+        }
+
+        protected virtual void OnInteractionStateChanged(InteractionState state)
+        {
+            if (_currentInteractionState == state)
+                return;
+
+            _currentInteractionState = state;
+            MarkVisualStateDirty();
         }
 
         protected override void OnInteractionChanged(bool value)

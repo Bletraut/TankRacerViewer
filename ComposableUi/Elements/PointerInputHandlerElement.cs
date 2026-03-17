@@ -1,6 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
 
-using System;
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -8,6 +8,20 @@ namespace ComposableUi
         IPointerInputHandler
     {
         public virtual Rectangle InteractionRectangle => BoundingRectangle;
+
+        public virtual Rectangle ClippedInteractionRectangle
+        {
+            get
+            {
+                var interactionRectangle = InteractionRectangle;
+
+                var clipMask = ClipMask;
+                if (clipMask.HasValue)
+                    interactionRectangle = Rectangle.Intersect(interactionRectangle, clipMask.Value);
+
+                return interactionRectangle;
+            }
+        }
 
         private bool _blockInput;
         public bool BlockInput

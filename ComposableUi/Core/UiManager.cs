@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -22,6 +23,7 @@ namespace ComposableUi
         private Stack<(uint Layer, Element Element)> _stack = new();
         private Stack<(uint Layer, Element Element)> _nextStack = new();
 
+        private readonly List<IPointerInputHandler> _skippedPointerInputHandlers = [];
         private readonly List<(Rectangle InputArea, IPointerInputHandler handler)> _pointerInputHandlers = [];
         private readonly List<IDrawableElement> _renderQueue = [];
 
@@ -123,9 +125,9 @@ namespace ComposableUi
             var isPrimaryButtonPressed = PointerInputProvider.IsPrimaryButtonPressed;
             var isSecondaryButtonPressed = PointerInputProvider.IsSecondaryButtonPressed;
 
-            var anyButtonDown = PointerInputProvider.IsPrimaryButtonDown 
+            var isAnyButtonDown = PointerInputProvider.IsPrimaryButtonDown 
                 || PointerInputProvider.IsSecondaryButtonDown;
-            if (anyButtonDown)
+            if (isAnyButtonDown)
             {
                 (_lastFocusedHandlers, _currentFocusedHandlers) = (_currentFocusedHandlers, _lastFocusedHandlers);
                 _currentFocusedHandlers.Clear();
@@ -151,6 +153,13 @@ namespace ComposableUi
                 isPrimaryButtonPressed, isSecondaryButtonPressed, true);
             var pointerUnfocusedEvent = new PointerFocusEvent(pointer, _currentPointerPosition,
                 isPrimaryButtonPressed, isSecondaryButtonPressed, false);
+
+            foreach (var handler in _skippedPointerInputHandlers)
+            {
+                if (_lastActiveHandlers.Remove(handler))
+                    handler.OnPointerLeave(pointerEvent);
+            }
+            _skippedPointerInputHandlers.Clear();
 
             var isInputBlocked = false;
             for (var i = _pointerInputHandlers.Count - 1; i >= 0; i--)
@@ -257,7 +266,7 @@ namespace ComposableUi
                 _secondaryButtonPressedHandlers.Clear();
             }
 
-            if (anyButtonDown)
+            if (isAnyButtonDown)
             {
                 foreach (var handler in _lastFocusedHandlers)
                 {
@@ -317,22 +326,31 @@ namespace ComposableUi
                             _stack.Push((layer, parentElement.GetChildAt(i)));
                     }
 
+                    var shouldSkip = false;
+
+                    var boundingRectangle = element.BoundingRectangle;
                     var clipMask = element.ClipMask;
+
                     if (clipMask.HasValue)
                     {
                         var isClipped = clipMask.Value.Width <= 0
                             && clipMask.Value.Height <= 0;
-                        if (isClipped)
-                            continue;
 
-                        if (!clipMask.Value.Intersects(element.BoundingRectangle))
-                            continue;
+                        shouldSkip = isClipped
+                            || !clipMask.Value.Intersects(boundingRectangle);
                     }
 
-                    if (!viewportBounds.Intersects(element.BoundingRectangle))
-                        continue;
+                    shouldSkip = shouldSkip 
+                        || !viewportBounds.Intersects(boundingRectangle);
 
-                    HandleElement(element);
+                    if (shouldSkip)
+                    {
+                        HandleSkippedElement(element);
+                    }
+                    else
+                    {
+                        HandleElement(element);
+                    }
                 }
 
                 currentLayer = nextMinLayer;
@@ -349,17 +367,20 @@ namespace ComposableUi
 
             if (element is IPointerInputHandler pointerInputHandler)
             {
-                var interactionRectangle = pointerInputHandler.InteractionRectangle;
-
-                var clipMask = element.ClipMask;
-                if (clipMask.HasValue)
-                    interactionRectangle = Rectangle.Intersect(interactionRectangle, clipMask.Value);
-
-                _pointerInputHandlers.Add((interactionRectangle, pointerInputHandler));
+                var inputArea = pointerInputHandler.ClippedInteractionRectangle;
+                _pointerInputHandlers.Add((inputArea, pointerInputHandler));
             }
 
             if (element is IDrawableElement drawableElement)
                 _renderQueue.Add(drawableElement);
+        }
+
+        private void HandleSkippedElement(Element element)
+        {
+            if (element is IPointerInputHandler pointerInputHandler)
+            {
+                _skippedPointerInputHandlers.Add(pointerInputHandler);
+            }
         }
 
         private void OnRootStateChanged(Element sender)
