@@ -3,18 +3,25 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
+using TankRacerViewer.Core.Ui;
+
 namespace TankRacerViewer.Core
 {
     public sealed partial class UiComponent : DrawableGameComponent
     {
         public UiManager UiManager { get; }
 
+        private readonly IFileDialogService _fileDialogService;
+
         private readonly CanvasElement _canvas;
         private readonly ContainerElement _mainLayer;
         private readonly ContainerElement _overlayLayer;
 
-        public UiComponent(Game game, SpriteBatch spriteBatch) : base(game)
+        public UiComponent(Game game, IFileDialogService fileDialogService,
+            SpriteBatch spriteBatch) : base(game)
         {
+            _fileDialogService = fileDialogService;
+
             UiManager = new UiManager(game.GraphicsDevice, game.Content, spriteBatch);
 
             _canvas = new CanvasElement(game.Window);

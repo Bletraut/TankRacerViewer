@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 
 using ComposableUi;
 
@@ -33,9 +35,9 @@ namespace TankRacerViewer.Core
         {
             _fileContextMenu = CreateAndAddContextMenu([
                 new ContextMenuItemElement(
-                    name: "Open...",
+                    name: "Open Game Folder...",
                     keyBindings: "Ctrl+O",
-                    clickAction: _ => SelectContextMenuItem(null)
+                    clickAction: _ => SelectContextMenuItem(OpenGameFolder)
                 ),
                 new ContextMenuItemElement(
                     name: "Exit",
@@ -108,6 +110,17 @@ namespace TankRacerViewer.Core
         {
             _menuBar.ResetSelectedItem();
             action?.Invoke();
+        }
+
+        private void OpenGameFolder()
+        {
+            var folderPath = _fileDialogService.OpenFolderDialog();
+            if (string.IsNullOrEmpty(folderPath))
+                return;
+
+            var filePaths = Directory.GetFiles(folderPath, "*.dat", SearchOption.AllDirectories);
+            foreach ( var filePath in filePaths)
+                Debug.WriteLine(filePath);
         }
     }
 }

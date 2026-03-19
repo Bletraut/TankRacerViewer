@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 
 using ComposableUi;
 
@@ -7,9 +6,26 @@ using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
-    public class FoldableGroupElement : SizedToContentHolderElement
+    public class FoldableGroupElement : FoldableGroupElement<Element>
     {
-        public const float DefaultIndent = 30;
+        public FoldableGroupElement(Sprite iconSprite = default,
+            StandardSkin iconSkin = default,
+            string name = default,
+            Element content = default,
+            bool isFolded = default)
+            : base(iconSprite,
+                  iconSkin,
+                  name,
+                  content,
+                  isFolded)
+        {
+        }
+    }
+
+    public class FoldableGroupElement<TItem> : SizedToContentHolderElement
+        where TItem : Element
+    {
+        public const float DefaultIndent = 16;
         public const float DefaultSpacing = 4;
 
         public const float DefaultBackgroundPadding = 10_000;
@@ -60,8 +76,8 @@ namespace TankRacerViewer.Core
 
         public RowLayout TitleLayout { get; }
 
-        private readonly List<Element> _items;
-        public IReadOnlyList<Element> Items { get; }
+        private readonly List<TItem> _items;
+        public IReadOnlyList<TItem> Items { get; }
 
         public Color NormalBackgroundColor { get; set; }
         public Color HoverBackgroundColor { get; set; }
@@ -77,7 +93,7 @@ namespace TankRacerViewer.Core
         public FoldableGroupElement(Sprite iconSprite = default,
             StandardSkin iconSkin = default,
             string name = default,
-            Element content = default,
+            TItem content = default,
             bool isFolded = default)
         {
             _items = [];
@@ -191,7 +207,7 @@ namespace TankRacerViewer.Core
             IsFolded = isFolded;
         }
 
-        public void AddItem(Element item)
+        public void AddItem(TItem item)
         {
             if (_items.Contains(item))
                 return;
@@ -202,7 +218,7 @@ namespace TankRacerViewer.Core
             RefreshFoldButtonVisibility();
         }
 
-        public void RemoveItem(Element item)
+        public void RemoveItem(TItem item)
         {
             if (_items.Remove(item))
                 _itemLayout.RemoveChild(item);

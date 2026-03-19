@@ -8,6 +8,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
+using TankRacerViewer.Core.Ui;
+
 namespace TankRacerViewer.Core
 {
     public class MainWindow : Game
@@ -38,10 +40,13 @@ namespace TankRacerViewer.Core
         private Vector3 _cameraDefaultPosition = new(0, 5, 30);
         private Vector3 _cameraDefaultRotation = new(0, 0, 0);
 
+        private readonly IFileDialogService _fileDialogService;
         private readonly StringBuilder _info = new();
 
-        public MainWindow()
+        public MainWindow(IFileDialogService fileDialogService)
         {
+            _fileDialogService = fileDialogService;
+
             _graphics = new GraphicsDeviceManager(this)
             {
                 GraphicsProfile = GraphicsProfile.HiDef
@@ -68,7 +73,7 @@ namespace TankRacerViewer.Core
             // TODO: use this.Content to load your game content here
             _mainFont = Content.Load<SpriteFont>("Fonts\\MainFont");
 
-            _uiComponent = new UiComponent(this, _spriteBatch);
+            _uiComponent = new UiComponent(this, _fileDialogService, _spriteBatch);
             Components.Add(_uiComponent);
 
             _gameWindowRenderContext = new GameWindowRenderContext(Window);
@@ -77,34 +82,34 @@ namespace TankRacerViewer.Core
             _renderer = new WorldRenderer(GraphicsDevice, _spriteBatch, Content);
             _renderer.ApplyRenderContext(_currentRenderContext);
 
-            using var dataFileStream = File.OpenRead("Content\\FastFiles\\DATA.DAT");
-            _dataFastFile = new FastFile(dataFileStream);
-
-            using var tanksFileStream = File.OpenRead("Content\\FastFiles\\TANKS.DAT");
-            var tanksFastFile = new FastFile(tanksFileStream);
-            _tanksAssetViewContainer = new AssetViewContainer(GraphicsDevice, tanksFastFile);
-
-            using var commonFileStream = File.OpenRead("Content\\FastFiles\\INGAME.DAT");
-            var commonFastFile = new FastFile(commonFileStream);
-            _commonAssetViewContainer = new AssetViewContainer(GraphicsDevice, commonFastFile);
-
-            using var levelFileStream = File.OpenRead("Content\\FastFiles\\ENGLAND.DAT");
-            //using var levelFileStream = File.OpenRead("Content\\FastFiles\\MEXICO.DAT");
-            //using var levelFileStream = File.OpenRead("Content\\FastFiles\\THEME.DAT");
-            var levelFastFile = new FastFile(levelFileStream);
-            _levelAssetViewContainer = new AssetViewContainer(GraphicsDevice, levelFastFile);
-
-            var levelViewName = levelFastFile.Assets.FirstOrDefault(asset => asset is MapAsset)?.FullName ?? string.Empty;
-            _levelView = new LevelView(levelViewName, _commonAssetViewContainer, _levelAssetViewContainer);
-
-            _tankView = new TankView("Tank1", _dataFastFile, _commonAssetViewContainer, [_tanksAssetViewContainer]);
-
             _camera = new Camera(GraphicsDevice);
             _camera.Position = _cameraDefaultPosition;
             _camera.ApplyRenderContext(_currentRenderContext);
 
             _cameraController = new CameraController(_camera);
             _cameraController.EulerAngles = _cameraDefaultRotation;
+
+            using var dataFileStream = File.OpenRead("Content\\FastFiles\\DATA.DAT");
+            FastFile.FromStream(dataFileStream, out _dataFastFile);
+
+            using var tanksFileStream = File.OpenRead("Content\\FastFiles\\TANKS.DAT");
+            FastFile.FromStream(tanksFileStream, out var tanksFastFile);
+            _tanksAssetViewContainer = new AssetViewContainer(GraphicsDevice, tanksFastFile);
+
+            using var commonFileStream = File.OpenRead("Content\\FastFiles\\INGAME.DAT");
+            FastFile.FromStream(commonFileStream, out var commonFastFile);
+            _commonAssetViewContainer = new AssetViewContainer(GraphicsDevice, commonFastFile);
+
+            using var levelFileStream = File.OpenRead("Content\\FastFiles\\ENGLAND.DAT");
+            //using var levelFileStream = File.OpenRead("Content\\FastFiles\\MEXICO.DAT");
+            //using var levelFileStream = File.OpenRead("Content\\FastFiles\\THEME.DAT");
+            FastFile.FromStream(levelFileStream, out var levelFastFile);
+            _levelAssetViewContainer = new AssetViewContainer(GraphicsDevice, levelFastFile);
+
+            var levelViewName = levelFastFile.Assets.FirstOrDefault(asset => asset is MapAsset)?.FullName ?? string.Empty;
+            _levelView = new LevelView(levelViewName, _commonAssetViewContainer, _levelAssetViewContainer);
+
+            _tankView = new TankView("Tank1", _dataFastFile, _commonAssetViewContainer, [_tanksAssetViewContainer]);
         }
 
         protected override void Update(GameTime gameTime)
