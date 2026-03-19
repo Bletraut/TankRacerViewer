@@ -11,20 +11,19 @@ namespace TankRacerViewer.Core
     {
         public UiManager UiManager { get; }
 
-        private readonly IFileDialogService _fileDialogService;
+        private readonly MainWindow _mainWindow;
 
         private readonly CanvasElement _canvas;
         private readonly ContainerElement _mainLayer;
         private readonly ContainerElement _overlayLayer;
 
-        public UiComponent(Game game, IFileDialogService fileDialogService,
-            SpriteBatch spriteBatch) : base(game)
+        public UiComponent(MainWindow mainWindow, SpriteBatch spriteBatch) : base(mainWindow)
         {
-            _fileDialogService = fileDialogService;
+            _mainWindow = mainWindow;
 
-            UiManager = new UiManager(game.GraphicsDevice, game.Content, spriteBatch);
+            UiManager = new UiManager(mainWindow.GraphicsDevice, mainWindow.Content, spriteBatch);
 
-            _canvas = new CanvasElement(game.Window);
+            _canvas = new CanvasElement(mainWindow.Window);
             UiManager.Root.AddChild(_canvas);
 
             _mainLayer = new ContainerElement();

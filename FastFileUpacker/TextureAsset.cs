@@ -5,7 +5,7 @@ namespace FastFileUnpacker
 {
     public sealed class TextureAsset : Asset
     {
-        private const int PaletteFlagOffset = 48;
+        private const int PaletteFlagOffset = 262;
         private const int RleEncodedFlagOffset = 282;
 
         private const byte RleControlByte = 0xC0;
@@ -69,7 +69,7 @@ namespace FastFileUnpacker
                 _ => throw new NotImplementedException(),
             };
 
-            var hasPalette = data[PaletteFlagOffset] > 0;
+            var hasPalette = data[PaletteFlagOffset] == 0;
             var isRleEncoded = data[RleEncodedFlagOffset] > 0;
 
             if (hasPalette)

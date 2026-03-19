@@ -128,7 +128,13 @@ namespace ComposableUi
                 if (PropagateToInnerElementChildren && InnerElement is ParentElement parent)
                 {
                     for (var i = 0; i < parent.ChildCount; i++)
+                    {
+                        var child = parent.GetChildAt(i);
+                        if (!child.IsEnabled)
+                            continue;
+
                         ExpandChild(parent.GetChildAt(i), size, false);
+                    }
                 }
             }
 

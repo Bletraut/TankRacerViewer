@@ -15,20 +15,17 @@ namespace ComposableUi
                 if (_parent == value)
                     return;
 
-                if (_parent is not null)
-                {
-                    _parent.SizeChanged -= OnParentSizeChanged;
-                    _parent.TransformChanged -= OnParentTransformChanged;
-                }
-
+                var oldParent = _parent;
                 _parent = value;
-                if (_parent is not null)
-                {
-                    _parent.SizeChanged += OnParentSizeChanged;
-                    _parent.TransformChanged += OnParentTransformChanged;
 
-                    OnParentSizeChanged(_parent);
-                }
+                if (!IsEnabled)
+                    return;
+
+                if (oldParent is not null)
+                    oldParent.TransformChanged -= OnParentTransformChanged;
+
+                if (_parent is not null)
+                    _parent.TransformChanged += OnParentTransformChanged;
 
                 OnParentTransformChanged(_parent);
             }
@@ -45,7 +42,24 @@ namespace ComposableUi
         public virtual bool IsEnabled
         {
             get => _isEnabled;
-            set => SetAndChangeState(ref _isEnabled, value);
+            set
+            {
+                if (SetAndChangeState(ref _isEnabled, value))
+                {
+                    if (_parent is null)
+                        return;
+
+                    if (_isEnabled)
+                    {
+                        _parent.TransformChanged += OnParentTransformChanged;
+                        OnParentTransformChanged(_parent);
+                    }
+                    else
+                    {
+                        _parent.TransformChanged -= OnParentTransformChanged;
+                    }
+                }
+            }
         }
 
         private Vector2 _size;
@@ -58,8 +72,6 @@ namespace ComposableUi
                     return;
 
                 _size = value;
-
-                OnSizeChanged();
                 OnTransformChanged();
             }
         }
@@ -275,12 +287,6 @@ namespace ComposableUi
             TransformChanged?.Invoke(this);
             OnStateChanged();
         }
-
-        protected virtual void OnSizeChanged() 
-        {
-            SizeChanged?.Invoke(this);
-        }
-        protected virtual void OnParentSizeChanged(Element sender) { }
     }
 
     public delegate void ElementEventHandler<TElement>(TElement sender);

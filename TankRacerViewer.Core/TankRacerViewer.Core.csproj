@@ -47,6 +47,9 @@
     <None Update="Content\FastFiles\ENGLAND_TEST.DAT">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Content\FastFiles\GUI.DAT">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Content\FastFiles\INGAME.DAT">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

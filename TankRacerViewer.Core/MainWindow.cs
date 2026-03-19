@@ -1,9 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 
 using FastFileUnpacker;
 
+using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -14,6 +18,8 @@ namespace TankRacerViewer.Core
 {
     public class MainWindow : Game
     {
+        public IFileDialogService FileDialogService { get; }
+
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
@@ -25,27 +31,20 @@ namespace TankRacerViewer.Core
         private IRenderContext _currentRenderContext;
         private WorldRenderer _renderer;
 
-        private FastFile _dataFastFile;
-        private AssetViewContainer _tanksAssetViewContainer;
-        private AssetViewContainer _commonAssetViewContainer;
-        private AssetViewContainer _levelAssetViewContainer;
-
-        private LevelView _levelView;
-        private int _currentContainerIndex;
-
-        private TankView _tankView;
-
         private Camera _camera;
         private CameraController _cameraController;
         private Vector3 _cameraDefaultPosition = new(0, 5, 30);
         private Vector3 _cameraDefaultRotation = new(0, 0, 0);
 
-        private readonly IFileDialogService _fileDialogService;
+        private AssetView _selectedAssetView;
+
+        private readonly Dictionary<string, AssetViewContainer> _assetViewContainers = [];
+
         private readonly StringBuilder _info = new();
 
         public MainWindow(IFileDialogService fileDialogService)
         {
-            _fileDialogService = fileDialogService;
+            FileDialogService = fileDialogService;
 
             _graphics = new GraphicsDeviceManager(this)
             {
@@ -73,8 +72,10 @@ namespace TankRacerViewer.Core
             // TODO: use this.Content to load your game content here
             _mainFont = Content.Load<SpriteFont>("Fonts\\MainFont");
 
-            _uiComponent = new UiComponent(this, _fileDialogService, _spriteBatch);
+            _uiComponent = new UiComponent(this, _spriteBatch);
             Components.Add(_uiComponent);
+
+            _uiComponent.ExplorerWindow.AssetViewSelected += OnAssetViewSelected;
 
             _gameWindowRenderContext = new GameWindowRenderContext(Window);
             _currentRenderContext = _uiComponent.ViewerWindow.RenderContext;
@@ -89,27 +90,65 @@ namespace TankRacerViewer.Core
             _cameraController = new CameraController(_camera);
             _cameraController.EulerAngles = _cameraDefaultRotation;
 
-            using var dataFileStream = File.OpenRead("Content\\FastFiles\\DATA.DAT");
-            FastFile.FromStream(dataFileStream, out _dataFastFile);
+            //using var dataFileStream = File.OpenRead("Content\\FastFiles\\DATA.DAT");
+            //FastFile.FromStream(dataFileStream, out _dataFastFile);
 
-            using var tanksFileStream = File.OpenRead("Content\\FastFiles\\TANKS.DAT");
-            FastFile.FromStream(tanksFileStream, out var tanksFastFile);
-            _tanksAssetViewContainer = new AssetViewContainer(GraphicsDevice, tanksFastFile);
+            //using var tanksFileStream = File.OpenRead("Content\\FastFiles\\TANKS.DAT");
+            //FastFile.FromStream(tanksFileStream, out var tanksFastFile);
+            //_tanksAssetViewContainer = new AssetViewContainer(GraphicsDevice, tanksFastFile);
 
-            using var commonFileStream = File.OpenRead("Content\\FastFiles\\INGAME.DAT");
-            FastFile.FromStream(commonFileStream, out var commonFastFile);
-            _commonAssetViewContainer = new AssetViewContainer(GraphicsDevice, commonFastFile);
+            //using var commonFileStream = File.OpenRead("Content\\FastFiles\\INGAME.DAT");
+            //FastFile.FromStream(commonFileStream, out var commonFastFile);
+            //_commonAssetViewContainer = new AssetViewContainer(GraphicsDevice, commonFastFile);
 
-            using var levelFileStream = File.OpenRead("Content\\FastFiles\\ENGLAND.DAT");
-            //using var levelFileStream = File.OpenRead("Content\\FastFiles\\MEXICO.DAT");
-            //using var levelFileStream = File.OpenRead("Content\\FastFiles\\THEME.DAT");
-            FastFile.FromStream(levelFileStream, out var levelFastFile);
-            _levelAssetViewContainer = new AssetViewContainer(GraphicsDevice, levelFastFile);
+            //using var commonFileStream = File.OpenRead("Content\\FastFiles\\GUI.DAT");
+            //FastFile.FromStream(commonFileStream, out var commonFastFile);
+            //var _commonAssetViewContainer = new AssetViewContainer(GraphicsDevice, commonFastFile);
 
-            var levelViewName = levelFastFile.Assets.FirstOrDefault(asset => asset is MapAsset)?.FullName ?? string.Empty;
-            _levelView = new LevelView(levelViewName, _commonAssetViewContainer, _levelAssetViewContainer);
+            //using var levelFileStream = File.OpenRead("Content\\FastFiles\\ENGLAND.DAT");
+            ////using var levelFileStream = File.OpenRead("Content\\FastFiles\\MEXICO.DAT");
+            ////using var levelFileStream = File.OpenRead("Content\\FastFiles\\THEME.DAT");
+            //FastFile.FromStream(levelFileStream, out var levelFastFile);
+            //_levelAssetViewContainer = new AssetViewContainer(GraphicsDevice, levelFastFile);
 
-            _tankView = new TankView("Tank1", _dataFastFile, _commonAssetViewContainer, [_tanksAssetViewContainer]);
+            //var levelViewName = levelFastFile.Assets.FirstOrDefault(asset => asset is MapAsset)?.FullName ?? string.Empty;
+            //_levelView = new LevelView(levelViewName, _commonAssetViewContainer, _levelAssetViewContainer);
+
+            //_tankView = new TankView("Tank1", _dataFastFile, _commonAssetViewContainer, [_tanksAssetViewContainer]);
+        }
+
+        public void LoadFiles(string[] filePaths)
+        {
+            foreach (var filePath in filePaths)
+                LoadFile(filePath);
+        }
+
+        public void LoadFile(string filePath)
+        {
+            if (_assetViewContainers.ContainsKey(filePath))
+                return;
+
+            try
+            {
+                using var fileStream = File.OpenRead(filePath);
+                if (FastFile.FromStream(fileStream, out var fastFile))
+                {
+                    var assetViewContainer = new AssetViewContainer(GraphicsDevice, fastFile);
+                    _assetViewContainers.Add(filePath, assetViewContainer);
+
+                    _uiComponent.ExplorerWindow.AddFile(filePath, assetViewContainer);
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine($"Can't load file '{filePath}'. {exception.Message}");
+            }
+        }
+
+        private void ResetCameraToDefaults()
+        {
+            _camera.Position = _cameraDefaultPosition;
+            _cameraController.EulerAngles = _cameraDefaultRotation;
         }
 
         protected override void Update(GameTime gameTime)
@@ -121,40 +160,7 @@ namespace TankRacerViewer.Core
             Input.Update();
 
             if (Input.IsKeyDown(Keys.R))
-            {
-                _camera.Position = _cameraDefaultPosition;
-                _cameraController.EulerAngles = _cameraDefaultRotation;
-            }
-
-            if (Input.IsKeyDown(Keys.NumPad8))
-            {
-                _currentContainerIndex++;
-                if (_currentContainerIndex >= _levelView.LevelObjectContainers.Count)
-                    _currentContainerIndex = 0;
-
-                _levelView.CurrentLevelObjectContainer = _levelView.LevelObjectContainers[_currentContainerIndex];
-            }
-            else if (Input.IsKeyDown(Keys.NumPad5))
-            {
-                _currentContainerIndex--;
-                if (_currentContainerIndex < 0)
-                    _currentContainerIndex = 0;
-
-                _levelView.CurrentLevelObjectContainer = _levelView.LevelObjectContainers[_currentContainerIndex];
-            }
-
-            if (Input.IsKeyDown(Keys.NumPad6))
-            {
-                _levelView.CurrentLap++;
-                if (_levelView.CurrentLap >= 11)
-                    _levelView.CurrentLap = 1;
-            }
-            else if (Input.IsKeyDown(Keys.NumPad4))
-            {
-                _levelView.CurrentLap--;
-                if (_levelView.CurrentLap < 1)
-                    _levelView.CurrentLap = 10;
-            }
+                ResetCameraToDefaults();
 
             base.Update(gameTime);
 
@@ -177,17 +183,29 @@ namespace TankRacerViewer.Core
             // TODO: Add your drawing code here
             _info.Clear();
 
-            if (_levelView is not null)
+            if (_selectedAssetView is not null)
             {
-                _levelView.Draw(_renderer, _camera);
-
-                _info.AppendLine($"Current Container: {_levelView.CurrentLevelObjectContainer.FullName}");
-                _info.AppendLine($"Current Lap: {_levelView.CurrentLap}");
+                if (_selectedAssetView is ModelAssetView modelAssetView)
+                {
+                    _renderer.Begin(Color.CornflowerBlue);
+                    _renderer.Draw(modelAssetView, Matrix.Identity, _camera);
+                    _renderer.End();
+                }
+                else if (_selectedAssetView is BackgroundAssetView backgroundAssetView)
+                {
+                    _renderer.Begin(Color.CornflowerBlue);
+                    _renderer.Draw(backgroundAssetView, _camera);
+                    _renderer.End();
+                }
+                else if (_selectedAssetView is LevelView levelView)
+                {
+                    levelView.Draw(_renderer, _camera);
+                }
+                else if (_selectedAssetView is TankView tankView)
+                {
+                    tankView.Draw(_renderer, _camera);
+                }
             }
-            //if (_tankView is not null)
-            //{
-            //    _tankView.Draw(_renderer, _camera);
-            //}
 
             _info.AppendLine($"Draw Calls: {GraphicsDevice.Metrics.DrawCount}");
             _info.Append($"Fps: {1 / gameTime.ElapsedGameTime.TotalSeconds:00.0}");
@@ -201,6 +219,12 @@ namespace TankRacerViewer.Core
             _spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        private void OnAssetViewSelected(AssetView assetView)
+        {
+            _selectedAssetView = assetView;
+            ResetCameraToDefaults();
         }
     }
 }

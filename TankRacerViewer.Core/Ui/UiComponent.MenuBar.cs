@@ -114,13 +114,12 @@ namespace TankRacerViewer.Core
 
         private void OpenGameFolder()
         {
-            var folderPath = _fileDialogService.OpenFolderDialog();
+            var folderPath = _mainWindow.FileDialogService.OpenFolderDialog();
             if (string.IsNullOrEmpty(folderPath))
                 return;
 
             var filePaths = Directory.GetFiles(folderPath, "*.dat", SearchOption.AllDirectories);
-            foreach ( var filePath in filePaths)
-                Debug.WriteLine(filePath);
+            _mainWindow.LoadFiles(filePaths);
         }
     }
 }

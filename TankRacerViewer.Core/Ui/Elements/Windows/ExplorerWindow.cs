@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 
 using ComposableUi;
 
@@ -6,8 +8,12 @@ namespace TankRacerViewer.Core
 {
     public sealed class ExplorerWindow : WindowElement
     {
+        public event Action<AssetView> AssetViewSelected;
+
         private readonly ScrollViewElement _scrollView;
         private readonly ColumnLayout _groups;
+
+        private FoldableFileGroupElement _selectedAssetGroup;
 
         public ExplorerWindow() : base("Explorer")
         {
@@ -23,39 +29,64 @@ namespace TankRacerViewer.Core
                 content: _groups
             );
 
-            for (var i = 0; i < 20; i++)
-            {
-                var g1 = new FoldableGroupElement(
-                    iconSkin: StandardSkin.WhitePixel,
-                    name: $"First group {i}"
-                );
-                _groups.AddChild(g1);
-
-                var count = Random.Shared.Next(5);
-                for (var j = 0; j < count; j++)
-                {
-                    var g2 = new FoldableGroupElement(
-                        iconSkin: StandardSkin.WhitePixel,
-                        name: "Inner group"
-                    );
-                    g1.AddItem(g2);
-
-                    if (Random.Shared.NextSingle() < 0.8f)
-                        continue;
-
-                    var count2 = Random.Shared.Next(10);
-                    for (var m = 0; m < count2; m++)
-                    {
-                        var g3 = new FoldableGroupElement(
-                            iconSkin: StandardSkin.WhitePixel,
-                            name: "Inner group"
-                        );
-                        g2.AddItem(g3);
-                    }
-                }
-            }
-
             ContentContainer.AddChild(new ExpandedElement(_scrollView));
+        }
+
+        public void AddFile(string filePath, object file)
+        {
+            var fastFileGroup = new FoldableFileGroupElement(
+                path: filePath,
+                iconSkin: StandardSkin.ContentPanel,
+                name: Path.GetFileName(filePath),
+                isFolded: true
+            );
+            _groups.AddChild(fastFileGroup);
+
+            if (file is AssetViewContainer assetViewContainer)
+            {
+                AddAssetViewGroup("Models", fastFileGroup, assetViewContainer.ModelAssetViews.Values);
+                AddAssetViewGroup("Textures", fastFileGroup, assetViewContainer.TextureAssetViews.Values);
+                AddAssetViewGroup("Backgrounds", fastFileGroup, assetViewContainer.BackgroundAssetViews.Values);
+                AddAssetViewGroup("Extra", fastFileGroup, assetViewContainer.ExtraAssetViews);
+            }
+        }
+
+        private void AddAssetViewGroup(string name,
+            FoldableFileGroupElement parentGroup,
+            IEnumerable<AssetView> assetViews)
+        {
+            var assetGroup = new FoldableFileGroupElement(
+                iconSkin: StandardSkin.RectanglePanel,
+                path: string.Empty,
+                name: name,
+                isFolded: true
+            );
+            parentGroup.AddItem(assetGroup);
+
+            foreach (var assetView in assetViews)
+            {
+                var asset = new FoldableFileGroupElement(
+                    iconSkin: StandardSkin.TextField,
+                    path: string.Empty,
+                    name: assetView.Name,
+                    file: assetView
+                );
+                assetGroup.AddItem(asset);
+
+                asset.ClickInputHandler.PointerClick += (_, _) => OnAssetGroupSelected(asset);
+            }
+        }
+
+        private void OnAssetGroupSelected(FoldableFileGroupElement assetGroup)
+        {
+            if (_selectedAssetGroup is not null)
+                _selectedAssetGroup.IsSelected = false;
+
+            _selectedAssetGroup = assetGroup;
+            _selectedAssetGroup.IsSelected = true;
+
+            if (_selectedAssetGroup.File is AssetView assetView)
+                AssetViewSelected?.Invoke(assetView);
         }
     }
 }

@@ -71,7 +71,6 @@ namespace ComposableUi
                 child.Parent = null;
 
             _children.Clear();
-            OnSizeChanged();
         }
 
         public void BringToFront(Element child)

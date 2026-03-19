@@ -208,8 +208,8 @@ namespace ComposableUi
             ResetItemsHover();
             HideAllSubmenus();
 
-            Position = CalculateClampedPosition(this, position, position);
             IsEnabled = true;
+            Position = CalculateClampedPosition(this, position, position);
         }
 
         public void Hide()

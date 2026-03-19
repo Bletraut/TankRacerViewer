@@ -56,7 +56,7 @@ namespace TankRacerViewer.Core
                     }
                     else if (!string.IsNullOrEmpty(textureGroup.Key))
                     {
-                        Debug.WriteLine($"Can't find texture with name '{textureGroup.Key}'");
+                        Debug.WriteLine($"Can't find texture with name '{textureGroup.Key}' for '{fullName}' asset.");
                     }
 
                     _verticesData.Clear();

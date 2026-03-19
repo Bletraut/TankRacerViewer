@@ -17,17 +17,19 @@ namespace FastFileUnpacker
         // Static.
         public static bool FromStream(Stream stream, out FastFile? fastFile)
         {
+            fastFile = default;
+
             using var binaryReader = new BinaryReader(stream);
+
+            if (stream.Length < HeaderSize)
+                return false;
 
             var header = binaryReader.ReadBytes(HeaderSize);
             var version = Encoding.Latin1.GetString(header.AsSpan(0, VersionSize));
             var assetCount = BitConverter.ToInt32(header.AsSpan(HeaderSize - AssetCountSize, AssetCountSize));
 
             if (!string.Equals(version, SupportedVersion, StringComparison.Ordinal))
-            {
-                fastFile = default;
                 return false;
-            }
 
             var assets = new Asset[assetCount];
             fastFile = new FastFile(version, assets);
@@ -67,14 +69,11 @@ namespace FastFileUnpacker
         // Class.
         public string Version { get; }
 
-        private readonly Asset[] _assets;
         public IReadOnlyList<Asset> Assets { get; }
 
         private FastFile(string version, Asset[] assets)
         {
             Version = version;
-
-            _assets = assets;
             Assets = assets.AsReadOnly();
         }
     }
