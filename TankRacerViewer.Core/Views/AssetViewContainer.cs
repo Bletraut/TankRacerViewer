@@ -16,6 +16,10 @@ namespace TankRacerViewer.Core
         public IReadOnlyDictionary<string, ModelAssetView> ModelAssetViews { get; }
         private readonly Dictionary<string, BackgroundAssetView> _backgroundAssetViews;
         public IReadOnlyDictionary<string, BackgroundAssetView> BackgroundAssetViews { get; }
+        private readonly Dictionary<string, DataAssetView> _dataAssetViews;
+        public IReadOnlyDictionary<string, DataAssetView> DataAssetViews { get; }
+        private readonly Dictionary<string, UnsupportedAssetView> _unsupportedAssetViews;
+        public IReadOnlyDictionary<string, UnsupportedAssetView> UnsupportedAssetViews { get; }
 
         public IReadOnlyList<AssetView> AssetViews { get; }
         public List<AssetView> ExtraAssetViews { get; } = [];
@@ -30,6 +34,12 @@ namespace TankRacerViewer.Core
             _textureAssetViews = [];
             TextureAssetViews = _textureAssetViews.AsReadOnly();
 
+            _dataAssetViews = [];
+            DataAssetViews = _dataAssetViews.AsReadOnly();
+
+            _unsupportedAssetViews = [];
+            UnsupportedAssetViews = _unsupportedAssetViews.AsReadOnly();
+
             var assetView = new List<AssetView>();
             AssetViews = assetView.AsReadOnly();
 
@@ -39,6 +49,19 @@ namespace TankRacerViewer.Core
                 {
                     var view = new TextureAssetView(_graphicsDevice, textureAsset);
                     _textureAssetViews.Add(view.Name.ToLowerInvariant(), view);
+                    assetView.Add(view);
+                }
+                else if (asset is DataAsset dataAsset)
+                {
+                    var view = new DataAssetView(dataAsset.FullName, dataAsset.Text);
+                    _dataAssetViews.Add(view.Name.ToLowerInvariant(), view);
+                    assetView.Add(view);
+                }
+                else if (asset is UnsupportedAsset unsupportedAsset)
+                {
+                    var view = new UnsupportedAssetView(unsupportedAsset.FullName,
+                        unsupportedAsset.Description);
+                    _unsupportedAssetViews.Add(view.Name.ToLowerInvariant(), view);
                     assetView.Add(view);
                 }
             }

@@ -14,6 +14,8 @@ namespace FastFileUnpacker
         private const int AssetFullNameSize = 12;
         private const int AssetPaddingSize = 4;
 
+        private const string AssetNotSupportedMessage = "This asset is not supported.";
+
         // Static.
         public static bool FromStream(Stream stream, out FastFile? fastFile)
         {
@@ -62,7 +64,9 @@ namespace FastFileUnpacker
                 ".bsm" => new MapAsset(fullName, data),
                 ".bgn" => new BackgroundAsset(fullName, data),
                 ".dat" or ".txt" => new DataAsset(fullName, data),
-                _ => new UnsupportedAsset(fullName, data)
+                ".ts" => new UnsupportedAsset(fullName, data, $"Presumably a file for a level editor.\n{AssetNotSupportedMessage}"),
+                ".gui" => new UnsupportedAsset(fullName, data, $"Presumably a file for a user interface.\n{AssetNotSupportedMessage}"),
+                _ => new UnsupportedAsset(fullName, data, AssetNotSupportedMessage)
             };
         }
 

@@ -119,7 +119,7 @@ namespace TankRacerViewer.Core
                 return;
 
             var filePaths = Directory.GetFiles(folderPath, "*.dat", SearchOption.AllDirectories);
-            _mainWindow.LoadFiles(filePaths);
+            _mainWindow.OpenGameFolder(filePaths);
         }
     }
 }

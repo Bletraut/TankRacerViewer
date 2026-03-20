@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO;
 
@@ -22,32 +23,22 @@ namespace TankRacerViewer.Core
         private const string TurretNodeName = "turret_node";
 
         // Static.
+        public static bool IsTankData(DataAssetView dataAssetView) 
+            => dataAssetView.FullName.StartsWith(TankDataFilePrefix);
+
         private static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> _emptyProperties
             = new Dictionary<string, IReadOnlyList<string>>().AsReadOnly();
 
         // Class.
         public LevelObjectContainer TankNodeContainer { get; }
 
-        public TankView(string fullName, FastFile dataFastFile,
+        public TankView(string fullName, DataAssetView tankDataAssetView,
             AssetViewContainer commonAssetViewContainer,
-            IEnumerable<AssetViewContainer> tankAssetViewContainers) 
+            AssetViewContainer tankAssetViewContainer) 
             : base(fullName)
         {
-            DataAsset tankDataAsset = null;
-            foreach (var asset in dataFastFile.Assets)
-            {
-                if (asset is not DataAsset dataAsset)
-                    continue;
-
-                if (dataAsset.FullName.StartsWith(TankDataFilePrefix))
-                {
-                    tankDataAsset = dataAsset;
-                    break;
-                }
-            }
-
             var tankNodes = new List<LevelObject>();
-            foreach (var line in tankDataAsset.Text.AsSpan().EnumerateLines())
+            foreach (var line in tankDataAssetView.Text.AsSpan().EnumerateLines())
             {
                 if (line.IsEmpty) 
                     continue;
@@ -77,13 +68,9 @@ namespace TankRacerViewer.Core
                         position += turretNode.Position;
                 }
 
-                if (!commonAssetViewContainer.ModelAssetViews.TryGetValue(modelName, out var modelAssetView))
+                if (!tankAssetViewContainer.ModelAssetViews.TryGetValue(modelName, out var modelAssetView))
                 {
-                    foreach (var tankAssetViewContainer in tankAssetViewContainers)
-                    {
-                        if (tankAssetViewContainer.ModelAssetViews.TryGetValue(modelName, out modelAssetView))
-                            break;
-                    }
+                    commonAssetViewContainer.ModelAssetViews.TryGetValue(modelName, out modelAssetView);
                 }
                 if (modelAssetView is null)
                     continue;
@@ -95,7 +82,7 @@ namespace TankRacerViewer.Core
                 });
             }
 
-            TankNodeContainer = new LevelObjectContainer(tankDataAsset.FullName,
+            TankNodeContainer = new LevelObjectContainer(tankDataAssetView.FullName,
                 tankNodes.AsReadOnly());
         }
 

@@ -39,6 +39,8 @@ namespace TankRacerViewer.Core
         private AssetView _selectedAssetView;
 
         private readonly Dictionary<string, AssetViewContainer> _assetViewContainers = [];
+        private AssetViewContainer _dataAssetViewContainer;
+        private AssetViewContainer _commonAssetViewContainer;
 
         private readonly StringBuilder _info = new();
 
@@ -89,41 +91,52 @@ namespace TankRacerViewer.Core
 
             _cameraController = new CameraController(_camera);
             _cameraController.EulerAngles = _cameraDefaultRotation;
-
-            //using var dataFileStream = File.OpenRead("Content\\FastFiles\\DATA.DAT");
-            //FastFile.FromStream(dataFileStream, out _dataFastFile);
-
-            //using var tanksFileStream = File.OpenRead("Content\\FastFiles\\TANKS.DAT");
-            //FastFile.FromStream(tanksFileStream, out var tanksFastFile);
-            //_tanksAssetViewContainer = new AssetViewContainer(GraphicsDevice, tanksFastFile);
-
-            //using var commonFileStream = File.OpenRead("Content\\FastFiles\\INGAME.DAT");
-            //FastFile.FromStream(commonFileStream, out var commonFastFile);
-            //_commonAssetViewContainer = new AssetViewContainer(GraphicsDevice, commonFastFile);
-
-            //using var commonFileStream = File.OpenRead("Content\\FastFiles\\GUI.DAT");
-            //FastFile.FromStream(commonFileStream, out var commonFastFile);
-            //var _commonAssetViewContainer = new AssetViewContainer(GraphicsDevice, commonFastFile);
-
-            //using var levelFileStream = File.OpenRead("Content\\FastFiles\\ENGLAND.DAT");
-            ////using var levelFileStream = File.OpenRead("Content\\FastFiles\\MEXICO.DAT");
-            ////using var levelFileStream = File.OpenRead("Content\\FastFiles\\THEME.DAT");
-            //FastFile.FromStream(levelFileStream, out var levelFastFile);
-            //_levelAssetViewContainer = new AssetViewContainer(GraphicsDevice, levelFastFile);
-
-            //var levelViewName = levelFastFile.Assets.FirstOrDefault(asset => asset is MapAsset)?.FullName ?? string.Empty;
-            //_levelView = new LevelView(levelViewName, _commonAssetViewContainer, _levelAssetViewContainer);
-
-            //_tankView = new TankView("Tank1", _dataFastFile, _commonAssetViewContainer, [_tanksAssetViewContainer]);
         }
 
-        public void LoadFiles(string[] filePaths)
+        public void OpenGameFolder(string[] filePaths)
         {
             foreach (var filePath in filePaths)
                 LoadFile(filePath);
+
+            _dataAssetViewContainer = _assetViewContainers.Values
+                .FirstOrDefault(container => container.DataAssetViews.ContainsKey("tank1"));
+            _commonAssetViewContainer = _assetViewContainers.Values
+                .FirstOrDefault(container => container.ModelAssetViews.ContainsKey("camera"));
+            var canCreateExtraAssetViews = _dataAssetViewContainer is not null
+                && _commonAssetViewContainer is not null;
+
+            foreach (var (path, assetViewContainer) in _assetViewContainers)
+            {
+                if (canCreateExtraAssetViews)
+                {
+                    var mapAsset = assetViewContainer.FastFile.Assets.FirstOrDefault(asset => asset is MapAsset);
+                    if (mapAsset is not null)
+                    {
+                        var levelView = new LevelView(mapAsset.FullName,
+                            _commonAssetViewContainer, assetViewContainer);
+                        assetViewContainer.ExtraAssetViews.Add(levelView);
+                    }
+
+                    foreach (var dataAssetView in _dataAssetViewContainer.DataAssetViews.Values)
+                    {
+                        if (!TankView.IsTankData(dataAssetView))
+                            continue;
+
+                        if (assetViewContainer.ModelAssetViews.TryGetValue($"{dataAssetView.Name.ToLower()}t",
+                            out var tankTurretModel))
+                        {
+                            var tankView = new TankView(dataAssetView.Name, dataAssetView,
+                                _commonAssetViewContainer, assetViewContainer);
+                            assetViewContainer.ExtraAssetViews.Add(tankView);
+                        }
+                    }
+                }
+
+                _uiComponent.ExplorerWindow.AddFile(path, assetViewContainer);
+            }
         }
 
-        public void LoadFile(string filePath)
+        private void LoadFile(string filePath)
         {
             if (_assetViewContainers.ContainsKey(filePath))
                 return;
@@ -135,8 +148,6 @@ namespace TankRacerViewer.Core
                 {
                     var assetViewContainer = new AssetViewContainer(GraphicsDevice, fastFile);
                     _assetViewContainers.Add(filePath, assetViewContainer);
-
-                    _uiComponent.ExplorerWindow.AddFile(filePath, assetViewContainer);
                 }
             }
             catch (Exception exception)
@@ -187,22 +198,40 @@ namespace TankRacerViewer.Core
             {
                 if (_selectedAssetView is ModelAssetView modelAssetView)
                 {
+                    _uiComponent.ViewerWindow.Show3DViewer();
+
                     _renderer.Begin(Color.CornflowerBlue);
                     _renderer.Draw(modelAssetView, Matrix.Identity, _camera);
                     _renderer.End();
                 }
                 else if (_selectedAssetView is BackgroundAssetView backgroundAssetView)
                 {
+                    _uiComponent.ViewerWindow.Show3DViewer();
+
                     _renderer.Begin(Color.CornflowerBlue);
                     _renderer.Draw(backgroundAssetView, _camera);
                     _renderer.End();
                 }
+                else if (_selectedAssetView is TextureAssetView textureAssetView)
+                {
+                    _uiComponent.ViewerWindow.ShowTextureViewer(textureAssetView.Texture);
+                }
+                else if (_selectedAssetView is DataAssetView dataAssetView)
+                {
+                    _uiComponent.ViewerWindow.ShowTextViewer(dataAssetView.Text);
+                }
+                else if (_selectedAssetView is UnsupportedAssetView unsupportedAssetView)
+                {
+                    _uiComponent.ViewerWindow.ShowTextViewer(unsupportedAssetView.Description);
+                }
                 else if (_selectedAssetView is LevelView levelView)
                 {
+                    _uiComponent.ViewerWindow.Show3DViewer();
                     levelView.Draw(_renderer, _camera);
                 }
                 else if (_selectedAssetView is TankView tankView)
                 {
+                    _uiComponent.ViewerWindow.Show3DViewer();
                     tankView.Draw(_renderer, _camera);
                 }
             }

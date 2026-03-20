@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 using ComposableUi;
 
@@ -47,6 +49,8 @@ namespace TankRacerViewer.Core
                 AddAssetViewGroup("Models", fastFileGroup, assetViewContainer.ModelAssetViews.Values);
                 AddAssetViewGroup("Textures", fastFileGroup, assetViewContainer.TextureAssetViews.Values);
                 AddAssetViewGroup("Backgrounds", fastFileGroup, assetViewContainer.BackgroundAssetViews.Values);
+                AddAssetViewGroup("Data", fastFileGroup, assetViewContainer.DataAssetViews.Values);
+                AddAssetViewGroup("Unsupported", fastFileGroup, assetViewContainer.UnsupportedAssetViews.Values);
                 AddAssetViewGroup("Extra", fastFileGroup, assetViewContainer.ExtraAssetViews);
             }
         }
@@ -55,6 +59,11 @@ namespace TankRacerViewer.Core
             FoldableFileGroupElement parentGroup,
             IEnumerable<AssetView> assetViews)
         {
+            var hasItems = assetViews.TryGetNonEnumeratedCount(out var count) && count > 0
+                || assetViews.Any();
+            if (!hasItems)
+                return;
+
             var assetGroup = new FoldableFileGroupElement(
                 iconSkin: StandardSkin.RectanglePanel,
                 path: string.Empty,
@@ -68,7 +77,7 @@ namespace TankRacerViewer.Core
                 var asset = new FoldableFileGroupElement(
                     iconSkin: StandardSkin.TextField,
                     path: string.Empty,
-                    name: assetView.Name,
+                    name: assetView.FullName,
                     file: assetView
                 );
                 assetGroup.AddItem(asset);

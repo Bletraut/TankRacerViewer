@@ -50,7 +50,14 @@ namespace ComposableUi
         public Vector2 Size
         {
             get => _size;
-            set => SetAndChangeState(ref _size, value);
+            set
+            {
+                if (SetAndChangeState(ref _size, value))
+                {
+                    if (IsEnabled)
+                        OnTransformChanged();
+                }    
+            }
         }
 
         public Vector2 PivotOffset => Size * Pivot;
