@@ -43,6 +43,13 @@ namespace ComposableUi
             Pivot = pivot ?? Alignment.Center;
         }
 
+        protected internal override void ApplyRoot(RootElement root)
+        {
+            base.ApplyRoot(root);
+
+            InnerElement?.ApplyRoot(root);
+        }
+
         public override void Rebuild(Vector2 size, bool excludeChildren)
         {
             Size = size;
@@ -77,6 +84,13 @@ namespace ComposableUi
         {
             if (InnerElement == child)
                 InnerElement = null;
+        }
+
+        internal override void OnTransformChanged()
+        {
+            base.OnTransformChanged();
+
+            InnerElement?.OnTransformChanged();
         }
     }
 }

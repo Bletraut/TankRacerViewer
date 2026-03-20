@@ -79,6 +79,14 @@ namespace ComposableUi
             AddChild(child);
         }
 
+        protected internal override void ApplyRoot(RootElement root)
+        {
+            base.ApplyRoot(root);
+
+            foreach (var child in _children)
+                child.ApplyRoot(root);
+        }
+
         public override Element GetChildAt(int index)
             => _children[index];
 
@@ -110,6 +118,17 @@ namespace ComposableUi
             {
                 child.Parent = null;
                 OnStateChanged();
+            }
+        }
+
+        internal override void OnTransformChanged()
+        {
+            base.OnTransformChanged();
+
+            foreach (var child in _children)
+            {
+                if (child.IsEnabled)
+                    child.OnTransformChanged();
             }
         }
     }

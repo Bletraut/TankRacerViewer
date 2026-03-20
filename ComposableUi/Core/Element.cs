@@ -1,6 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
 
-using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -15,21 +15,15 @@ namespace ComposableUi
                 if (_parent == value)
                     return;
 
-                var oldParent = _parent;
                 _parent = value;
+                ApplyRoot(_parent?.Root);
 
-                if (!IsEnabled)
-                    return;
-
-                if (oldParent is not null)
-                    oldParent.TransformChanged -= OnParentTransformChanged;
-
-                if (_parent is not null)
-                    _parent.TransformChanged += OnParentTransformChanged;
-
-                OnParentTransformChanged(_parent);
+                if (IsEnabled)
+                    OnTransformChanged();
             }
         }
+
+        public RootElement Root { get; private set; }
 
         private uint _layer;
         public uint Layer
@@ -46,18 +40,8 @@ namespace ComposableUi
             {
                 if (SetAndChangeState(ref _isEnabled, value))
                 {
-                    if (_parent is null)
-                        return;
-
                     if (_isEnabled)
-                    {
-                        _parent.TransformChanged += OnParentTransformChanged;
-                        OnParentTransformChanged(_parent);
-                    }
-                    else
-                    {
-                        _parent.TransformChanged -= OnParentTransformChanged;
-                    }
+                        OnTransformChanged();
                 }
             }
         }
@@ -66,14 +50,7 @@ namespace ComposableUi
         public Vector2 Size
         {
             get => _size;
-            set
-            {
-                if (_size == value) 
-                    return;
-
-                _size = value;
-                OnTransformChanged();
-            }
+            set => SetAndChangeState(ref _size, value);
         }
 
         public Vector2 PivotOffset => Size * Pivot;
@@ -173,10 +150,6 @@ namespace ComposableUi
             }
         }
 
-        public event ElementEventHandler<Element> SizeChanged;
-        public event ElementEventHandler<Element> TransformChanged;
-        public event ElementEventHandler<Element> StateChanged;
-
         private bool _isBoundingRectangleDirty = true;
 
         private bool _isClipMaskDirty = true;
@@ -187,6 +160,11 @@ namespace ComposableUi
 
         protected internal virtual Rectangle? CalculateClipMask()
             => Parent?.ClipMask;
+
+        protected internal virtual void ApplyRoot(RootElement root)
+        {
+            Root = root;
+        }
 
         public IEnumerable<ParentElement> GetParentsRecursively()
         {
@@ -262,20 +240,7 @@ namespace ComposableUi
             Size = size;
         }
 
-        protected void OnStateChanged()
-        {
-            StateChanged?.Invoke(this);
-            Parent?.OnStateChanged();
-        }
-
-        protected void OnTransformChanged()
-        {
-            _isLocalTransformationMatrixDirty = true;
-
-            OnParentTransformChanged(Parent);
-        }
-
-        private void OnParentTransformChanged(Element sender)
+        internal virtual void OnTransformChanged()
         {
             _isBoundingRectangleDirty = true;
 
@@ -283,9 +248,14 @@ namespace ComposableUi
 
             _isGlobalTransformationMatrixDirty = true;
             _isGlobalInverseTransformationMatrixDirty = true;
+            _isLocalTransformationMatrixDirty = true;
 
-            TransformChanged?.Invoke(this);
             OnStateChanged();
+        }
+
+        protected internal virtual void OnStateChanged()
+        {
+            Root?.OnStateChanged();
         }
     }
 

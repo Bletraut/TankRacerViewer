@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -10,7 +9,7 @@ namespace ComposableUi
 {
     public sealed class UiManager
     {
-        public ContainerElement Root { get; }
+        public RootElement Root { get; }
 
         public IPointerInputProvider PointerInputProvider { get; set; }
         public IUiRenderer UiRenderer { get; set; }
@@ -64,7 +63,8 @@ namespace ComposableUi
             PointerInputProvider = pointerInputProvider;
             UiRenderer = uiRenderer;
 
-            Root = new ContainerElement();
+            Root = new RootElement();
+            Root.ApplyRoot(Root);
             Root.StateChanged += OnRootStateChanged;
 
             TextElement.DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
