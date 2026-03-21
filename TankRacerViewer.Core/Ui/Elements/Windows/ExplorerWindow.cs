@@ -40,7 +40,7 @@ namespace TankRacerViewer.Core
                 path: filePath,
                 iconSkin: StandardSkin.ContentPanel,
                 name: Path.GetFileName(filePath),
-                isFolded: true
+                isFolded: false
             );
             _groups.AddChild(fastFileGroup);
 
@@ -68,7 +68,7 @@ namespace TankRacerViewer.Core
                 iconSkin: StandardSkin.RectanglePanel,
                 path: string.Empty,
                 name: name,
-                isFolded: true
+                isFolded: false
             );
             parentGroup.AddItem(assetGroup);
 

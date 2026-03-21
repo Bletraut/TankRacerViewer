@@ -120,16 +120,5 @@ namespace ComposableUi
                 OnStateChanged();
             }
         }
-
-        internal override void OnTransformChanged()
-        {
-            base.OnTransformChanged();
-
-            foreach (var child in _children)
-            {
-                if (child.IsEnabled)
-                    child.OnTransformChanged();
-            }
-        }
     }
 }

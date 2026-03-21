@@ -44,7 +44,7 @@ namespace ComposableUi
             container.DockingMode = DockingMode.None;
             container.ViewHolder.PropagateToInnerElementChildren = false;
             container.ApplyContainer(null);
-            container.ApplyRoot(null);
+            container.ApplyRootContainer(null);
             container.ApplyLayout(null);
             container.ClearItems();
 
@@ -203,7 +203,7 @@ namespace ComposableUi
             item.Container?.RemoveItem(item);
 
             item.ApplyContainer(this);
-            item.ApplyRoot(Root ?? this);
+            item.ApplyRootContainer(RootContainer ?? this);
             item.IsInteractable = false;
 
             Layout.InsertChild(inLayoutIndex, item);
@@ -224,7 +224,7 @@ namespace ComposableUi
             {
                 item.IsInteractable = true;
                 item.ApplyContainer(null);
-                item.ApplyRoot(null);
+                item.ApplyRootContainer(null);
 
                 Layout.RemoveChild(item);
             }
@@ -251,12 +251,12 @@ namespace ComposableUi
             ViewHolder.InnerElement = layout;
         }
 
-        internal override void ApplyRoot(WindowContainerElement root)
+        internal override void ApplyRootContainer(WindowContainerElement root)
         {
-            base.ApplyRoot(root);
+            base.ApplyRootContainer(root);
 
             foreach (var item in _items)
-                item.ApplyRoot(root ?? this);
+                item.ApplyRootContainer(root ?? this);
         }
 
         internal override void PrepareReplacementWith(Item node)

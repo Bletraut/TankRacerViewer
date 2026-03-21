@@ -150,7 +150,7 @@ namespace ComposableUi
             if (container is null)
                 return;
 
-            var parent = container.Root?.Parent ?? container.Parent;
+            var parent = container.RootContainer?.Parent ?? container.Parent;
             parent.AddChild(source);
 
             source.IsInteractable = true;

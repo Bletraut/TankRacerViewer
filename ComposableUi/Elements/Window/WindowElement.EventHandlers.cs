@@ -31,7 +31,7 @@ namespace ComposableUi
             if (IsMaximized)
                 return;
 
-            var root = ResolveRoot();
+            var root = ResolveRootContainer();
             root.Position += pointerEvent.Delta.ToVector2();
         }
 

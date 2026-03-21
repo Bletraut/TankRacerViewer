@@ -356,7 +356,7 @@ namespace ComposableUi
 
         public void BringToFront()
         {
-            var root = ResolveRoot();
+            var root = ResolveRootContainer();
             if (root.Parent is ContainerElement container)
                 container.BringToFront(root);
         }
@@ -393,7 +393,7 @@ namespace ComposableUi
             MaximizeButton.IsEnabled = false;
             RestoreButton.IsEnabled = true;
 
-            var parent = ResolveRoot().Parent;
+            var parent = ResolveRootContainer().Parent;
 
             _placeHolder = WindowPlaceHolderElement.Rent();
             _placeHolder.MinSize = MinSize;

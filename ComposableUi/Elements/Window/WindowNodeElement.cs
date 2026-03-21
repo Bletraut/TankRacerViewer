@@ -7,7 +7,7 @@ namespace ComposableUi
     {
         internal T Container { get; private set; }
 
-        internal T Root { get; private set; }
+        internal T RootContainer { get; private set; }
 
         internal ExpandedElement ViewHolder { get; }
 
@@ -59,24 +59,24 @@ namespace ComposableUi
                 InnerElement.Size = size;
         }
 
-        protected Element ResolveRoot()
-            => Root is not null ? Root : this;
+        protected Element ResolveRootContainer()
+            => RootContainer is not null ? RootContainer : this;
 
         internal virtual void ApplyContainer(T container)
         {
             Container = container;
         }
 
-        internal virtual void ApplyRoot(T root)
+        internal virtual void ApplyRootContainer(T root)
         {
-            Root = root;
+            RootContainer = root;
         }
 
         internal virtual void PrepareReplacementWith(WindowNodeElement<T> node)
         {
             node.SetSize(Size);
             node.ApplyContainer(Container);
-            node.ApplyRoot(Root);
+            node.ApplyRootContainer(RootContainer);
             node.IsInteractable = IsInteractable;
         }
 

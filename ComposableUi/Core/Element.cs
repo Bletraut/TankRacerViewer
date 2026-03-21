@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
@@ -18,8 +19,7 @@ namespace ComposableUi
                 _parent = value;
                 ApplyRoot(_parent?.Root);
 
-                if (IsEnabled)
-                    OnTransformChanged();
+                _parentTransformVersion = int.MinValue;
             }
         }
 
@@ -36,14 +36,7 @@ namespace ComposableUi
         public virtual bool IsEnabled
         {
             get => _isEnabled;
-            set
-            {
-                if (SetAndChangeState(ref _isEnabled, value))
-                {
-                    if (_isEnabled)
-                        OnTransformChanged();
-                }
-            }
+            set => SetAndChangeState(ref _isEnabled, value);
         }
 
         private Vector2 _size;
@@ -53,10 +46,7 @@ namespace ComposableUi
             set
             {
                 if (SetAndChangeState(ref _size, value))
-                {
-                    if (IsEnabled)
-                        OnTransformChanged();
-                }    
+                    OnTransformChanged();
             }
         }
 
@@ -117,7 +107,9 @@ namespace ComposableUi
         {
             get
             {
-                if (_isClipMaskDirty)
+                var isDirty = _isClipMaskDirty
+                    || InvalidateIfParentTransformChanged();
+                if (isDirty)
                 {
                     _isClipMaskDirty = false;
                     _clipMask = CalculateClipMask();
@@ -157,9 +149,11 @@ namespace ComposableUi
             }
         }
 
-        private bool _isBoundingRectangleDirty = true;
+        private int _transformVersion;
+        private int _parentTransformVersion;
 
         private bool _isClipMaskDirty = true;
+        private bool _isBoundingRectangleDirty = true;
 
         private bool _isLocalTransformationMatrixDirty = true;
         private bool _isGlobalTransformationMatrixDirty = true;
@@ -200,7 +194,9 @@ namespace ComposableUi
 
         private void RecalculateBoundingRectangleIfDirty()
         {
-            if (!_isBoundingRectangleDirty)
+            var isDirty = _isBoundingRectangleDirty 
+                || InvalidateIfParentTransformChanged();
+            if (!isDirty)
                 return;
 
             _isBoundingRectangleDirty = false;
@@ -218,7 +214,9 @@ namespace ComposableUi
 
         private void RecalculateGlobalTransformationMatrixIfDirty()
         {
-            if (!_isGlobalTransformationMatrixDirty)
+            var isDirty = _isGlobalTransformationMatrixDirty
+                || InvalidateIfParentTransformChanged();
+            if (!isDirty)
                 return;
 
             _isGlobalTransformationMatrixDirty = false;
@@ -233,7 +231,9 @@ namespace ComposableUi
 
         private void RecalculateGlobalInverseTransformationMatrixIfDirty()
         {
-            if (!_isGlobalInverseTransformationMatrixDirty)
+            var isDirty = _isGlobalInverseTransformationMatrixDirty
+                || InvalidateIfParentTransformChanged();
+            if (!isDirty)
                 return;
 
             _isGlobalInverseTransformationMatrixDirty = false;
@@ -247,22 +247,42 @@ namespace ComposableUi
             Size = size;
         }
 
-        internal virtual void OnTransformChanged()
+        private bool InvalidateIfParentTransformChanged()
         {
-            _isBoundingRectangleDirty = true;
+            if (Parent is null)
+                return false;
 
-            _isClipMaskDirty = true;
+            if (_parentTransformVersion == Parent._transformVersion)
+                return false;
 
-            _isGlobalTransformationMatrixDirty = true;
-            _isGlobalInverseTransformationMatrixDirty = true;
-            _isLocalTransformationMatrixDirty = true;
+            _transformVersion++;
+            _parentTransformVersion = Parent._transformVersion;
+            MarkTransformPropertiesDirty();
 
-            OnStateChanged();
+            return true;
         }
 
-        protected internal virtual void OnStateChanged()
+        private void MarkTransformPropertiesDirty()
         {
-            Root?.OnStateChanged();
+            _isClipMaskDirty = true;
+            _isBoundingRectangleDirty = true;
+            _isGlobalTransformationMatrixDirty = true;
+            _isGlobalInverseTransformationMatrixDirty = true;
+        }
+
+        protected void OnStateChanged()
+        {
+            Root?.MarkAsDirty();
+        }
+
+        private void OnTransformChanged()
+        {
+            _transformVersion++;
+
+            _isLocalTransformationMatrixDirty = true;
+            MarkTransformPropertiesDirty();
+
+            OnStateChanged();
         }
     }
 

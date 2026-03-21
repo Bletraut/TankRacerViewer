@@ -1,12 +1,21 @@
-﻿namespace ComposableUi
+﻿using Microsoft.Xna.Framework;
+
+namespace ComposableUi
 {
     public sealed class RootElement : ContainerElement
     {
-        public event ElementEventHandler<RootElement> StateChanged;
+        internal bool IsDirty { get; private set; }
 
-        protected internal override void OnStateChanged()
+        internal void MarkAsDirty()
         {
-            StateChanged?.Invoke(this);
+            IsDirty = true;
+        }
+
+        public override void Rebuild(Vector2 size, bool excludeChildren)
+        {
+            base.Rebuild(size, excludeChildren);
+
+            IsDirty = false;
         }
     }
 }

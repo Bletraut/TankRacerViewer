@@ -236,6 +236,8 @@ namespace TankRacerViewer.Core
                 }
             }
 
+            base.Draw(gameTime);
+
             _info.AppendLine($"Draw Calls: {GraphicsDevice.Metrics.DrawCount}");
             _info.Append($"Fps: {1 / gameTime.ElapsedGameTime.TotalSeconds:00.0}");
 
@@ -246,8 +248,6 @@ namespace TankRacerViewer.Core
             _spriteBatch.Begin();
             _spriteBatch.DrawString(_mainFont, infoString, infoPosition, Color.White);
             _spriteBatch.End();
-
-            base.Draw(gameTime);
         }
 
         private void OnAssetViewSelected(AssetView assetView)

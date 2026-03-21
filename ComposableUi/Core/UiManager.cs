@@ -40,8 +40,6 @@ namespace ComposableUi
         private Point _currentPointerPosition;
         private Point _lastPointerPosition;
 
-        private bool _isRootDirty = true;
-
         public UiManager(GraphicsDevice graphicsDevice,
             ContentManager contentManager,
             SpriteBatch spriteBatch)
@@ -65,7 +63,6 @@ namespace ComposableUi
 
             Root = new RootElement();
             Root.ApplyRoot(Root);
-            Root.StateChanged += OnRootStateChanged;
 
             TextElement.DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
 
@@ -278,15 +275,13 @@ namespace ComposableUi
 
         private void RebuildIfDirty()
         {
-            if (!_isRootDirty)
+            if (!Root.IsDirty)
                 return;
 
             var size = Root.CalculatePreferredSize();
             Root.Rebuild(size);
 
             RefreshVisibleElementLists();
-
-            _isRootDirty = false;
         }
 
         private void RefreshVisibleElementLists()
@@ -381,11 +376,6 @@ namespace ComposableUi
             {
                 _skippedPointerInputHandlers.Add(pointerInputHandler);
             }
-        }
-
-        private void OnRootStateChanged(Element sender)
-        {
-            _isRootDirty = true;
         }
     }
 }

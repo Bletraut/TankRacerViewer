@@ -23,7 +23,7 @@ namespace ComposableUi
         {
             placeHolder.IsEnabled = false;
             placeHolder.ApplyContainer(null);
-            placeHolder.ApplyRoot(null);
+            placeHolder.ApplyRootContainer(null);
 
             _pool.Push(placeHolder);
         }
