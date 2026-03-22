@@ -68,7 +68,7 @@ namespace ComposableUi
             OnStateChanged();
         }
 
-        public void InsertRange(int index, ReadOnlySpan<TData> collection)
+        public void InsertDataRange(int index, ReadOnlySpan<TData> collection)
         {
             _data.InsertRange(index, collection);
 
@@ -86,10 +86,18 @@ namespace ComposableUi
             OnStateChanged();
         }
 
-        public void RemoveRange(int index, int count)
+        public void RemoveDataRange(int index, int count)
         {
             _data.RemoveRange(index, count);
             RefreshPreferredSize();
+
+            OnStateChanged();
+        }
+
+        public void ClearData()
+        {
+            _data.Clear();
+            _preferredSize = Vector2.Zero;
 
             OnStateChanged();
         }

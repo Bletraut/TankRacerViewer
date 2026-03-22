@@ -155,7 +155,7 @@ namespace TankRacerViewer.Core
                 }
 
                 var dataIndex = _lazyListView.IndexOf(node.Data);
-                _lazyListView.RemoveRange(dataIndex + 1, childCount);
+                _lazyListView.RemoveDataRange(dataIndex + 1, childCount);
             }
             else
             {
@@ -178,7 +178,7 @@ namespace TankRacerViewer.Core
                 }
 
                 var dataIndex = _lazyListView.IndexOf(node.Data);
-                _lazyListView.InsertRange(dataIndex + 1, CollectionsMarshal.AsSpan(_list));
+                _lazyListView.InsertDataRange(dataIndex + 1, CollectionsMarshal.AsSpan(_list));
             }
 
             node.Data.IsFolded = isFolded;
