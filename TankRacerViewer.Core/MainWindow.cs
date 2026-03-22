@@ -114,7 +114,7 @@ namespace TankRacerViewer.Core
                     {
                         var levelView = new LevelView(mapAsset.FullName,
                             _commonAssetViewContainer, assetViewContainer);
-                        assetViewContainer.ExtraAssetViews.Add(levelView);
+                        assetViewContainer.ExtraAssetViews.Add(mapAsset.FullName, levelView);
                     }
 
                     foreach (var dataAssetView in _dataAssetViewContainer.DataAssetViews.Values)
@@ -127,7 +127,7 @@ namespace TankRacerViewer.Core
                         {
                             var tankView = new TankView(dataAssetView.Name, dataAssetView,
                                 _commonAssetViewContainer, assetViewContainer);
-                            assetViewContainer.ExtraAssetViews.Add(tankView);
+                            assetViewContainer.ExtraAssetViews.Add(dataAssetView.Name, tankView);
                         }
                     }
                 }

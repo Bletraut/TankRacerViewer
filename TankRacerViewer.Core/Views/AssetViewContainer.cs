@@ -22,7 +22,7 @@ namespace TankRacerViewer.Core
         public IReadOnlyDictionary<string, UnsupportedAssetView> UnsupportedAssetViews { get; }
 
         public IReadOnlyList<AssetView> AssetViews { get; }
-        public List<AssetView> ExtraAssetViews { get; } = [];
+        public Dictionary<string, AssetView> ExtraAssetViews { get; } = [];
 
         private readonly GraphicsDevice _graphicsDevice;
 

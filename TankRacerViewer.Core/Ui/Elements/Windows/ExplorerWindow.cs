@@ -40,7 +40,7 @@ namespace TankRacerViewer.Core
                 path: filePath,
                 iconSkin: StandardSkin.ContentPanel,
                 name: Path.GetFileName(filePath),
-                isFolded: false
+                isFolded: true
             );
             _groups.AddChild(fastFileGroup);
 
@@ -51,7 +51,7 @@ namespace TankRacerViewer.Core
                 AddAssetViewGroup("Backgrounds", fastFileGroup, assetViewContainer.BackgroundAssetViews.Values);
                 AddAssetViewGroup("Data", fastFileGroup, assetViewContainer.DataAssetViews.Values);
                 AddAssetViewGroup("Unsupported", fastFileGroup, assetViewContainer.UnsupportedAssetViews.Values);
-                AddAssetViewGroup("Extra", fastFileGroup, assetViewContainer.ExtraAssetViews);
+                AddAssetViewGroup("Extra", fastFileGroup, assetViewContainer.ExtraAssetViews.Values);
             }
         }
 
@@ -68,7 +68,7 @@ namespace TankRacerViewer.Core
                 iconSkin: StandardSkin.RectanglePanel,
                 path: string.Empty,
                 name: name,
-                isFolded: false
+                isFolded: true
             );
             parentGroup.AddItem(assetGroup);
 

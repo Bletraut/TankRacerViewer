@@ -12,12 +12,18 @@ namespace TankRacerViewer.Core
             StandardSkin iconSkin = default,
             string name = default,
             Element content = default,
-            bool isFolded = default)
+            bool isFolded = default,
+            Color? normalBackgroundColor = default,
+            Color? hoverBackgroundColor = default,
+            Color? selectedBackgroundColor = default)
             : base(iconSprite,
                   iconSkin,
                   name,
                   content,
-                  isFolded)
+                  isFolded,
+                  normalBackgroundColor,
+                  hoverBackgroundColor,
+                  selectedBackgroundColor)
         {
         }
     }
@@ -28,7 +34,7 @@ namespace TankRacerViewer.Core
         public const float DefaultIndent = 16;
         public const float DefaultSpacing = 4;
 
-        public const float DefaultBackgroundPadding = 10_000;
+        private readonly float DefaultTitleHorizontalPadding = 4;
 
         public readonly Vector2 DefaultFoldButtonSize = new(12);
         public readonly Vector2 DefaultIconSize = new(12);
@@ -36,6 +42,37 @@ namespace TankRacerViewer.Core
         public readonly Color DefaultNormalBackgroundColor = Color.Transparent;
         public readonly Color DefaultHoverBackgroundColor = Color.Gray;
         public readonly Color DefaultSelectedBackgroundColor = Color.BlueViolet;
+
+        private Color _normalBackgroundColor;
+        public Color NormalBackgroundColor
+        {
+            get => _normalBackgroundColor;
+            set
+            {
+                _normalBackgroundColor = value;
+                RefreshBackgroundVisualState();
+            }
+        }
+        private Color _hoverBackgroundColor;
+        public Color HoverBackgroundColor
+        {
+            get => _hoverBackgroundColor;
+            set
+            {
+                _hoverBackgroundColor = value;
+                RefreshBackgroundVisualState();
+            }
+        }
+        private Color _selectedBackgroundColor;
+        public Color SelectedBackgroundColor
+        {
+            get => _selectedBackgroundColor;
+            set
+            {
+                _selectedBackgroundColor = value;
+                RefreshBackgroundVisualState();
+            }
+        }
 
         public float Indent
         {
@@ -79,10 +116,6 @@ namespace TankRacerViewer.Core
         private readonly List<TItem> _items;
         public IReadOnlyList<TItem> Items { get; }
 
-        public Color NormalBackgroundColor { get; set; }
-        public Color HoverBackgroundColor { get; set; }
-        public Color SelectedBackgroundColor { get; set; }
-
         private readonly Element _foldButtonPlaceholder;
         private readonly ColumnLayout _groupColumn;
         private readonly RowLayout _titleRow;
@@ -94,14 +127,21 @@ namespace TankRacerViewer.Core
             StandardSkin iconSkin = default,
             string name = default,
             TItem content = default,
-            bool isFolded = default)
+            bool isFolded = default,
+            Color? normalBackgroundColor = default,
+            Color? hoverBackgroundColor = default,
+            Color? selectedBackgroundColor = default)
         {
             _items = [];
             Items = _items.AsReadOnly();
 
+            _normalBackgroundColor = normalBackgroundColor ?? DefaultNormalBackgroundColor;
+            _hoverBackgroundColor = hoverBackgroundColor ?? DefaultHoverBackgroundColor;
+            _selectedBackgroundColor = selectedBackgroundColor ?? DefaultSelectedBackgroundColor;
+
             Background = new SpriteElement(
                 skin: StandardSkin.WhitePixel,
-                color: DefaultNormalBackgroundColor
+                color: _normalBackgroundColor
             );
 
             ClickInputHandler = new PointerInputHandlerElement(
@@ -143,6 +183,8 @@ namespace TankRacerViewer.Core
 
             TitleLayout = new RowLayout(
                 alignmentFactor: Alignment.MiddleLeft,
+                leftPadding: DefaultTitleHorizontalPadding,
+                rightPadding: DefaultTitleHorizontalPadding,
                 spacing: DefaultSpacing,
                 sizeMainAxisToContent: true,
                 sizeCrossAxisToContent: true,
@@ -162,8 +204,6 @@ namespace TankRacerViewer.Core
                     new LayoutElement(
                         ignoreLayout: true,
                         innerElement: new ExpandedElement(
-                            leftPadding: -DefaultBackgroundPadding,
-                            rightPadding: -DefaultBackgroundPadding,
                             innerElement: ClickInputHandler
                         )
                     ),
@@ -171,8 +211,6 @@ namespace TankRacerViewer.Core
                     new LayoutElement(
                         ignoreLayout: true,
                         innerElement: new ExpandedElement(
-                            leftPadding: -DefaultBackgroundPadding,
-                            rightPadding: -DefaultBackgroundPadding,
                             innerElement: HoverInputHandler
                         )
                     ),
@@ -251,13 +289,13 @@ namespace TankRacerViewer.Core
         {
             if (IsSelected)
             {
-                Background.Color = DefaultSelectedBackgroundColor;
+                Background.Color = NormalBackgroundColor;
             }
             else
             {
                 Background.Color = _isHover 
-                    ? DefaultHoverBackgroundColor 
-                    : DefaultNormalBackgroundColor;
+                    ? HoverBackgroundColor 
+                    : NormalBackgroundColor;
             }
         }
 

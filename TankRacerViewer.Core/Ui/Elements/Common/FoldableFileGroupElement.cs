@@ -21,6 +21,13 @@ namespace TankRacerViewer.Core
         {
             Path = path;
             File = file;
+
+#warning TODO: Optimize it.
+            if (ClickInputHandler.Parent is ExpandedElement clickExpanded)
+                clickExpanded.LeftPadding = clickExpanded.RightPadding = -10_000;
+
+            if (HoverInputHandler.Parent is ExpandedElement hoverExpanded)
+                hoverExpanded.LeftPadding = hoverExpanded.RightPadding = -10_000;
         }
     }
 }

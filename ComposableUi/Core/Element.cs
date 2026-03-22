@@ -19,7 +19,9 @@ namespace ComposableUi
                 _parent = value;
                 ApplyRoot(_parent?.Root);
 
+                _transformVersion++;
                 _parentTransformVersion = int.MinValue;
+                MarkTransformPropertiesDirty();
             }
         }
 
@@ -107,9 +109,8 @@ namespace ComposableUi
         {
             get
             {
-                var isDirty = _isClipMaskDirty
-                    || InvalidateIfParentTransformChanged();
-                if (isDirty)
+                InvalidateIfParentTransformChanged();
+                if (_isClipMaskDirty)
                 {
                     _isClipMaskDirty = false;
                     _clipMask = CalculateClipMask();
@@ -194,9 +195,8 @@ namespace ComposableUi
 
         private void RecalculateBoundingRectangleIfDirty()
         {
-            var isDirty = _isBoundingRectangleDirty 
-                || InvalidateIfParentTransformChanged();
-            if (!isDirty)
+            InvalidateIfParentTransformChanged();
+            if (!_isBoundingRectangleDirty)
                 return;
 
             _isBoundingRectangleDirty = false;
@@ -214,9 +214,8 @@ namespace ComposableUi
 
         private void RecalculateGlobalTransformationMatrixIfDirty()
         {
-            var isDirty = _isGlobalTransformationMatrixDirty
-                || InvalidateIfParentTransformChanged();
-            if (!isDirty)
+            InvalidateIfParentTransformChanged();
+            if (!_isGlobalTransformationMatrixDirty)
                 return;
 
             _isGlobalTransformationMatrixDirty = false;
@@ -231,9 +230,8 @@ namespace ComposableUi
 
         private void RecalculateGlobalInverseTransformationMatrixIfDirty()
         {
-            var isDirty = _isGlobalInverseTransformationMatrixDirty
-                || InvalidateIfParentTransformChanged();
-            if (!isDirty)
+            InvalidateIfParentTransformChanged();
+            if (!_isGlobalInverseTransformationMatrixDirty)
                 return;
 
             _isGlobalInverseTransformationMatrixDirty = false;
@@ -247,19 +245,17 @@ namespace ComposableUi
             Size = size;
         }
 
-        private bool InvalidateIfParentTransformChanged()
+        private void InvalidateIfParentTransformChanged()
         {
             if (Parent is null)
-                return false;
+                return;
 
             if (_parentTransformVersion == Parent._transformVersion)
-                return false;
+                return;
 
             _transformVersion++;
             _parentTransformVersion = Parent._transformVersion;
             MarkTransformPropertiesDirty();
-
-            return true;
         }
 
         private void MarkTransformPropertiesDirty()
