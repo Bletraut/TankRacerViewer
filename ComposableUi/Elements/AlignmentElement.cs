@@ -31,10 +31,12 @@ namespace ComposableUi
 
         public override void Rebuild(Vector2 size, bool excludeChildren)
         {
-            base.Rebuild(size, excludeChildren);
+            Size = size;
 
             if (Parent is not null)
                 LocalPosition = Parent.Size * AlignmentFactor + Offset - Parent.PivotOffset;
+
+            base.Rebuild(size, excludeChildren);
         }
     }
 }

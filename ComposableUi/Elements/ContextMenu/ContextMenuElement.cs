@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
@@ -328,9 +327,23 @@ namespace ComposableUi
 
         public override void Rebuild(Vector2 size, bool excludeChildren)
         {
-            base.Rebuild(size, excludeChildren);
+            Size = size;
 
-            _columnsRow.LocalPosition = _columnsRow.PivotOffset - PivotOffset;
+            for (var i = 0; i < ChildCount; i++)
+            {
+                var child = GetChildAt(i);
+                if (!child.IsEnabled)
+                    continue;
+
+                var childSize = child.CalculatePreferredSize();
+
+                if (child == _columnsRow)
+                {
+                    child.Size = childSize;
+                    _columnsRow.LocalPosition = _columnsRow.PivotOffset - PivotOffset;
+                }
+                child.Rebuild(childSize);
+            }
         }
 
         private void OnItemPointerEnter(ContextMenuItemElement item,

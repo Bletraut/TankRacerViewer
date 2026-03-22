@@ -13,6 +13,7 @@ namespace TankRacerViewer.Core
         public event Action<AssetView> AssetViewSelected;
 
         private readonly ScrollViewElement _scrollView;
+        private readonly LazyListViewElement _lazyListView;
         private readonly ColumnLayout _groups;
 
         private FoldableFileGroupElement _selectedAssetGroup;
@@ -25,10 +26,13 @@ namespace TankRacerViewer.Core
                 sizeCrossAxisToContent: true
             );
 
+            _lazyListView = new LazyListViewElement();
+
             _scrollView = new ScrollViewElement(
                 sizeToContentWidth: true,
                 sizeToContentHeight: true,
                 content: _groups
+                //content: _lazyListView
             );
 
             ContentContainer.AddChild(new ExpandedElement(_scrollView));

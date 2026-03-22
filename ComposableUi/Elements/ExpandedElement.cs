@@ -119,6 +119,9 @@ namespace ComposableUi
         {
             Size = size;
 
+            if (Parent is not null)
+                LocalPosition = new Vector2(LeftPadding, TopPadding) + PivotOffset - Parent.PivotOffset;
+
             var shouldRebuildInnerElement = !excludeChildren && HasEnabledInnerElement;
             if (shouldRebuildInnerElement)
             {
@@ -137,9 +140,6 @@ namespace ComposableUi
                     }
                 }
             }
-
-            if (Parent is not null)
-                LocalPosition = new Vector2(LeftPadding, TopPadding) + PivotOffset - Parent.PivotOffset;
         }
     }
 }

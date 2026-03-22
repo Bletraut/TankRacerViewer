@@ -22,8 +22,9 @@ namespace ComposableUi
             var shouldRebuildInnerElement = !excludeChildren && HasEnabledInnerElement;
             if (shouldRebuildInnerElement)
             {
-                InnerElement.Rebuild(size);
+                InnerElement.Size = size;
                 InnerElement.LocalPosition = InnerElement.PivotOffset - PivotOffset;
+                InnerElement.Rebuild(size);
             }
         }
     }

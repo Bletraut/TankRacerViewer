@@ -262,8 +262,9 @@ namespace ComposableUi
                     if (!layoutElement.HasEnabledInnerElement)
                         continue;
 
-                    layoutElement.Rebuild(size);
+                    layoutElement.Size = size;
                     layoutElement.LocalPosition = layoutElement.PivotOffset - PivotOffset;
+                    layoutElement.Rebuild(size);
 
                     if (layoutElement.IgnoreLayout)
                     {
@@ -295,11 +296,13 @@ namespace ComposableUi
 
                     childSize = mainAxisSize + crossAxisSize;
                 }
-                child.Rebuild(childSize);
 
+                child.Size = childSize;
                 var crossAxisLayoutOffset = CrossAxis * (PivotOffset - AlignmentFactor * (Size - childSize));
                 child.LocalPosition = offset + child.PivotOffset
                     - (totalMainAxisLayoutOffset + crossAxisLayoutOffset);
+
+                child.Rebuild(childSize);
 
                 totalMainAxisLayoutOffset -= MainAxis * (childSize + new Vector2(Spacing));
             }
