@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 using ComposableUi;
 
@@ -10,29 +10,28 @@ namespace TankRacerViewer.Core
 {
     public sealed class ExplorerWindow : WindowElement
     {
+        // Static.
+        private static readonly Stack<HierarchyNodeData> _stack = [];
+        private static readonly List<HierarchyNodeData> _list = [];
+
+        // Class.
         public event Action<AssetView> AssetViewSelected;
 
         private readonly ScrollViewElement _scrollView;
-        private readonly LazyListViewElement _lazyListView;
-        private readonly ColumnLayout _groups;
-
-        private FoldableFileGroupElement _selectedAssetGroup;
+        private readonly LazyListViewElement<HierarchyNodeData, HierarchyNodeElement> _lazyListView;
+        
+        private HierarchyNodeData _selectedNodeData;
 
         public ExplorerWindow() : base("Explorer")
         {
-            _groups = new ColumnLayout(
-                alignmentFactor: Alignment.TopLeft,
-                sizeMainAxisToContent: true,
-                sizeCrossAxisToContent: true
+            _lazyListView = new LazyListViewElement<HierarchyNodeData, HierarchyNodeElement>(
+                itemFactory: CreateHierarchyNode
             );
-
-            _lazyListView = new LazyListViewElement();
 
             _scrollView = new ScrollViewElement(
                 sizeToContentWidth: true,
                 sizeToContentHeight: true,
-                content: _groups
-                //content: _lazyListView
+                content: _lazyListView
             );
 
             ContentContainer.AddChild(new ExpandedElement(_scrollView));
@@ -40,27 +39,28 @@ namespace TankRacerViewer.Core
 
         public void AddFile(string filePath, object file)
         {
-            var fastFileGroup = new FoldableFileGroupElement(
-                path: filePath,
-                iconSkin: StandardSkin.ContentPanel,
-                name: Path.GetFileName(filePath),
-                isFolded: true
-            );
-            _groups.AddChild(fastFileGroup);
+            var fastFileNodeData = new HierarchyNodeData()
+            {
+                File = file,
+                Skin = StandardSkin.ContentPanel,
+                Name = Path.GetFileName(filePath),
+                IsFolded = false,
+            };
+            _lazyListView.AddData(fastFileNodeData);
 
             if (file is AssetViewContainer assetViewContainer)
             {
-                AddAssetViewGroup("Models", fastFileGroup, assetViewContainer.ModelAssetViews.Values);
-                AddAssetViewGroup("Textures", fastFileGroup, assetViewContainer.TextureAssetViews.Values);
-                AddAssetViewGroup("Backgrounds", fastFileGroup, assetViewContainer.BackgroundAssetViews.Values);
-                AddAssetViewGroup("Data", fastFileGroup, assetViewContainer.DataAssetViews.Values);
-                AddAssetViewGroup("Unsupported", fastFileGroup, assetViewContainer.UnsupportedAssetViews.Values);
-                AddAssetViewGroup("Extra", fastFileGroup, assetViewContainer.ExtraAssetViews.Values);
+                AddAssetViewGroup("Models", fastFileNodeData, assetViewContainer.ModelAssetViews.Values);
+                AddAssetViewGroup("Textures", fastFileNodeData, assetViewContainer.TextureAssetViews.Values);
+                AddAssetViewGroup("Backgrounds", fastFileNodeData, assetViewContainer.BackgroundAssetViews.Values);
+                AddAssetViewGroup("Data", fastFileNodeData, assetViewContainer.DataAssetViews.Values);
+                AddAssetViewGroup("Unsupported", fastFileNodeData, assetViewContainer.UnsupportedAssetViews.Values);
+                AddAssetViewGroup("Extra", fastFileNodeData, assetViewContainer.ExtraAssetViews.Values);
             }
         }
 
         private void AddAssetViewGroup(string name,
-            FoldableFileGroupElement parentGroup,
+            HierarchyNodeData parentNode,
             IEnumerable<AssetView> assetViews)
         {
             var hasItems = assetViews.TryGetNonEnumeratedCount(out var count) && count > 0
@@ -68,38 +68,121 @@ namespace TankRacerViewer.Core
             if (!hasItems)
                 return;
 
-            var assetGroup = new FoldableFileGroupElement(
-                iconSkin: StandardSkin.RectanglePanel,
-                path: string.Empty,
-                name: name,
-                isFolded: true
-            );
-            parentGroup.AddItem(assetGroup);
+            var assetGroupNodeData = new HierarchyNodeData()
+            {
+                Skin = StandardSkin.RectanglePanel,
+                Name = name,
+                IsFolded = false,
+            };
+            parentNode.AddChild(assetGroupNodeData);
+
+            if (!parentNode.IsFolded)
+                _lazyListView.AddData(assetGroupNodeData);
 
             foreach (var assetView in assetViews)
             {
-                var asset = new FoldableFileGroupElement(
-                    iconSkin: StandardSkin.TextField,
-                    path: string.Empty,
-                    name: assetView.FullName,
-                    file: assetView
-                );
-                assetGroup.AddItem(asset);
+                var assetNodeData = new HierarchyNodeData()
+                {
+                    File = assetView,
+                    Skin = StandardSkin.TextField,
+                    Name = assetView.FullName,
+                    IsFolded = true,
+                };
+                assetGroupNodeData.AddChild(assetNodeData);
 
-                asset.ClickInputHandler.PointerClick += (_, _) => OnAssetGroupSelected(asset);
+                if (!assetGroupNodeData.IsFolded)
+                    _lazyListView.AddData(assetNodeData);
             }
         }
 
-        private void OnAssetGroupSelected(FoldableFileGroupElement assetGroup)
+        private HierarchyNodeElement CreateHierarchyNode()
         {
-            if (_selectedAssetGroup is not null)
-                _selectedAssetGroup.IsSelected = false;
+            var element = new HierarchyNodeElement();
+            element.OnClicked += OnNodeClicked;
+            element.OnFoldButtonClicked += OnNodeFoldButtonClicked;
 
-            _selectedAssetGroup = assetGroup;
-            _selectedAssetGroup.IsSelected = true;
+            return element;
+        }
 
-            if (_selectedAssetGroup.File is AssetView assetView)
+        private void OnNodeClicked(HierarchyNodeElement node)
+        {
+            if (_selectedNodeData is not null)
+            {
+                _selectedNodeData.IsSelected = false;
+                foreach (var item in _lazyListView.Items)
+                {
+                    if (_selectedNodeData == item.Data)
+                    {
+                        item.RefreshBackgroundVisualState();
+                        break;
+                    }
+                }    
+            }
+
+            _selectedNodeData = node.Data;
+            _selectedNodeData.IsSelected = true;
+            node.RefreshBackgroundVisualState();
+
+            if (_selectedNodeData.File is AssetView assetView)
                 AssetViewSelected?.Invoke(assetView);
+        }
+
+        private void OnNodeFoldButtonClicked(HierarchyNodeElement node)
+        {
+            var isFolded = !node.Data.IsFolded;
+
+            if (isFolded)
+            {
+                _stack.Clear();
+                _stack.Push(node.Data);
+
+                var childCount = 0;
+                while (_stack.Count > 0)
+                {
+                    var parent = _stack.Pop();
+                    if (!parent.IsFolded)
+                    {
+                        childCount += parent.Children.Count;
+
+                        foreach ( var child in parent.Children)
+                        {
+                            if (parent.IsFolded)
+                                continue;
+
+                            _stack.Push(child);
+                        }
+                    }
+                }
+
+                var dataIndex = _lazyListView.IndexOf(node.Data);
+                _lazyListView.RemoveRange(dataIndex + 1, childCount);
+            }
+            else
+            {
+                _list.Clear();
+                _stack.Clear();
+
+                for (var i = node.Data.Children.Count - 1; i >= 0; i--)
+                    _stack.Push(node.Data.Children[i]);
+
+                while (_stack.Count > 0)
+                {
+                    var parent = _stack.Pop();
+                    _list.Add(parent);
+
+                    if (!parent.IsFolded)
+                    {
+                        for (var i = parent.Children.Count - 1; i >= 0; i--)
+                            _stack.Push(parent.Children[i]);
+                    }
+                }
+
+                var dataIndex = _lazyListView.IndexOf(node.Data);
+                _lazyListView.InsertRange(dataIndex + 1, CollectionsMarshal.AsSpan(_list));
+            }
+
+            node.Data.IsFolded = isFolded;
+            node.RefreshFoldButtonSkin();
         }
     }
 }

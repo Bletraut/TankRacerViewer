@@ -1,33 +1,129 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
-    public class LazyListViewElement : ContainerElement
+    public class LazyListViewElement<TData, TItem> : ContainerElement
+        where TItem : Element, ILazyListItem<TData>
     {
-        private readonly SpriteElement _block;
+        public ColumnLayout ItemColumn { get; }
 
-        public LazyListViewElement()
+        private readonly List<TData> _data;
+        public IReadOnlyCollection<TData> Data { get; }
+
+        private readonly List<TItem> _items;
+        public IReadOnlyCollection<TItem> Items { get; }
+
+        private TItem _templateItem;
+        private TItem TemplateItem => _templateItem ??= _itemFactory();
+
+        private readonly Func<TItem> _itemFactory;
+
+        private Vector2 _preferredSize;
+
+        public LazyListViewElement(Func<TItem> itemFactory)
         {
-            Size = new Vector2(300, 8_000);
+            _data = [];
+            Data = _data.AsReadOnly();
+
+            _items = [];
+            Items = _items.AsReadOnly();
+
+            _itemFactory = itemFactory;
+
             Pivot = Alignment.TopLeft;
 
-            var background = new ExpandedElement(
-                innerElement: new SpriteElement(
-                    skin: StandardSkin.WhitePixel,
-                    color: Color.Aqua
-                )
-            );
-            AddChild(background);
-
-            _block = new SpriteElement(
-                size: new Vector2(100),
-                skin: StandardSkin.WhitePixel,
-                color: Color.Black
+            ItemColumn = new ColumnLayout(
+                sizeMainAxisToContent: true,
+                sizeCrossAxisToContent: true
             )
             {
-                Pivot = Alignment.TopLeft
+                Pivot = Alignment.TopLeft,
             };
-            AddChild(_block);
+            AddChild(ItemColumn);
+            _itemFactory = itemFactory;
+        }
+
+        public int IndexOf(TData data)
+        {
+            return _data.IndexOf(data);
+        }
+
+        public void AddData(TData data)
+        {
+            _data.Add(data);
+            RefreshPreferredSize(data);
+
+            OnStateChanged();
+        }
+
+        public void InsertData(int index, TData data)
+        {
+            _data.Insert(index, data);
+            RefreshPreferredSize(data);
+
+            OnStateChanged();
+        }
+
+        public void InsertRange(int index, ReadOnlySpan<TData> collection)
+        {
+            _data.InsertRange(index, collection);
+
+            foreach (var data in collection)
+                RefreshPreferredSize(data);
+
+            OnStateChanged();
+        }
+
+        public void RemoveData(TData data)
+        {
+            if (_data.Remove(data))
+                RefreshPreferredSize();
+
+            OnStateChanged();
+        }
+
+        public void RemoveRange(int index, int count)
+        {
+            _data.RemoveRange(index, count);
+            RefreshPreferredSize();
+
+            OnStateChanged();
+        }
+
+        private void RefreshPreferredSize()
+        {
+            foreach (var data in _data)
+                RefreshPreferredSize(data);
+        }
+
+        private void RefreshPreferredSize(TData data)
+        {
+            TemplateItem.SetData(data);
+
+            var itemSize = TemplateItem.CalculatePreferredSize();
+            _preferredSize = _preferredSize with
+            {
+                X = MathF.Max(_preferredSize.X, itemSize.X),
+                Y = _data.Count * itemSize.Y
+            };
+        }
+
+        private TItem CreateItem()
+        {
+            var item = _itemFactory();
+            _items.Add(item);
+            ItemColumn.AddChild(item);
+
+            return item;
+        }
+
+        public override Vector2 CalculatePreferredSize()
+        {
+            return _preferredSize;
         }
 
         public override void Rebuild(Vector2 size, bool excludeChildren)
@@ -44,11 +140,44 @@ namespace ComposableUi
                     continue;
 
                 var childSize = child.CalculatePreferredSize();
+
+                if (child == ItemColumn)
+                {
+                    var visibleRectangle = ClipMask ?? BoundingRectangle;
+                    var itemHeight = TemplateItem.CalculatePreferredSize().Y;
+
+                    var offset = (visibleRectangle.Y - Position.Y) / itemHeight;
+                    var layoutOffset = offset % 1 * itemHeight;
+
+                    var itemIndex = (int)offset;
+                    var visibleItemCount = (int)MathF.Ceiling((visibleRectangle.Height + layoutOffset) / itemHeight);
+
+                    var length = Math.Clamp(visibleItemCount, 0, _data.Count);
+                    for (var j = 0; j < length; j++)
+                    {
+                        var item = j >= _items.Count
+                            ? CreateItem()
+                            : _items[j];
+
+                        item.IsEnabled = j < visibleItemCount;
+                        if (!item.IsEnabled)
+                        {
+                            item.ClearData();
+                            continue;
+                        }
+
+                        var dataIndex = itemIndex + j;
+                        if (dataIndex < _data.Count)
+                            item.SetData(_data[dataIndex]);
+                    }
+
+                    ItemColumn.Position = ItemColumn.Position with 
+                    { 
+                        Y = visibleRectangle.Top - layoutOffset 
+                    };
+                }
                 child.Rebuild(childSize);
             }
-
-            var visibleRectangle = ClipMask ?? BoundingRectangle;
-            _block.Position = visibleRectangle.Location.ToVector2();
         }
     }
 }
