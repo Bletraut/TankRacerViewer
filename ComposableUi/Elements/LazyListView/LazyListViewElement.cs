@@ -12,10 +12,10 @@ namespace ComposableUi
         public ColumnLayout ItemColumn { get; }
 
         private readonly List<TData> _data;
-        public IReadOnlyCollection<TData> Data { get; }
+        public IReadOnlyList<TData> Data { get; }
 
         private readonly List<TItem> _items;
-        public IReadOnlyCollection<TItem> Items { get; }
+        public IReadOnlyList<TItem> Items { get; }
 
         private TItem _templateItem;
         private TItem TemplateItem => _templateItem ??= _itemFactory();
@@ -100,6 +100,18 @@ namespace ComposableUi
             _preferredSize = Vector2.Zero;
 
             OnStateChanged();
+        }
+
+        public Rectangle CalculateItemBoundingRectangle(int index)
+        {
+            var boundingRectangle = BoundingRectangle;
+            var itemSize = TemplateItem.CalculatePreferredSize();
+
+            return new Rectangle()
+            {
+                Location = new Point(boundingRectangle.X, boundingRectangle.Y + (int)(index * itemSize.Y)),
+                Size = itemSize.ToPoint()
+            };
         }
 
         private void RefreshPreferredSize()

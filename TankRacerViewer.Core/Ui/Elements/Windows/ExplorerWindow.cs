@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 
 using ComposableUi;
+
+using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
@@ -59,6 +63,26 @@ namespace TankRacerViewer.Core
             }
         }
 
+        public void SelectNextNode() => SelectNode(1);
+        public void SelectPreventNode() => SelectNode(-1);
+        public void SelectNode(int indexOffset)
+        {
+            if (_selectedNodeData is null)
+                return;
+
+            var currentIndex = _lazyListView.IndexOf(_selectedNodeData);
+            var nextIndex = currentIndex >= 0
+                ? int.Clamp(currentIndex + indexOffset, 0, _lazyListView.Data.Count - 1)
+                : 0;
+
+            SelectNode(_lazyListView.Data[nextIndex]);
+
+            var itemBoundingRectangle = _lazyListView.CalculateItemBoundingRectangle(nextIndex);
+            _scrollView.ScrollVerticalToFitBounds(itemBoundingRectangle);
+
+            OnStateChanged();
+        }
+
         private void AddAssetViewGroup(string name,
             HierarchyNodeData parentNode,
             IEnumerable<AssetView> assetViews)
@@ -104,7 +128,7 @@ namespace TankRacerViewer.Core
             return element;
         }
 
-        private void OnNodeClicked(HierarchyNodeElement node)
+        private void SelectNode(HierarchyNodeData data)
         {
             if (_selectedNodeData is not null)
             {
@@ -116,15 +140,20 @@ namespace TankRacerViewer.Core
                         item.RefreshBackgroundVisualState();
                         break;
                     }
-                }    
+                }
             }
 
-            _selectedNodeData = node.Data;
+            _selectedNodeData = data;
             _selectedNodeData.IsSelected = true;
-            node.RefreshBackgroundVisualState();
 
             if (_selectedNodeData.File is AssetView assetView)
                 AssetViewSelected?.Invoke(assetView);
+        }
+
+        private void OnNodeClicked(HierarchyNodeElement node)
+        {
+            SelectNode(node.Data);
+            node.RefreshBackgroundVisualState();
         }
 
         private void OnNodeFoldButtonClicked(HierarchyNodeElement node)

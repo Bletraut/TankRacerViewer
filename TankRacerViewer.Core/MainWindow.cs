@@ -173,6 +173,18 @@ namespace TankRacerViewer.Core
             if (Input.IsKeyDown(Keys.R))
                 ResetCameraToDefaults();
 
+            if (_uiComponent.ExplorerWindow.IsSelected)
+            {
+                if (Input.IsKeyDown(Keys.Up) || Input.IsKeyDown(Keys.NumPad8))
+                {
+                    _uiComponent.ExplorerWindow.SelectPreventNode();
+                }
+                else if (Input.IsKeyDown(Keys.Down) || Input.IsKeyDown(Keys.NumPad2))
+                {
+                    _uiComponent.ExplorerWindow.SelectNextNode();
+                }
+            }
+
             base.Update(gameTime);
 
             if (_renderer.RenderContext == _gameWindowRenderContext)

@@ -23,6 +23,8 @@ namespace ComposableUi
 
                 var (min, max) = CalculateScrollBounds();
                 Button.LocalPosition = min + (max - min) * _progressValue;
+
+                OnProgressValueChanged();
             }
         }
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Reflection;
 
 using Microsoft.Xna.Framework;
 
@@ -146,6 +148,29 @@ namespace ComposableUi
             Content = content;
 
             _wheelScrollAction = ScrollContent;
+        }
+
+        public void ScrollHorizontalToFitBounds(Rectangle bounds)
+            => HorizontalScrollBar.ProgressValue = CalculateFitBoundsProgressValue(bounds).X;
+
+        public void ScrollVerticalToFitBounds(Rectangle bounds)
+            => VerticalScrollBar.ProgressValue = CalculateFitBoundsProgressValue(bounds).Y;
+
+        private Vector2 CalculateFitBoundsProgressValue(Rectangle bounds)
+        {
+            if (Content is null)
+                return _progressValue;
+
+            var localPosition = Vector2.Transform(bounds.Location.ToVector2(),
+                Content.GlobalInverseTransformationMatrix);
+
+            var minProgressValue = localPosition / -_minContentPosition;
+            var maxProgressValue = (localPosition + bounds.Size.ToVector2() - _view.Size) / -_minContentPosition;
+
+            var progressValue = Vector2.Min(minProgressValue, _progressValue);
+            progressValue = Vector2.Max(maxProgressValue, progressValue);
+
+            return progressValue;
         }
 
         private void RefreshContentAndScrollBarsVisibility()
