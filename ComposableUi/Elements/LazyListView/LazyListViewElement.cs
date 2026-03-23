@@ -158,9 +158,10 @@ namespace ComposableUi
                     var layoutOffset = offset % 1 * itemHeight;
 
                     var itemIndex = (int)offset;
-                    var visibleItemCount = (int)MathF.Ceiling((visibleRectangle.Height + layoutOffset) / itemHeight);
+                    var maxVisibleItemCount = (int)MathF.Ceiling((visibleRectangle.Height + layoutOffset) / itemHeight);
+                    var visibleItemCount = Math.Clamp(maxVisibleItemCount, 0, _data.Count);
 
-                    var length = Math.Clamp(visibleItemCount, 0, _data.Count);
+                    var length = int.Max(visibleItemCount, _items.Count);
                     for (var j = 0; j < length; j++)
                     {
                         var item = j >= _items.Count
@@ -179,9 +180,9 @@ namespace ComposableUi
                             item.SetData(_data[dataIndex]);
                     }
 
-                    ItemColumn.Position = ItemColumn.Position with 
-                    { 
-                        Y = visibleRectangle.Top - layoutOffset 
+                    ItemColumn.Position = ItemColumn.Position with
+                    {
+                        Y = visibleRectangle.Top - layoutOffset
                     };
                 }
                 child.Rebuild(childSize);
