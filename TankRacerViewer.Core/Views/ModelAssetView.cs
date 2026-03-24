@@ -13,6 +13,8 @@ namespace TankRacerViewer.Core
 {
     public sealed class ModelAssetView : AssetView
     {
+        public const string NullTextureName = "Null";
+
         // Static.
         private static readonly List<VertexPositionColorTextureOffset> _verticesData = [];
 
@@ -48,14 +50,18 @@ namespace TankRacerViewer.Core
                 foreach (var textureGroup in textureGroups)
                 {
                     Texture2D texture = null;
+                    var textureName = NullTextureName;
+
                     var blendMode = BlendMode.Opaque;
                     if (textureAssetViewCache.TryGetValue(textureGroup.Key, out var textureAsset))
                     {
                         texture = textureAsset.Texture;
+                        textureName = textureAsset.FullName;
                         blendMode = textureAsset.BlendMode;
                     }
                     else if (!string.IsNullOrEmpty(textureGroup.Key))
                     {
+                        textureName = $"Missing_{textureGroup.Key}";
                         Debug.WriteLine($"Can't find texture with name '{textureGroup.Key}' for '{fullName}' asset.");
                     }
 
@@ -143,6 +149,7 @@ namespace TankRacerViewer.Core
                         IndexBuffer = indexBuffer,
                         PrimitiveCount = _verticesData.Count / 3,
                         Texture = texture,
+                        TextureName = textureName,
                         BlendMode = blendMode
                     });
                 }
@@ -176,7 +183,8 @@ namespace TankRacerViewer.Core
         public VertexBuffer VertexBuffer { get; init; }
         public IndexBuffer IndexBuffer { get; init; }
         public int PrimitiveCount { get; init; }
-        public Texture2D Texture { get; init;  }
+        public Texture2D Texture { get; init; }
+        public string TextureName { get; init; }
         public BlendMode BlendMode { get; init; }
     }
 }

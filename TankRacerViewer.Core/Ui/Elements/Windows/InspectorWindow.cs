@@ -1,39 +1,36 @@
 ﻿using ComposableUi;
 
-using Microsoft.Xna.Framework;
-
 namespace TankRacerViewer.Core
 {
     public sealed class InspectorWindow : WindowElement
     {
+        private readonly TextureInspectorElement _textureInspector;
+        private readonly ModelInspectorElement _modelInspector;
+
         private readonly ScrollViewElement _scrollView;
-        private readonly FoldableGroupElement _group;
 
         public InspectorWindow() : base("Inspector")
         {
-            _group = new FoldableGroupElement(
-                name: "Texture Info",
-                normalBackgroundColor: Color.DarkSlateBlue,
-                hoverBackgroundColor: Color.DarkSlateBlue,
-                selectedBackgroundColor: Color.DarkSlateBlue,
-                content: new SpriteElement(
-                    size: new Vector2(180),
-                    skin: StandardSkin.ContentPanel
-                )
-            )
-            {
-                Indent = 0
-            };
-            _group.Icon.IsEnabled = false;
-
             _scrollView = new ScrollViewElement(
-                //sizeToContentWidth: true,
                 expandContentWidth: true,
-                sizeToContentHeight: true,
-                content: _group
+                sizeToContentHeight: true
             );
-
             ContentContainer.AddChild(new ExpandedElement(_scrollView));
+
+            _textureInspector = new TextureInspectorElement();
+            _modelInspector = new ModelInspectorElement();
+        }
+
+        public void ShowTextureInspector(TextureAssetView textureAssetView)
+        {
+            _textureInspector.SetTarget(textureAssetView);
+            _scrollView.Content = _textureInspector;
+        }
+
+        public void ShowModelInspector(ModelAssetView modelAssetView)
+        {
+            _modelInspector.SetTarget(modelAssetView);
+            _scrollView.Content = _modelInspector;
         }
     }
 }

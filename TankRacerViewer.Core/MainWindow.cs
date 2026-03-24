@@ -175,11 +175,18 @@ namespace TankRacerViewer.Core
 
             if (_uiComponent.ExplorerWindow.IsSelected)
             {
-                if (Input.IsKeyDown(Keys.Up) || Input.IsKeyDown(Keys.NumPad8))
+                var isUpPressed = Input.IsKeyDown(Keys.Up)
+                    || Input.IsKeyDown(Keys.W)
+                    || Input.IsKeyDown(Keys.NumPad8);
+                var isDownPressed = Input.IsKeyDown(Keys.Down)
+                    || Input.IsKeyDown(Keys.S)
+                    || Input.IsKeyDown(Keys.NumPad2);
+
+                if (isUpPressed)
                 {
                     _uiComponent.ExplorerWindow.SelectPreventNode();
                 }
-                else if (Input.IsKeyDown(Keys.Down) || Input.IsKeyDown(Keys.NumPad2))
+                else if (isDownPressed)
                 {
                     _uiComponent.ExplorerWindow.SelectNextNode();
                 }
@@ -210,40 +217,22 @@ namespace TankRacerViewer.Core
             {
                 if (_selectedAssetView is ModelAssetView modelAssetView)
                 {
-                    _uiComponent.ViewerWindow.Show3DViewer();
-
                     _renderer.Begin(Color.CornflowerBlue);
                     _renderer.Draw(modelAssetView, Matrix.Identity, _camera);
                     _renderer.End();
                 }
                 else if (_selectedAssetView is BackgroundAssetView backgroundAssetView)
                 {
-                    _uiComponent.ViewerWindow.Show3DViewer();
-
                     _renderer.Begin(Color.CornflowerBlue);
                     _renderer.Draw(backgroundAssetView, _camera);
                     _renderer.End();
                 }
-                else if (_selectedAssetView is TextureAssetView textureAssetView)
-                {
-                    _uiComponent.ViewerWindow.ShowTextureViewer(textureAssetView.Texture);
-                }
-                else if (_selectedAssetView is DataAssetView dataAssetView)
-                {
-                    _uiComponent.ViewerWindow.ShowTextViewer(dataAssetView.Text);
-                }
-                else if (_selectedAssetView is UnsupportedAssetView unsupportedAssetView)
-                {
-                    _uiComponent.ViewerWindow.ShowTextViewer(unsupportedAssetView.Description);
-                }
                 else if (_selectedAssetView is LevelView levelView)
                 {
-                    _uiComponent.ViewerWindow.Show3DViewer();
                     levelView.Draw(_renderer, _camera);
                 }
                 else if (_selectedAssetView is TankView tankView)
                 {
-                    _uiComponent.ViewerWindow.Show3DViewer();
                     tankView.Draw(_renderer, _camera);
                 }
             }
@@ -265,6 +254,40 @@ namespace TankRacerViewer.Core
         private void OnAssetViewSelected(AssetView assetView)
         {
             _selectedAssetView = assetView;
+            if (_selectedAssetView is not null)
+            {
+                if (_selectedAssetView is ModelAssetView modelAssetView)
+                {
+                    _uiComponent.InspectorWindow.ShowModelInspector(modelAssetView);
+                    _uiComponent.ViewerWindow.Show3DViewer();
+                }
+                else if (_selectedAssetView is BackgroundAssetView backgroundAssetView)
+                {
+                    _uiComponent.ViewerWindow.Show3DViewer();
+                }
+                else if (_selectedAssetView is TextureAssetView textureAssetView)
+                {
+                    _uiComponent.InspectorWindow.ShowTextureInspector(textureAssetView);
+                    _uiComponent.ViewerWindow.ShowTextureViewer(textureAssetView.Texture);
+                }
+                else if (_selectedAssetView is DataAssetView dataAssetView)
+                {
+                    _uiComponent.ViewerWindow.ShowTextViewer(dataAssetView.Text);
+                }
+                else if (_selectedAssetView is UnsupportedAssetView unsupportedAssetView)
+                {
+                    _uiComponent.ViewerWindow.ShowTextViewer(unsupportedAssetView.Description);
+                }
+                else if (_selectedAssetView is LevelView)
+                {
+                    _uiComponent.ViewerWindow.Show3DViewer();
+                }
+                else if (_selectedAssetView is TankView)
+                {
+                    _uiComponent.ViewerWindow.Show3DViewer();
+                }
+            }
+
             ResetCameraToDefaults();
         }
     }

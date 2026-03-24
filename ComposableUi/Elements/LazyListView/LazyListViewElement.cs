@@ -146,6 +146,7 @@ namespace ComposableUi
             return _preferredSize;
         }
 
+        public bool a;
         public override void Rebuild(Vector2 size, bool excludeChildren)
         {
             Size = size;
@@ -163,10 +164,11 @@ namespace ComposableUi
 
                 if (child == ItemColumn)
                 {
-                    var visibleRectangle = ClipMask ?? BoundingRectangle;
+                    var boundingRectangle = BoundingRectangle;
+                    var visibleRectangle = Rectangle.Intersect(boundingRectangle, ClipMask ?? boundingRectangle);
                     var itemHeight = TemplateItem.CalculatePreferredSize().Y;
 
-                    var offset = (visibleRectangle.Y - Position.Y) / itemHeight;
+                    var offset = (visibleRectangle.Top - boundingRectangle.Top) / itemHeight;
                     var layoutOffset = offset % 1 * itemHeight;
 
                     var itemIndex = (int)offset;

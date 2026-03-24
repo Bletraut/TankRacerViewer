@@ -150,6 +150,18 @@ namespace ComposableUi
             }
         }
 
+        private bool IsParentTransformChanged
+        {
+            get
+            {
+                if (Parent is null)
+                    return false;
+
+                return _parentTransformVersion != Parent._transformVersion
+                    || Parent.IsParentTransformChanged;
+            }
+        }
+
         private int _transformVersion;
         private int _parentTransformVersion;
 
@@ -247,10 +259,7 @@ namespace ComposableUi
 
         private void InvalidateIfParentTransformChanged()
         {
-            if (Parent is null)
-                return;
-
-            if (_parentTransformVersion == Parent._transformVersion)
+            if (!IsParentTransformChanged)
                 return;
 
             _transformVersion++;

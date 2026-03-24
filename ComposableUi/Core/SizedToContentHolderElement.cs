@@ -1,11 +1,17 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Diagnostics;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
     public class SizedToContentHolderElement : HolderElement
     {
         public SizedToContentHolderElement(Element innerElement = default)
-            : base(innerElement) { }
+            : base(innerElement) 
+        {
+            if (HasEnabledInnerElement)
+                Size = InnerElement.Size;
+        }
 
         public override Vector2 CalculatePreferredSize()
         {

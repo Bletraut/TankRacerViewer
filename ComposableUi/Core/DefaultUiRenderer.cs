@@ -14,8 +14,8 @@ namespace ComposableUi
     {
         public const int DefaultNineSlicedScale = 2;
 
-        private static Texture2D _fallbackTexture;
-        private static Sprite _fallbackSprite;
+        public static Texture2D FallbackTexture { get; private set; }
+        public static Sprite FallbackSprite { get; private set; }
 
         public int NineSlicedScale = DefaultNineSlicedScale;
 
@@ -35,15 +35,15 @@ namespace ComposableUi
             _contentManager = contentManager;
             _spriteBatch = spriteBatch;
 
-            if (_fallbackTexture is null)
+            if (FallbackTexture is null)
             {
-                _fallbackTexture = new Texture2D(spriteBatch.GraphicsDevice, 2, 2);
-                _fallbackTexture.SetData([Color.Pink, Color.DeepPink, Color.DeepPink, Color.Pink]);
+                FallbackTexture = new Texture2D(spriteBatch.GraphicsDevice, 2, 2);
+                FallbackTexture.SetData([Color.Pink, Color.DeepPink, Color.DeepPink, Color.Pink]);
 
-                _fallbackSprite = new Sprite()
+                FallbackSprite = new Sprite()
                 {
-                    Texture = _fallbackTexture,
-                    SourceRectangle = new Rectangle(0, 0, _fallbackTexture.Width, _fallbackTexture.Height)
+                    Texture = FallbackTexture,
+                    SourceRectangle = new Rectangle(0, 0, FallbackTexture.Width, FallbackTexture.Height)
                 };
             }
 
@@ -247,7 +247,7 @@ namespace ComposableUi
             }
             else
             {
-                sprite = _fallbackSprite;
+                sprite = FallbackSprite;
             }
 
             DrawSprite(sprite, drawMode, destinationRectangle, clipMask, color);
