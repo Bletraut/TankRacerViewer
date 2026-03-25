@@ -124,6 +124,14 @@ namespace TankRacerViewer.Core
             _text.Text = text;
         }
 
+        public void HideViewer()
+        {
+            _3dViewer.IsEnabled = false;
+            _aspectRationModeButton.IsEnabled = false;
+            _textureViewer.IsEnabled = false;
+            _textViewer.IsEnabled = false;
+        }
+
         private void OnAspectRationModeButtonClicked(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {

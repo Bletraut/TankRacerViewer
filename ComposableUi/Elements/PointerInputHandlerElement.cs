@@ -4,8 +4,21 @@ using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
-    public class PointerInputHandlerElement : SizedToContentHolderElement,
+    public class PointerInputHandlerElement : PointerInputHandlerElement<PointerInputHandlerElement>
+    {
+        public PointerInputHandlerElement(Element innerElement = default,
+            bool blockInput = true,
+            bool isInteractable = true)
+            : base(innerElement,
+                  blockInput,
+                  isInteractable)
+        {
+        }
+    }
+
+    public class PointerInputHandlerElement<TSelf> : SizedToContentHolderElement,
         IPointerInputHandler
+        where TSelf : PointerInputHandlerElement<TSelf>
     {
         public virtual Rectangle InteractionRectangle => BoundingRectangle;
 
@@ -46,28 +59,30 @@ namespace ComposableUi
 
         public bool IsFocused { get; private set; }
 
-        public event ElementEventHandler<PointerInputHandlerElement, bool> InteractionChanged;
+        public bool IsHover { get; private set; }
 
-        public event ElementEventHandler<PointerInputHandlerElement, PointerScrollEvent> ScrollWheel;
-        public event ElementEventHandler<PointerInputHandlerElement, PointerScrollEvent> HorizontalScrollWheel;
+        public event ElementEventHandler<TSelf, bool> InteractionChanged;
 
-        public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerEnter;
-        public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerMove;
-        public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerLeave;
+        public event ElementEventHandler<TSelf, PointerScrollEvent> ScrollWheel;
+        public event ElementEventHandler<TSelf, PointerScrollEvent> HorizontalScrollWheel;
 
-        public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerDown;
-        public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerUp;
+        public event ElementEventHandler<TSelf, PointerEvent> PointerEnter;
+        public event ElementEventHandler<TSelf, PointerEvent> PointerMove;
+        public event ElementEventHandler<TSelf, PointerEvent> PointerLeave;
 
-        public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerSecondaryDown;
-        public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerSecondaryUp;
+        public event ElementEventHandler<TSelf, PointerEvent> PointerDown;
+        public event ElementEventHandler<TSelf, PointerEvent> PointerUp;
 
-        public event ElementEventHandler<PointerInputHandlerElement, PointerDragEvent> PointerDrag;
-        public event ElementEventHandler<PointerInputHandlerElement, PointerDragEvent> PointerFixedDrag;
+        public event ElementEventHandler<TSelf, PointerEvent> PointerSecondaryDown;
+        public event ElementEventHandler<TSelf, PointerEvent> PointerSecondaryUp;
 
-        public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerClick;
-        public event ElementEventHandler<PointerInputHandlerElement, PointerEvent> PointerSecondaryClick;
+        public event ElementEventHandler<TSelf, PointerDragEvent> PointerDrag;
+        public event ElementEventHandler<TSelf, PointerDragEvent> PointerFixedDrag;
 
-        public event ElementEventHandler<PointerInputHandlerElement, PointerFocusEvent> FocusChanged;
+        public event ElementEventHandler<TSelf, PointerEvent> PointerClick;
+        public event ElementEventHandler<TSelf, PointerEvent> PointerSecondaryClick;
+
+        public event ElementEventHandler<TSelf, PointerFocusEvent> FocusChanged;
 
         private Vector2 _pointerDownNormalizedPosition = Vector2.Zero;
 
@@ -115,23 +130,29 @@ namespace ComposableUi
             => OnFocusChanged(pointerEvent);
 
         protected virtual void OnInteractionChanged(bool value)
-            => InteractionChanged?.Invoke(this, value);
+            => InteractionChanged?.Invoke((TSelf)this, value);
 
         protected virtual void OnScrollWheel(in PointerScrollEvent pointerEvent)
-            => ScrollWheel?.Invoke(this, pointerEvent);
+            => ScrollWheel?.Invoke((TSelf)this, pointerEvent);
         protected virtual void OnHorizontalScrollWheel(in PointerScrollEvent pointerEvent)
-            => HorizontalScrollWheel?.Invoke(this, pointerEvent);
+            => HorizontalScrollWheel?.Invoke((TSelf)this, pointerEvent);
 
         protected virtual void OnPointerEnter(in PointerEvent pointerEvent)
-            => PointerEnter?.Invoke(this, pointerEvent);
+        {
+            IsHover = true;
+            PointerEnter?.Invoke((TSelf)this, pointerEvent);
+        }
         protected virtual void OnPointerMove(in PointerEvent pointerEvent)
-            => PointerMove?.Invoke(this, pointerEvent);
+            => PointerMove?.Invoke((TSelf)this, pointerEvent);
         protected virtual void OnPointerLeave(in PointerEvent pointerEvent)
-            => PointerLeave?.Invoke(this, pointerEvent);
+        {
+            IsHover = false;
+            PointerLeave?.Invoke((TSelf)this, pointerEvent);
+        }
 
         protected virtual void OnPointerDown(in PointerEvent pointerEvent)
         {
-            PointerDown?.Invoke(this, pointerEvent);
+            PointerDown?.Invoke((TSelf)this, pointerEvent);
 
             var boundingBox = BoundingRectangle;
             var localPointerPosition = pointerEvent.Position - new Point(boundingBox.Left, boundingBox.Top);
@@ -139,16 +160,16 @@ namespace ComposableUi
             _pointerDownNormalizedPosition = localPointerPosition.ToVector2() / Size;
         }
         protected virtual void OnPointerUp(in PointerEvent pointerEvent)
-            => PointerUp?.Invoke(this, pointerEvent);
+            => PointerUp?.Invoke((TSelf)this, pointerEvent);
 
         protected virtual void OnPointerSecondaryDown(in PointerEvent pointerEvent)
-            => PointerSecondaryDown?.Invoke(this, pointerEvent);
+            => PointerSecondaryDown?.Invoke((TSelf)this, pointerEvent);
         protected virtual void OnPointerSecondaryUp(in PointerEvent pointerEvent)
-            => PointerSecondaryUp?.Invoke(this, pointerEvent);
+            => PointerSecondaryUp?.Invoke((TSelf)this, pointerEvent);
 
         protected virtual void OnPointerDrag(in PointerDragEvent pointerEvent)
         {
-            PointerDrag?.Invoke(this, pointerEvent);
+            PointerDrag?.Invoke((TSelf)this, pointerEvent);
 
             var boundingBox = BoundingRectangle;
             var pointerDownPosition = new Vector2(boundingBox.Left, boundingBox.Top)
@@ -179,17 +200,17 @@ namespace ComposableUi
                 pointerEvent.IsPrimaryButtonPressed, pointerEvent.IsSecondaryButtonPressed, delta));
         }
         protected virtual void OnPointerFixedDrag(in PointerDragEvent pointerEvent)
-            => PointerFixedDrag?.Invoke(this, pointerEvent);
+            => PointerFixedDrag?.Invoke((TSelf)this, pointerEvent);
 
         protected virtual void OnPointerClick(in PointerEvent pointerEvent)
-            => PointerClick?.Invoke(this, pointerEvent);
+            => PointerClick?.Invoke((TSelf)this, pointerEvent);
         protected virtual void OnPointerSecondaryClick(in PointerEvent pointerEvent)
-            => PointerSecondaryClick?.Invoke(this, pointerEvent);
+            => PointerSecondaryClick?.Invoke((TSelf)this, pointerEvent);
 
         protected virtual void OnFocusChanged(in PointerFocusEvent pointerEvent)
         {
             IsFocused = pointerEvent.IsFocused;
-            FocusChanged?.Invoke(this, pointerEvent);
+            FocusChanged?.Invoke((TSelf)this, pointerEvent);
         }
     }
 }

@@ -1,17 +1,24 @@
-﻿using ComposableUi;
+﻿using System;
+
+using ComposableUi;
 
 using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
-    public sealed class UsedTextureElement : SizedToContentHolderElement,
+    public sealed class UsedTextureElement : PointerInputHandlerElement<UsedTextureElement>,
         ILazyListItem<UsedTextureData>
     {
         public const float DefaultNameHeight = 20;
+        public const float DefaultSpacing = 4;
+        public const float DefaultVerticalPaddings = 8;
 
-        public static readonly Vector2 DefaultSpriteSize = new(50);
-        public static readonly Color DefaultEvenBackgroundColor = Color.Orange;
-        public static readonly Color DefaultOddBackgroundColor = Color.Red;
+        public static readonly Vector2 DefaultSpriteSize = new(120);
+        public static readonly Color DefaultEvenBackgroundColor = Color.MediumSlateBlue;
+        public static readonly Color DefaultOddBackgroundColor = Color.SlateBlue;
+        public static readonly Color DefaultHoverBackgroundColor = Color.CornflowerBlue;
+
+        public UsedTextureData Data { get; private set; }
 
         private readonly SpriteElement _background;
         private readonly TextElement _name;
@@ -36,7 +43,8 @@ namespace TankRacerViewer.Core
             _sprite = new Sprite();
             _image = new SpriteElement(
                 sprite: _sprite,
-                sizeToSource: true
+                sizeToSource: true,
+                drawMode: DrawMode.Simple
             );
 
             _aspectRatioFitter = new AspectRatioFitterElement(
@@ -45,6 +53,10 @@ namespace TankRacerViewer.Core
             );
 
             InnerElement = new ColumnLayout(
+                alignmentFactor: Alignment.TopCenter,
+                topPadding: DefaultVerticalPaddings,
+                bottomPadding: DefaultVerticalPaddings,
+                spacing: DefaultSpacing,
                 sizeMainAxisToContent: true,
                 sizeCrossAxisToContent: true,
                 children: [
@@ -63,33 +75,54 @@ namespace TankRacerViewer.Core
             );
         }
 
-        void ILazyListItem<UsedTextureData>.SetData(UsedTextureData data)
+        private void RefreshBackgroundColor()
         {
-            _background.Color = data.Index % 2 == 0
-                ? DefaultEvenBackgroundColor
-                : DefaultOddBackgroundColor;
-
-            _name.Text = data.TextureName;
-
-            if (data.Texture is not null)
+            if (IsHover)
             {
-                _sprite.Texture = data.Texture;
-                _sprite.SourceRectangle = data.Texture.Bounds;
-
-                _aspectRatioFitter.AspectRatio = data.Texture.Width / (float)data.Texture.Height;
+                _background.Color = DefaultHoverBackgroundColor;
             }
             else
             {
-                _sprite.Texture = DefaultUiRenderer.FallbackTexture;
-                _sprite.SourceRectangle = Rectangle.Empty;
-
-                _aspectRatioFitter.AspectRatio = 1;
+                _background.Color = Data.Index % 2 == 0
+                    ? DefaultEvenBackgroundColor
+                    : DefaultOddBackgroundColor;
             }
+        }
+
+        void ILazyListItem<UsedTextureData>.SetData(UsedTextureData data)
+        {
+            Data = data;
+
+            RefreshBackgroundColor();
+
+            _name.Text = Data.TextureName;
+
+            _sprite.Texture = Data.Texture is not null
+                ? Data.Texture
+                : DefaultUiRenderer.FallbackTexture;
+            _sprite.Texture = _sprite.Texture;
+            _sprite.SourceRectangle = _sprite.Texture.Bounds;
+
+            _aspectRatioFitter.AspectRatio = _sprite.Texture.Width / (float)_sprite.Texture.Height;
+            //_aspectRatioFitter.AspectRatio = Random.Shared.NextSingle();
         }
 
         void ILazyListItem<UsedTextureData>.ClearData()
         {
+            Data = default;
             _sprite.Texture = null;
+        }
+
+        protected override void OnPointerEnter(in PointerEvent pointerEvent)
+        {
+            base.OnPointerEnter(pointerEvent);
+            RefreshBackgroundColor();
+        }
+
+        protected override void OnPointerLeave(in PointerEvent pointerEvent)
+        {
+            base.OnPointerLeave(pointerEvent);
+            RefreshBackgroundColor();
         }
     }
 }

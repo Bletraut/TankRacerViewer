@@ -85,5 +85,10 @@ namespace ComposableUi
             if (InnerElement == child)
                 InnerElement = null;
         }
+
+        protected override void HandleTransformChanged()
+        {
+            _innerElement?.OnTransformChanged();
+        }
     }
 }

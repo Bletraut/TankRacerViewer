@@ -263,6 +263,7 @@ namespace TankRacerViewer.Core
                 }
                 else if (_selectedAssetView is BackgroundAssetView backgroundAssetView)
                 {
+                    _uiComponent.InspectorWindow.HideInspector();
                     _uiComponent.ViewerWindow.Show3DViewer();
                 }
                 else if (_selectedAssetView is TextureAssetView textureAssetView)
@@ -272,20 +273,29 @@ namespace TankRacerViewer.Core
                 }
                 else if (_selectedAssetView is DataAssetView dataAssetView)
                 {
+                    _uiComponent.InspectorWindow.HideInspector();
                     _uiComponent.ViewerWindow.ShowTextViewer(dataAssetView.Text);
                 }
                 else if (_selectedAssetView is UnsupportedAssetView unsupportedAssetView)
                 {
+                    _uiComponent.InspectorWindow.HideInspector();
                     _uiComponent.ViewerWindow.ShowTextViewer(unsupportedAssetView.Description);
                 }
                 else if (_selectedAssetView is LevelView)
                 {
+                    _uiComponent.InspectorWindow.HideInspector();
                     _uiComponent.ViewerWindow.Show3DViewer();
                 }
                 else if (_selectedAssetView is TankView)
                 {
+                    _uiComponent.InspectorWindow.HideInspector();
                     _uiComponent.ViewerWindow.Show3DViewer();
                 }
+            }
+            else
+            {
+                _uiComponent.InspectorWindow.HideInspector();
+                _uiComponent.ViewerWindow.HideViewer();
             }
 
             ResetCameraToDefaults();

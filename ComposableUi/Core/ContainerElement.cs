@@ -120,5 +120,11 @@ namespace ComposableUi
                 OnStateChanged();
             }
         }
+
+        protected override void HandleTransformChanged()
+        {
+            foreach (var child in _children)
+                child.OnTransformChanged();
+        }
     }
 }

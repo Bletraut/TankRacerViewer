@@ -26,6 +26,8 @@ namespace ComposableUi
 
         public LazyListViewElement(Func<TItem> itemFactory)
         {
+            _itemFactory = itemFactory;
+
             _data = [];
             Data = _data.AsReadOnly();
 
@@ -36,15 +38,11 @@ namespace ComposableUi
 
             Pivot = Alignment.TopLeft;
 
-            ItemColumn = new ColumnLayout(
-                sizeMainAxisToContent: true,
-                sizeCrossAxisToContent: true
-            )
+            ItemColumn = new ColumnLayout(sizeMainAxisToContent: true)
             {
                 Pivot = Alignment.TopLeft,
             };
             AddChild(ItemColumn);
-            _itemFactory = itemFactory;
         }
 
         public int IndexOf(TData data)
@@ -128,7 +126,7 @@ namespace ComposableUi
             _preferredSize = _preferredSize with
             {
                 X = MathF.Max(_preferredSize.X, itemSize.X),
-                Y = _data.Count * itemSize.Y
+                Y = _data.Count * itemSize.Y + ItemColumn.Spacing * (_data.Count - 1)
             };
         }
 
@@ -146,7 +144,6 @@ namespace ComposableUi
             return _preferredSize;
         }
 
-        public bool a;
         public override void Rebuild(Vector2 size, bool excludeChildren)
         {
             Size = size;
@@ -164,9 +161,11 @@ namespace ComposableUi
 
                 if (child == ItemColumn)
                 {
+                    childSize.X = size.X;
+
                     var boundingRectangle = BoundingRectangle;
                     var visibleRectangle = Rectangle.Intersect(boundingRectangle, ClipMask ?? boundingRectangle);
-                    var itemHeight = TemplateItem.CalculatePreferredSize().Y;
+                    var itemHeight = TemplateItem.CalculatePreferredSize().Y + ItemColumn.Spacing;
 
                     var offset = (visibleRectangle.Top - boundingRectangle.Top) / itemHeight;
                     var layoutOffset = offset % 1 * itemHeight;

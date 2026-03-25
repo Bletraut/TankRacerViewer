@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
 
 using ComposableUi;
-
-using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
@@ -146,8 +142,7 @@ namespace TankRacerViewer.Core
             _selectedNodeData = data;
             _selectedNodeData.IsSelected = true;
 
-            if (_selectedNodeData.File is AssetView assetView)
-                AssetViewSelected?.Invoke(assetView);
+            AssetViewSelected?.Invoke(_selectedNodeData.File as AssetView);
         }
 
         private void OnNodeClicked(HierarchyNodeElement node)

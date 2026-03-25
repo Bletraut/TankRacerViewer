@@ -186,5 +186,6 @@ namespace TankRacerViewer.Core
         public Texture2D Texture { get; init; }
         public string TextureName { get; init; }
         public BlendMode BlendMode { get; init; }
+        public Color HighlightColor { get; set; } = Color.White;
     }
 }

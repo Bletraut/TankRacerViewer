@@ -32,5 +32,10 @@ namespace TankRacerViewer.Core
             _modelInspector.SetTarget(modelAssetView);
             _scrollView.Content = _modelInspector;
         }
+
+        public void HideInspector()
+        {
+            _scrollView.Content = null;
+        }
     }
 }

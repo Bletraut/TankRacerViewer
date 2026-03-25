@@ -7,6 +7,8 @@
 	#define PS_SHADERMODEL ps_4_0
 #endif
 
+float4 HighlightColor;
+
 sampler2D BaseColorSampler;
 sampler2D OpaqueDepthSampler = sampler_state
 {
@@ -89,6 +91,12 @@ float3 BlendHardLight(float3 baseColor, float3 blendColor)
     return lerp(a, b, step(0.5, blendColor));
 }
 
+float4 Highlight(float4 baseColor, float4 highlightColor)
+{
+    float3 color = pow(baseColor.rgb / highlightColor.rgb, highlightColor.a);
+    return float4(color, baseColor.a);
+}
+
 FragmentShaderOuput OpaquePS(VertexShaderOutput input)
 {
     float4 baseColor = tex2D(BaseColorSampler, input.Uv.xy);
@@ -101,7 +109,7 @@ FragmentShaderOuput OpaquePS(VertexShaderOutput input)
     float depth = input.ClipSpacePosition.z / input.ClipSpacePosition.w;
 	
     FragmentShaderOuput output;
-    output.Color = resultColor;
+    output.Color = Highlight(resultColor, HighlightColor);
     output.Depth = float4(depth, 0, 0, 0);
     
     return output;
@@ -130,7 +138,7 @@ FragmentShaderOuput TransparentPS(VertexShaderOutput input)
     float3 hardLightColor = BlendHardLight(baseColor.rgb, input.Color.rgb);
     float4 resultColor = float4(hardLightColor, baseColor.a);
     
-    output.Color = resultColor;
+    output.Color = Highlight(resultColor, HighlightColor);
     output.Depth = float4(projectedPosition.z, 0, 0, 0);
     
     return output;

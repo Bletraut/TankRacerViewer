@@ -287,6 +287,7 @@ namespace TankRacerViewer.Core
                 };
 
                 effect.Parameters["BaseColorSampler"]?.SetValue(meshPart.Texture ?? fallbackTexture);
+                effect.Parameters["HighlightColor"]?.SetValue(meshPart.HighlightColor.ToVector4());
                 effect.Parameters["AlphaThreshold"]?.SetValue(alphaThreshold);
                 effect.CurrentTechnique.Passes[passIndex].Apply();
 
