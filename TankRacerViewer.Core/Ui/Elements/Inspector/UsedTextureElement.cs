@@ -105,7 +105,6 @@ namespace TankRacerViewer.Core
             _sprite.SourceRectangle = _sprite.Texture.Bounds;
 
             _aspectRatioFitter.AspectRatio = _sprite.Texture.Width / (float)_sprite.Texture.Height;
-            //_aspectRatioFitter.AspectRatio = Random.Shared.NextSingle();
         }
 
         void ILazyListItem<UsedTextureData>.ClearData()

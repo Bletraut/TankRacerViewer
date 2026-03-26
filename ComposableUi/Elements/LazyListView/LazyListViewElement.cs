@@ -21,6 +21,10 @@ namespace ComposableUi
         private TItem TemplateItem => _templateItem ??= _itemFactory();
 
         private readonly Func<TItem> _itemFactory;
+        private readonly Stack<TItem> _pool = [];
+
+        private Dictionary<TData, TItem> _lastItemCache = [];
+        private Dictionary<TData, TItem> _currentItemCache = [];
 
         private Vector2 _preferredSize;
 
@@ -130,13 +134,26 @@ namespace ComposableUi
             };
         }
 
-        private TItem CreateItem()
+        private TItem GetItem(TData data)
         {
-            var item = _itemFactory();
-            _items.Add(item);
-            ItemColumn.AddChild(item);
+            if (_lastItemCache.Remove(data, out var item))
+                return item;
 
-            return item;
+            return Rent();
+        }
+
+        private TItem Rent()
+        {
+            if (_pool.Count > 0)
+                return _pool.Pop();
+
+            return _itemFactory();
+        }
+
+        private void Return(TItem item)
+        {
+            item.ClearData();
+            _pool.Push(item);
         }
 
         public override Vector2 CalculatePreferredSize()
@@ -174,24 +191,27 @@ namespace ComposableUi
                     var maxVisibleItemCount = (int)MathF.Ceiling((visibleRectangle.Height + layoutOffset) / itemHeight);
                     var visibleItemCount = Math.Clamp(maxVisibleItemCount, 0, _data.Count);
 
-                    var length = int.Max(visibleItemCount, _items.Count);
-                    for (var j = 0; j < length; j++)
+                    _items.Clear();
+                    ItemColumn.Clear();
+
+                    for (var j = 0; j < visibleItemCount; j++)
                     {
-                        var item = j >= _items.Count
-                            ? CreateItem()
-                            : _items[j];
+                        var data = _data[itemIndex + j];
 
-                        item.IsEnabled = j < visibleItemCount;
-                        if (!item.IsEnabled)
-                        {
-                            item.ClearData();
-                            continue;
-                        }
+                        var item = GetItem(data);
+                        item.SetData(data);
 
-                        var dataIndex = itemIndex + j;
-                        if (dataIndex < _data.Count)
-                            item.SetData(_data[dataIndex]);
+                        _items.Add(item);
+                        ItemColumn.AddChild(item);
+                        _currentItemCache.Add(data, item);
                     }
+
+                    foreach (var item in _lastItemCache.Values)
+                    {
+                        Return(item);
+                    }
+                    _lastItemCache.Clear();
+                    (_currentItemCache, _lastItemCache) = (_lastItemCache, _currentItemCache);
 
                     ItemColumn.Position = ItemColumn.Position with
                     {

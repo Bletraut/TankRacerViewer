@@ -72,8 +72,6 @@ namespace TankRacerViewer.Core
         private readonly Element _foldButtonPlaceholder;
         private readonly RowLayout _titleRow;
 
-        private bool _isHover;
-
         public HierarchyNodeElement(Color? normalBackgroundColor = default,
             Color? hoverBackgroundColor = default,
             Color? selectedBackgroundColor = default)
@@ -189,7 +187,7 @@ namespace TankRacerViewer.Core
             }
             else
             {
-                Background.Color = _isHover
+                Background.Color = HoverInputHandler.IsHover
                     ? HoverBackgroundColor
                     : NormalBackgroundColor;
             }
@@ -240,14 +238,12 @@ namespace TankRacerViewer.Core
         private void OnHoverInputHandlerPointerEnter(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
-            _isHover = true;
             RefreshBackgroundVisualState();
         }
 
         private void OnHoverInputHandlerPointerLeave(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
-            _isHover = false;
             RefreshBackgroundVisualState();
         }
     }
