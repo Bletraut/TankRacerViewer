@@ -22,7 +22,6 @@ namespace ComposableUi
         private Stack<(uint Layer, Element Element)> _stack = new();
         private Stack<(uint Layer, Element Element)> _nextStack = new();
 
-        private readonly List<IPointerInputHandler> _skippedPointerInputHandlers = [];
         private readonly List<(Rectangle InputArea, IPointerInputHandler handler)> _pointerInputHandlers = [];
         private readonly List<IDrawableElement> _renderQueue = [];
 
@@ -151,13 +150,6 @@ namespace ComposableUi
             var pointerUnfocusedEvent = new PointerFocusEvent(pointer, _currentPointerPosition,
                 isPrimaryButtonPressed, isSecondaryButtonPressed, false);
 
-            foreach (var handler in _skippedPointerInputHandlers)
-            {
-                if (_lastActiveHandlers.Remove(handler))
-                    handler.OnPointerLeave(pointerEvent);
-            }
-            _skippedPointerInputHandlers.Clear();
-
             var isInputBlocked = false;
             for (var i = _pointerInputHandlers.Count - 1; i >= 0; i--)
             {
@@ -263,6 +255,12 @@ namespace ComposableUi
                 _secondaryButtonPressedHandlers.Clear();
             }
 
+            foreach (var handler in _lastActiveHandlers)
+            {
+                if (!_currentActiveHandlers.Contains(handler))
+                    handler.OnPointerLeave(pointerEvent);
+            }
+
             if (isAnyButtonDown)
             {
                 foreach (var handler in _lastFocusedHandlers)
@@ -321,8 +319,6 @@ namespace ComposableUi
                             _stack.Push((layer, parentElement.GetChildAt(i)));
                     }
 
-                    var shouldSkip = false;
-
                     var boundingRectangle = element.BoundingRectangle;
                     var clipMask = element.ClipMask;
 
@@ -330,22 +326,17 @@ namespace ComposableUi
                     {
                         var isClipped = clipMask.Value.Width <= 0
                             && clipMask.Value.Height <= 0;
+                        if (isClipped)
+                            continue;
 
-                        shouldSkip = isClipped
-                            || !clipMask.Value.Intersects(boundingRectangle);
+                        if (!clipMask.Value.Intersects(boundingRectangle))
+                            continue;
                     }
 
-                    shouldSkip = shouldSkip 
-                        || !viewportBounds.Intersects(boundingRectangle);
+                    if (!viewportBounds.Intersects(boundingRectangle))
+                        continue;
 
-                    if (shouldSkip)
-                    {
-                        HandleSkippedElement(element);
-                    }
-                    else
-                    {
-                        HandleElement(element);
-                    }
+                    HandleElement(element);
                 }
 
                 currentLayer = nextMinLayer;
@@ -368,14 +359,6 @@ namespace ComposableUi
 
             if (element is IDrawableElement drawableElement)
                 _renderQueue.Add(drawableElement);
-        }
-
-        private void HandleSkippedElement(Element element)
-        {
-            if (element is IPointerInputHandler pointerInputHandler)
-            {
-                _skippedPointerInputHandlers.Add(pointerInputHandler);
-            }
         }
     }
 }

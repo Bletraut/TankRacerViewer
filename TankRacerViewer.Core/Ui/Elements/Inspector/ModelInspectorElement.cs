@@ -9,7 +9,7 @@ namespace TankRacerViewer.Core
 {
     public sealed class ModelInspectorElement : InspectorElement<ModelAssetView>
     {
-        public static readonly Color HighlightColor = new(Color.Yellow, 0.8f);
+        public static readonly Color HighlightColor = new(Color.Fuchsia, 0f);
 
         private readonly FoldableGroupElement _usedTexturesGroup;
         public readonly LazyListViewElement<UsedTextureData, UsedTextureElement> _lazyListView;

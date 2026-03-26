@@ -93,7 +93,10 @@ float3 BlendHardLight(float3 baseColor, float3 blendColor)
 
 float4 Highlight(float4 baseColor, float4 highlightColor)
 {
-    float3 color = pow(baseColor.rgb / highlightColor.rgb, highlightColor.a);
+    float grayScale = max(max(baseColor.r, baseColor.g), baseColor.b);
+    float3 highlighted = lerp(highlightColor.rgb, 1, grayScale);
+    float3 color = lerp(baseColor.rgb, highlighted, 1 - highlightColor.a);
+
     return float4(color, baseColor.a);
 }
 
