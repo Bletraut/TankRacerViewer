@@ -221,7 +221,7 @@ namespace TankRacerViewer.Core
             foreach (var levelObject in CurrentLevelObjectContainer.LevelObjects)
             {
                 var isEditorType = levelObject.Type == LevelObject.WayPointTypeName
-                    || levelObject.Type == LevelObject.TrackcamTypeName;
+                    || levelObject.Type == LevelObject.TrackCameraTypeName;
 
                 var shouldShowOnCurrentLap = true;
                 if (levelObject.Properties.TryGetValue(LevelObject.LapToAddPropertyName, out var values))

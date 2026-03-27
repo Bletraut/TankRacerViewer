@@ -220,6 +220,14 @@ namespace ComposableUi
             _floatPreviewTab.IsEnabled = false;
         }
 
+        private void RefreshFloatPreviewTabPosition()
+        {
+            if (_tempTabPlaceHolder is null)
+                return;
+
+            _floatPreviewTab.Position = _tempTabPlaceHolder.Position with { X = _floatPreviewTab.Position.X };
+        }
+
         private void ShowEmbedPreviewAreaIfPossible()
         {
             if (_embedPreviewInputArea.IsEnabled)
@@ -274,10 +282,7 @@ namespace ComposableUi
             _floatPreviewWindow.Position += deltaVector;
             _floatPreviewTab.Position += deltaVector;
 
-            if (_tempTabPlaceHolder is not null)
-            {
-                _floatPreviewTab.Position = _tempTabPlaceHolder.Position with { X = _floatPreviewTab.Position.X };
-            }
+            RefreshFloatPreviewTabPosition();
 
             ShowEmbedPreviewAreaIfPossible();
         }
@@ -289,6 +294,8 @@ namespace ComposableUi
 
             HideFloatPreviewWindow();
             HideEmbeddedPreviewWindow();
+
+            RefreshFloatPreviewTabPosition();
             ShowFloatPreviewTab();
         }
 

@@ -92,7 +92,7 @@ namespace TankRacerViewer.Core
             {
                 Skin = StandardSkin.RectanglePanel,
                 Name = name,
-                IsFolded = false,
+                IsFolded = true,
             };
             parentNode.AddChild(assetGroupNodeData);
 

@@ -44,8 +44,8 @@ namespace TankRacerViewer.Core
 
             EulerAngles = new Vector3()
             {
-                X = MathF.Atan2(direction.X, direction.Z),
-                Y = -MathF.Atan2(direction.Y, new Vector2(direction.X, direction.Z).Length())
+                X = -MathF.Atan2(direction.Y, new Vector2(direction.X, direction.Z).Length()),
+                Y = MathF.Atan2(direction.X, direction.Z),
             };
         }
 

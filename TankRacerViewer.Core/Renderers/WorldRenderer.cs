@@ -23,6 +23,8 @@ namespace TankRacerViewer.Core
         // Class.
         public IRenderContext RenderContext { get; private set; }
 
+        public Matrix WorldScaleMatrix { get; private set; }
+
         private bool HasRenderContext => RenderContext is not null;
 
         private readonly GraphicsDevice _graphicsDevice;
@@ -42,7 +44,6 @@ namespace TankRacerViewer.Core
 
         private readonly RenderTargetBinding[] _renderTargetBindings = new RenderTargetBinding[2];
 
-        private readonly Matrix _worldScaleMatrix;
         private readonly List<(ModelAssetView modelAssetView, Matrix matrix, Camera Camera)> _renderQueue = [];
         private Camera _lastCamera;
 
@@ -68,7 +69,7 @@ namespace TankRacerViewer.Core
                 _grayPixelTexture.SetData([Color.Gray]);
             }
 
-            _worldScaleMatrix = Matrix.CreateScale(DefaultWorldScale);
+            WorldScaleMatrix = Matrix.CreateScale(DefaultWorldScale);
         }
 
         public void ApplyRenderContext(IRenderContext context)
@@ -176,7 +177,7 @@ namespace TankRacerViewer.Core
             if (!HasRenderContext)
                 return;
 
-            _renderQueue.Add((modelAssetView, modelMatrix * _worldScaleMatrix, camera));
+            _renderQueue.Add((modelAssetView, modelMatrix * WorldScaleMatrix, camera));
         }
 
         private void DrawRenderQueue()

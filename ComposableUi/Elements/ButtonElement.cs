@@ -129,7 +129,6 @@ namespace ComposableUi
             }
         }
 
-        public bool IsHover { get; private set; }
         public bool IsPressed { get; private set; }
 
         private InteractionState _currentInteractionState;
@@ -232,7 +231,7 @@ namespace ComposableUi
         {
             base.OnInteractionChanged(value);
 
-            IsHover = IsPressed = false;
+            IsPressed = false;
             OnInteractionStateChanged(value ? InteractionState.Normal : InteractionState.Disabled);
         }
 
@@ -240,7 +239,6 @@ namespace ComposableUi
         {
             base.OnPointerEnter(pointerEvent);
 
-            IsHover = true;
             OnInteractionStateChanged(IsPressed ? InteractionState.Pressed : InteractionState.Hover);
         }
 
@@ -248,7 +246,6 @@ namespace ComposableUi
         {
             base.OnPointerLeave(pointerEvent);
 
-            IsHover = false;
             OnInteractionStateChanged(InteractionState.Normal);
         }
 

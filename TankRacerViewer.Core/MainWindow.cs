@@ -18,6 +18,8 @@ namespace TankRacerViewer.Core
 {
     public class MainWindow : Game
     {
+        private const float ViewDistance = 800;
+
         public IFileDialogService FileDialogService { get; }
 
         private GraphicsDeviceManager _graphics;
@@ -42,6 +44,8 @@ namespace TankRacerViewer.Core
         private AssetViewContainer _dataAssetViewContainer;
         private AssetViewContainer _commonAssetViewContainer;
 
+        private readonly Action<LevelObject> _levelObjectSelectedAction;
+
         private readonly StringBuilder _info = new();
 
         public MainWindow(IFileDialogService fileDialogService)
@@ -58,6 +62,8 @@ namespace TankRacerViewer.Core
             IsMouseVisible = true;
 
             Window.AllowUserResizing = true;
+
+            _levelObjectSelectedAction = OnLevelObjectSelected;
         }
 
         protected override void Initialize()
@@ -281,9 +287,10 @@ namespace TankRacerViewer.Core
                     _uiComponent.InspectorWindow.HideInspector();
                     _uiComponent.ViewerWindow.ShowTextViewer(unsupportedAssetView.Description);
                 }
-                else if (_selectedAssetView is LevelView)
+                else if (_selectedAssetView is LevelView levelView)
                 {
-                    _uiComponent.InspectorWindow.HideInspector();
+                    _uiComponent.InspectorWindow.ShowLevelInspector(levelView,
+                        _levelObjectSelectedAction);
                     _uiComponent.ViewerWindow.Show3DViewer();
                 }
                 else if (_selectedAssetView is TankView)
@@ -299,6 +306,20 @@ namespace TankRacerViewer.Core
             }
 
             ResetCameraToDefaults();
+        }
+
+        private void OnLevelObjectSelected(LevelObject levelObject)
+        {
+            var boundingSphere = BoundingSphere.CreateFromBoundingBox(levelObject.ModelAssetView.BoundingBox);
+
+            var objectPosition = Vector3.Transform(boundingSphere.Center, levelObject.ModelMatrix);
+            var viewPosition = objectPosition + Vector3.One * MathF.Max(ViewDistance, boundingSphere.Radius) * 1.5f;
+
+            var worldObjectPosition = Vector3.Transform(objectPosition, _renderer.WorldScaleMatrix);
+            var worldViewPosition = Vector3.Transform(viewPosition, _renderer.WorldScaleMatrix);
+
+            _cameraController.Position = worldViewPosition;
+            _cameraController.LookAt(worldObjectPosition);
         }
     }
 }

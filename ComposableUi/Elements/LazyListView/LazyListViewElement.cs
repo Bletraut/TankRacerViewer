@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
@@ -196,7 +195,11 @@ namespace ComposableUi
 
                     for (var j = 0; j < visibleItemCount; j++)
                     {
-                        var data = _data[itemIndex + j];
+                        var dataIndex = itemIndex + j;
+                        if (dataIndex >= _data.Count)
+                            break;
+
+                        var data = _data[dataIndex];
 
                         var item = GetItem(data);
                         item.SetData(data);

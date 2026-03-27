@@ -4,12 +4,12 @@ using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
-    public sealed class LevelObject(string type, string id, IReadOnlyDictionary<string, IReadOnlyList<string>> properties)
+    public sealed class LevelObject(string type, string id,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> properties)
     {
         public const string WayPointTypeName = "WayPoint";
-        public const string TrackcamTypeName = "Trackcam";
+        public const string TrackCameraTypeName = "Trackcam";
         public const string PowerupTypeName = "Powerup";
-#warning TODO: Add flock support.
         public const string FlockTypeName = "Flock";
 
         public const string MultiCrushPropertyName = "multi_crush";

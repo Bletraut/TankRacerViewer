@@ -19,6 +19,8 @@ namespace TankRacerViewer.Core
         private static readonly List<VertexPositionColorTextureOffset> _verticesData = [];
 
         // Class.
+        public BoundingBox BoundingBox { get; }
+
         private readonly List<MeshPart> _opaque = [];
         public IReadOnlyList<MeshPart> Opaque { get; }
         private readonly List<MeshPart> _opaqueDoubleSided = [];
@@ -37,6 +39,12 @@ namespace TankRacerViewer.Core
             : base(fullName)
         {
             _graphicsDevice = graphicsDevice;
+
+            var boundingBox = new BoundingBox()
+            {
+                Min = new Vector3(float.PositiveInfinity),
+                Max = new Vector3(float.NegativeInfinity)
+            };
 
             Opaque = _opaque.AsReadOnly();
             OpaqueDoubleSided = _opaqueDoubleSided.AsReadOnly();
@@ -84,10 +92,13 @@ namespace TankRacerViewer.Core
 
                         var quadCenter = Vector3.Zero;
 
+                        var min = Vector3.Min(Vector3.Min(v1, v2), v3);
+                        var max = Vector3.Max(Vector3.Max(v1, v2), v3);
+                        boundingBox.Min = Vector3.Min(boundingBox.Min, min);
+                        boundingBox.Max = Vector3.Max(boundingBox.Max, max);
+
                         if (polygon.IsBillboard)
                         {
-                            var min = Vector3.Min(Vector3.Min(v1, v2), v3);
-                            var max = Vector3.Max(Vector3.Max(v1, v2), v3);
                             quadCenter = min + (max - min) / 2;
 
                             var normal = Vector3.Normalize(Vector3.Cross(v2 - v1, v3 - v1));
@@ -150,10 +161,12 @@ namespace TankRacerViewer.Core
                         PrimitiveCount = _verticesData.Count / 3,
                         Texture = texture,
                         TextureName = textureName,
-                        BlendMode = blendMode
+                        BlendMode = blendMode,
                     });
                 }
             }
+
+            BoundingBox = boundingBox;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
