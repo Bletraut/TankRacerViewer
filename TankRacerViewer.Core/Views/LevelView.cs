@@ -94,9 +94,9 @@ namespace TankRacerViewer.Core
                     return false;
             }
 
-            levelObject = new LevelObject(type, id, properties.AsReadOnly())
+            levelObject = new LevelObject(type, id,
+                modelAssetView, properties.AsReadOnly())
             {
-                ModelAssetView = modelAssetView,
                 Position = position,
                 Rotation = rotation
             };

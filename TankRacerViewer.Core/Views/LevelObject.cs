@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 namespace TankRacerViewer.Core
 {
     public sealed class LevelObject(string type, string id,
+        ModelAssetView modelAssetView,
         IReadOnlyDictionary<string, IReadOnlyList<string>> properties)
     {
         public const string WayPointTypeName = "WayPoint";
@@ -20,7 +21,7 @@ namespace TankRacerViewer.Core
         public string Type { get; } = type;
         public string Id { get; } = id;
 
-        public ModelAssetView ModelAssetView { get; set; }
+        public ModelAssetView ModelAssetView { get; } = modelAssetView;
 
         public bool IsEnabled { get; set; } = true;
 
