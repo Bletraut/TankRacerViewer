@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using FastFileUnpacker;
 
@@ -17,6 +18,54 @@ namespace TankRacerViewer.Core
         private const float DefaultBackgroundSize = 0.75f;
 
         // Static.
+        public static readonly Color BoundingBoxColor = Color.Fuchsia;
+
+        private static readonly VertexPositionColor[] _unitCubeVertices = [
+            // Back.
+            // Top.
+            new(new Vector3(-1, -1, -1), BoundingBoxColor),
+            new(new Vector3(1, -1, -1), BoundingBoxColor),
+            // Bottom.
+            new(new Vector3(-1, 1, -1), BoundingBoxColor),
+            new(new Vector3(1, 1, -1), BoundingBoxColor),
+            // Left.
+            new(new Vector3(-1, -1, -1), BoundingBoxColor),
+            new(new Vector3(-1, 1, -1), BoundingBoxColor),
+            // Right.
+            new(new Vector3(1, -1, -1), BoundingBoxColor),
+            new(new Vector3(1, 1, -1), BoundingBoxColor),
+
+            // Front.
+            // Top.
+            new(new Vector3(-1, -1, 1), BoundingBoxColor),
+            new(new Vector3(1, -1, 1), BoundingBoxColor),
+            // Bottom.
+            new(new Vector3(-1, 1, 1), BoundingBoxColor),
+            new(new Vector3(1, 1, 1), BoundingBoxColor),
+            // Left.
+            new(new Vector3(-1, -1, 1), BoundingBoxColor),
+            new(new Vector3(-1, 1, 1), BoundingBoxColor),
+            // Right.
+            new(new Vector3(1, -1, 1), BoundingBoxColor),
+            new(new Vector3(1, 1, 1), BoundingBoxColor),
+
+            // Left.
+            // Top.
+            new(new Vector3(-1, -1, -1), BoundingBoxColor),
+            new(new Vector3(-1, -1, 1), BoundingBoxColor),
+            // Bottom.
+            new(new Vector3(-1, 1, -1), BoundingBoxColor),
+            new(new Vector3(-1, 1, 1), BoundingBoxColor),
+
+            // Right.
+            // Top.
+            new(new Vector3(1, -1, -1), BoundingBoxColor),
+            new(new Vector3(1, -1, 1), BoundingBoxColor),
+            // Bottom.
+            new(new Vector3(1, 1, -1), BoundingBoxColor),
+            new(new Vector3(1, 1, 1), BoundingBoxColor),
+        ];
+
         private static Texture2D _whitePixelTexture;
         private static Texture2D _grayPixelTexture;
 
@@ -30,6 +79,7 @@ namespace TankRacerViewer.Core
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
 
+        private readonly BasicEffect _basicEffect;
         private readonly Effect _modelEffect;
         private readonly Effect _compositeEffect;
         private readonly Effect _backgroundEffect;
@@ -44,17 +94,25 @@ namespace TankRacerViewer.Core
 
         private readonly RenderTargetBinding[] _renderTargetBindings = new RenderTargetBinding[2];
 
-        private readonly List<(ModelAssetView modelAssetView, Matrix matrix, Camera Camera)> _renderQueue = [];
+        private readonly List<(ModelAssetView ModelAssetView, Matrix Matrix, Camera Camera)> _renderQueue = [];
+        private readonly List<(Matrix Matrix, Camera Camera)> _boundingBoxes = [];
         private Camera _lastCamera;
 
-        private Action<ModelAssetView> _drawOpaqueRenderHandler;
-        private Action<ModelAssetView> _drawTransparentRenderHandler;
+        private readonly Action<ModelAssetView> _drawOpaqueRenderHandler;
+        private readonly Action<ModelAssetView> _drawTransparentRenderHandler;
 
         public WorldRenderer(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch,
             ContentManager contentManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
+
+            _basicEffect = new BasicEffect(graphicsDevice)
+            {
+                VertexColorEnabled = true,
+                TextureEnabled = false,
+                LightingEnabled = false
+            };
 
             _modelEffect = contentManager.Load<Effect>("Effects\\ModelEffect");
             _compositeEffect = contentManager.Load<Effect>("Effects\\CompositeEffect");
@@ -175,6 +233,21 @@ namespace TankRacerViewer.Core
                     continue;
 
                 Draw(levelObject.ModelAssetView, levelObject.ModelMatrix, camera);
+
+                if (levelObject.IsBoundingBoxEnabled)
+                {
+                    var boundingBox = levelObject.ModelAssetView.BoundingBox;
+                    var halfSize = (boundingBox.Max - boundingBox.Min) / 2;
+                    var center = boundingBox.Min + halfSize;
+
+                    var worldPosition = Vector3.Transform(center, levelObject.ModelMatrix) * DefaultWorldScale;
+
+                    var worldMatrix = Matrix.CreateScale(halfSize * DefaultWorldScale)
+                        * Matrix.CreateFromYawPitchRoll(levelObject.Rotation.Y, levelObject.Rotation.X, levelObject.Rotation.Z)
+                        * Matrix.CreateTranslation(worldPosition);
+
+                    _boundingBoxes.Add((worldMatrix, camera));
+                }
             }
         }
 
@@ -191,6 +264,8 @@ namespace TankRacerViewer.Core
             _graphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             DrawAll(_drawOpaqueRenderHandler);
+
+            DrawBoundingBoxes();
 
             _graphicsDevice.SetRenderTarget(_nextTransparentDepthRenderTarget);
             _graphicsDevice.Clear(Color.Transparent);
@@ -225,6 +300,7 @@ namespace TankRacerViewer.Core
 
             _lastCamera = null;
             _renderQueue.Clear();
+            _boundingBoxes.Clear();
         }
 
         private void Present()
@@ -302,6 +378,26 @@ namespace TankRacerViewer.Core
                 _graphicsDevice.Indices = meshPart.IndexBuffer;
 
                 _graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshPart.PrimitiveCount);
+            }
+        }
+
+        private void DrawBoundingBoxes()
+        {
+            if (_boundingBoxes.Count <= 0)
+                return;
+
+            foreach (var (matrix, camera) in _boundingBoxes)
+            {
+                _basicEffect.View = matrix * camera.ViewMatrix;
+                _basicEffect.Projection = camera.ProjectionMatrix;
+
+                foreach (var pass in _basicEffect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+
+                    _graphicsDevice.DrawUserPrimitives(PrimitiveType.LineList,
+                        _unitCubeVertices, 0, _unitCubeVertices.Length / 2);
+                }
             }
         }
 
