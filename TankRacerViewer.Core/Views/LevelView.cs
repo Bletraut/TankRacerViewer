@@ -220,9 +220,6 @@ namespace TankRacerViewer.Core
 
             foreach (var levelObject in CurrentLevelObjectContainer.LevelObjects)
             {
-                var isEditorType = levelObject.Type == LevelObject.WayPointTypeName
-                    || levelObject.Type == LevelObject.TrackCameraTypeName;
-
                 var shouldShowOnCurrentLap = true;
                 if (levelObject.Properties.TryGetValue(LevelObject.LapToAddPropertyName, out var values))
                     shouldShowOnCurrentLap &= CurrentLap >= int.Parse(values[0]);
@@ -240,7 +237,7 @@ namespace TankRacerViewer.Core
                     shouldShowOnCurrentLap &= shouldShow;
                 }
 
-                levelObject.IsEnabled = !isEditorType && shouldShowOnCurrentLap;
+                levelObject.IsEnabled = !levelObject.IsEditorType && shouldShowOnCurrentLap;
             }
         }
     }

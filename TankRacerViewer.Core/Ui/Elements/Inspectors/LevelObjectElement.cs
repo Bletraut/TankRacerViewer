@@ -34,7 +34,7 @@ namespace TankRacerViewer.Core
             _visibilityButton = new IconButtonElement();
             _visibilityButton.PointerClick += OnVisibilityButtonPointerClick;
 
-            _boundingBoxButton = new IconButtonElement(null, StandardSkin.MaximizeWindowIcon);
+            _boundingBoxButton = new IconButtonElement();
             _boundingBoxButton.PointerClick += OnBoundingBoxButtonPointerClick;
 
             _lookAtButton = new IconButtonElement(null, StandardSkin.ScrollButton);
@@ -82,6 +82,16 @@ namespace TankRacerViewer.Core
                 : StandardSkin.DisabledRectangleButton;
         }
 
+        private void RefreshBoundingBoxButtonVisualState()
+        {
+            if (_data is null)
+                return;
+
+            _boundingBoxButton.Icon.Skin = _data.IsBoundingBoxEnabled
+                ? StandardSkin.PressedRoundedButton
+                : StandardSkin.DisabledRoundedButton;
+        }
+
         void ILazyListItem<LevelObject>.SetData(LevelObject data)
         {
             _data = data;
@@ -89,6 +99,7 @@ namespace TankRacerViewer.Core
             _name.Text = $"Name: {_data.ModelAssetView.Name}";
 
             RefreshVisibilityButtonVisualState();
+            RefreshBoundingBoxButtonVisualState();
         }
 
         void ILazyListItem<LevelObject>.ClearData()
@@ -106,6 +117,8 @@ namespace TankRacerViewer.Core
         private void OnBoundingBoxButtonPointerClick(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
+            _data.IsBoundingBoxEnabled = !_data.IsBoundingBoxEnabled;
+            RefreshBoundingBoxButtonVisualState();
         }
 
         private void OnLookAtButtonPointerClick(PointerInputHandlerElement sender,

@@ -7,7 +7,6 @@ using System.Text;
 
 using FastFileUnpacker;
 
-using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -18,7 +17,7 @@ namespace TankRacerViewer.Core
 {
     public class MainWindow : Game
     {
-        private const float ViewDistance = 800;
+        private const float ViewDistance = 1500;
 
         public IFileDialogService FileDialogService { get; }
 
@@ -311,9 +310,34 @@ namespace TankRacerViewer.Core
         private void OnLevelObjectSelected(LevelObject levelObject)
         {
             var boundingSphere = BoundingSphere.CreateFromBoundingBox(levelObject.ModelAssetView.BoundingBox);
-
             var objectPosition = Vector3.Transform(boundingSphere.Center, levelObject.ModelMatrix);
-            var viewPosition = objectPosition + Vector3.One * MathF.Max(ViewDistance, boundingSphere.Radius) * 1.5f;
+
+            var viewDirection = Vector3.One;
+            if (!levelObject.IsWayPoint && _selectedAssetView is LevelView levelView)
+            {
+                var minDistance = float.MaxValue;
+                LevelObject closestWayPoint = null;
+
+                foreach (var levelObjectA in levelView.CurrentLevelObjectContainer.LevelObjects)
+                {
+                    if (!levelObjectA.IsWayPoint)
+                        continue;
+
+                    var distance = Vector3.DistanceSquared(levelObjectA.Position, objectPosition);
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                        closestWayPoint = levelObjectA;
+                    }
+                }
+
+                if (closestWayPoint is not null)
+                {
+                    viewDirection = Vector3.Normalize(closestWayPoint.Position - objectPosition);
+                    viewDirection = Vector3.Normalize(viewDirection with { Y = 0.65f });
+                }
+            }
+            var viewPosition = objectPosition + viewDirection * MathF.Max(ViewDistance, boundingSphere.Radius) * 1.5f;
 
             var worldObjectPosition = Vector3.Transform(objectPosition, _renderer.WorldScaleMatrix);
             var worldViewPosition = Vector3.Transform(viewPosition, _renderer.WorldScaleMatrix);

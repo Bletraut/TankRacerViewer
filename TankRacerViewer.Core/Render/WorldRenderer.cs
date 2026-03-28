@@ -47,6 +47,9 @@ namespace TankRacerViewer.Core
         private readonly List<(ModelAssetView modelAssetView, Matrix matrix, Camera Camera)> _renderQueue = [];
         private Camera _lastCamera;
 
+        private Action<ModelAssetView> _drawOpaqueRenderHandler;
+        private Action<ModelAssetView> _drawTransparentRenderHandler;
+
         public WorldRenderer(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch,
             ContentManager contentManager)
         {
@@ -70,6 +73,9 @@ namespace TankRacerViewer.Core
             }
 
             WorldScaleMatrix = Matrix.CreateScale(DefaultWorldScale);
+
+            _drawOpaqueRenderHandler = DrawOpaqueMeshParts;
+            _drawTransparentRenderHandler = DrawTransparentMeshParts;
         }
 
         public void ApplyRenderContext(IRenderContext context)
@@ -97,8 +103,8 @@ namespace TankRacerViewer.Core
             _graphicsDevice.SetRenderTargets(_renderTargetBindings);
 
             _clearEffect.Parameters["DepthValue"].SetValue(depth);
-            _spriteBatch.Begin(effect:_clearEffect);
-            _spriteBatch.Draw(_whitePixelTexture, new Rectangle(0, 0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height), clearColor);
+            _spriteBatch.Begin(effect: _clearEffect);
+            _spriteBatch.Draw(_whitePixelTexture, _graphicsDevice.Viewport.Bounds, clearColor);
             _spriteBatch.End();
         }
 
@@ -184,7 +190,7 @@ namespace TankRacerViewer.Core
         {
             _graphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            DrawAll(DrawOpaqueMeshParts);
+            DrawAll(_drawOpaqueRenderHandler);
 
             _graphicsDevice.SetRenderTarget(_nextTransparentDepthRenderTarget);
             _graphicsDevice.Clear(Color.Transparent);
@@ -201,7 +207,7 @@ namespace TankRacerViewer.Core
                 _graphicsDevice.DepthStencilState = DepthStencilState.Default;
                 _modelEffect.Parameters["TransparentDepthSampler"]?.SetValue(_nextTransparentDepthRenderTarget);
 
-                DrawAll(DrawTransparentMeshParts);
+                DrawAll(_drawTransparentRenderHandler);
 
                 _graphicsDevice.SetRenderTarget(_tempTransparentDepthRenderTarget);
                 _graphicsDevice.Clear(Color.Transparent);
