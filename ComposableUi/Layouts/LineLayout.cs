@@ -298,7 +298,7 @@ namespace ComposableUi
                 }
 
                 child.Size = childSize;
-                var crossAxisLayoutOffset = CrossAxis * (PivotOffset - AlignmentFactor * (Size - childSize));
+                var crossAxisLayoutOffset = CrossAxis * (PivotOffset - AlignmentFactor * (Size - childSize - paddings));
                 child.LocalPosition = offset + child.PivotOffset
                     - (totalMainAxisLayoutOffset + crossAxisLayoutOffset);
 

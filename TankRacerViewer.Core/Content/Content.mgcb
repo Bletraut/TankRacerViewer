@@ -19,6 +19,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/BackgroundEffect.fx
 
+#begin Effects/BoundingBoxEffect.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/BoundingBoxEffect.fx
+
 #begin Effects/ClearEffect.fx
 /importer:EffectImporter
 /processor:EffectProcessor

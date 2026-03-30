@@ -26,6 +26,7 @@ namespace TankRacerViewer.Core
         public bool IsEnabled { get; set; } = true;
 
         public bool IsBoundingBoxEnabled { get; set; }
+        public Color BoundingBoxColor { get; set; }
 
         public bool IsWayPoint => Type == WayPointTypeName;
         public bool IsTrackCamera => Type == TrackCameraTypeName;
