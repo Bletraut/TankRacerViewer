@@ -60,7 +60,10 @@ namespace ComposableUi
             PointerInputProvider = pointerInputProvider;
             UiRenderer = uiRenderer;
 
-            Root = new RootElement();
+            Root = new RootElement
+            {
+                Pivot = Alignment.TopLeft
+            };
             Root.ApplyRoot(Root);
 
             TextElement.DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
@@ -341,7 +344,9 @@ namespace ComposableUi
 
                 currentLayer = nextMinLayer;
                 nextMinLayer = uint.MaxValue;
-                (_stack, _nextStack) = (_nextStack, _stack);
+
+                while (_nextStack.Count > 0)
+                    _stack.Push(_nextStack.Pop());
             } 
             while (_stack.Count > 0);
         }

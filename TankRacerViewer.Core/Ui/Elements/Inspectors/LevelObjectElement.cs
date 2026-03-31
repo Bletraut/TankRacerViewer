@@ -51,7 +51,7 @@ namespace TankRacerViewer.Core
             _boundingBoxButton = new IconButtonElement();
             _boundingBoxButton.PointerClick += OnBoundingBoxButtonPointerClick;
 
-            _lookAtButton = new IconButtonElement(null, StandardSkin.ScrollButton);
+            _lookAtButton = new IconButtonElement(iconSkin: StandardSkin.ScrollButton);
             _lookAtButton.PointerClick += OnLookAtButtonPointerClick;
 
             _name = new TextElement(

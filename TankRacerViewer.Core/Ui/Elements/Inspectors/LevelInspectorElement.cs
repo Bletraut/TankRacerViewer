@@ -12,12 +12,38 @@ namespace TankRacerViewer.Core
 
         public Action<LevelObject> LevelObjectSelectedAction { get; set; }
 
+        private readonly FoldableGroupElement _backgroundGroup;
+        private readonly DropDownListElement<DropDownListTextItemElement> _backgroundList;
+
         private readonly FoldableGroupElement _objectsGroup;
         private readonly LazyListViewElement<LevelObject, LevelObjectElement> _lazyListView;
 
         public LevelInspectorElement() 
         {
             InfoGroup.Name.Text = "Level Info";
+
+            _backgroundGroup = new FoldableGroupElement(
+                name: "Background"
+            );
+            _backgroundGroup.Icon.IsEnabled = false;
+            _backgroundGroup.ContentLayout.RightPadding = _backgroundGroup.ContentLayout.LeftPadding;
+            _backgroundGroup.ContentLayout.ExpandChildrenCrossAxis = true;
+            GroupLayout.AddChild(_backgroundGroup);
+
+            _backgroundGroup.ContentLayout.AddChild(new TextElement(
+                text: "Current:",
+                textAlignmentFactor: Alignment.TopLeft,
+                sizeToTextWidth: true,
+                sizeToTextHeight: true
+            ));
+
+            _backgroundList = new();
+            _backgroundList.AddItem(new DropDownListTextItemElement("SHIT"));
+            _backgroundList.AddItem(new DropDownListTextItemElement("FUCK"));
+            _backgroundList.AddItem(new DropDownListTextItemElement("DICK"));
+            _backgroundList.AddItem(new DropDownListTextItemElement("Who dem a program"));
+            _backgroundList.SelectItem(0);
+            _backgroundGroup.ContentLayout.AddChild(_backgroundList);
 
             _objectsGroup = new FoldableGroupElement(
                 name: "Objects Container"

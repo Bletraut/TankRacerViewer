@@ -1,6 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ComposableUi;
 
-namespace ComposableUi
+using Microsoft.Xna.Framework;
+
+namespace TankRacerViewer.Core
 {
     public class IconButtonElement : ButtonElement
     {

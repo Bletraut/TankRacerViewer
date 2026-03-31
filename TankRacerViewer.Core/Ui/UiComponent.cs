@@ -1,9 +1,9 @@
-﻿using ComposableUi;
+﻿using System;
+
+using ComposableUi;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-
-using TankRacerViewer.Core.Ui;
 
 namespace TankRacerViewer.Core
 {
@@ -13,27 +13,36 @@ namespace TankRacerViewer.Core
 
         private readonly MainWindow _mainWindow;
 
-        private readonly CanvasElement _canvas;
         private readonly ContainerElement _mainLayer;
         private readonly ContainerElement _overlayLayer;
 
         public UiComponent(MainWindow mainWindow, SpriteBatch spriteBatch) : base(mainWindow)
         {
             _mainWindow = mainWindow;
+            _mainWindow.Window.ClientSizeChanged += OnClientSizeChanged;
 
             UiManager = new UiManager(mainWindow.GraphicsDevice, mainWindow.Content, spriteBatch);
-
-            _canvas = new CanvasElement(mainWindow.Window);
-            UiManager.Root.AddChild(_canvas);
+            RefreshUiRootSize();
 
             _mainLayer = new ContainerElement();
-            _canvas.AddChild(new ExpandedElement(_mainLayer));
+            UiManager.Root.AddChild(new ExpandedElement(_mainLayer));
 
             _overlayLayer = new ContainerElement();
-            _canvas.AddChild(new ExpandedElement(_overlayLayer));
+            UiManager.Root.AddChild(new ExpandedElement(_overlayLayer));
 
             CreateWindows();
             CreateMenuBar();
+        }
+
+        private void RefreshUiRootSize()
+        {
+            UiManager.Root.Size = _mainWindow.Window.ClientBounds.Size.ToVector2();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            _mainWindow.Window.ClientSizeChanged -= OnClientSizeChanged;
         }
 
         public override void Update(GameTime gameTime)
@@ -44,6 +53,11 @@ namespace TankRacerViewer.Core
         public override void Draw(GameTime gameTime)
         {
             UiManager.Draw(gameTime);
+        }
+
+        private void OnClientSizeChanged(object sender, EventArgs arguments)
+        {
+            RefreshUiRootSize();
         }
     }
 }

@@ -17,18 +17,18 @@ namespace ComposableUi
         private static readonly Stack<Submenu> _stack = [];
 
         // Class.
-        public bool _clampPositionToParentWidth;
-        public bool ClampPositionToParentWidth
+        public bool _clampToRootWidth;
+        public bool ClampToRootWidth
         {
-            get => _clampPositionToParentWidth;
-            set => SetAndChangeState(ref _clampPositionToParentWidth, value);
+            get => _clampToRootWidth;
+            set => SetAndChangeState(ref _clampToRootWidth, value);
         }
 
-        public bool _clampPositionToParentHeight;
-        public bool ClampPositionToParentHeight
+        public bool _clampToRootHeight;
+        public bool ClampToRootHeight
         {
-            get => _clampPositionToParentHeight;
-            set => SetAndChangeState(ref _clampPositionToParentHeight, value);
+            get => _clampToRootHeight;
+            set => SetAndChangeState(ref _clampToRootHeight, value);
         }
 
         public SpriteElement Background { get; }
@@ -49,11 +49,11 @@ namespace ComposableUi
         private ContextMenuItemElement _currentItem;
 
         public ContextMenuElement(IEnumerable<ContextMenuItemElement> items = default,
-            bool clampPositionToParentWidth = true,
-            bool clampPositionToParentHeight = true)
+            bool clampToRootWidth = true,
+            bool clampToRootHeight = true)
         {
-            ClampPositionToParentWidth = clampPositionToParentWidth;
-            ClampPositionToParentHeight = clampPositionToParentHeight;
+            ClampToRootWidth = clampToRootWidth;
+            ClampToRootHeight = clampToRootHeight;
 
             Background = new SpriteElement(skin: StandardSkin.RectanglePanel);
             var backgroundParent = new LayoutElement(
@@ -204,11 +204,14 @@ namespace ComposableUi
 
         public void Show(Vector2 position)
         {
+            if (Root is null)
+                return;
+
             ResetItemsHover();
             HideAllSubmenus();
 
-            IsEnabled = true;
-            Position = CalculateClampedPosition(this, position, position);
+            Root.ShowInOverlay(this, position, position,
+                ClampToRootWidth, ClampToRootHeight);
         }
 
         public void Hide()
@@ -255,9 +258,8 @@ namespace ComposableUi
             var position = topRightPosition + size * submenu.Menu.Pivot;
             var fallbackPosition = topLeftPosition + size * submenu.Menu.Pivot with { X = submenu.Menu.Pivot.X - 1};
 
-            submenu.Menu.IsEnabled = true;
-            submenu.Menu.Position = submenu.Menu.CalculateClampedPosition(submenu.Root,
-                position, fallbackPosition);
+            Root.ShowInOverlay(submenu.Menu, position, fallbackPosition,
+                ClampToRootWidth, ClampToRootHeight);
         }
 
         private void ResetItemsHover()
@@ -274,50 +276,6 @@ namespace ComposableUi
         {
             foreach (var submenu in _submenus.Values)
                 submenu.Menu.IsEnabled = false;
-        }
-
-        private Vector2 CalculateClampedPosition(ContextMenuElement root,
-            Vector2 position, Vector2 fallbackPosition)
-        {
-            if (root.Parent is null)
-                return position;
-
-            var shouldClamp = root.ClampPositionToParentWidth
-                || root.ClampPositionToParentHeight;
-            if (!shouldClamp)
-                return position;
-
-            var size = CalculatePreferredSize();
-            var pivotOffset = size * Pivot;
-            var boundingRectangle = new Rectangle((position - pivotOffset).ToPoint(), size.ToPoint());
-            var parentBoundingRectangle = root.Parent.BoundingRectangle;
-
-            var fallbackTopLeftPosition = fallbackPosition - pivotOffset;
-
-            if (root.ClampPositionToParentWidth)
-            {
-                if (boundingRectangle.Right > parentBoundingRectangle.Right)
-                {
-                    position.X = fallbackPosition.X;
-                    boundingRectangle.X = (int)fallbackTopLeftPosition.X;
-                }
-
-                position.X += MathF.Max(0, parentBoundingRectangle.Left - boundingRectangle.Left)
-                    + MathF.Min(0, parentBoundingRectangle.Right - boundingRectangle.Right);
-            }
-            if (root.ClampPositionToParentHeight)
-            {
-                if (boundingRectangle.Bottom > parentBoundingRectangle.Bottom)
-                {
-                    position.Y = fallbackPosition.Y;
-                    boundingRectangle.Y = (int)fallbackTopLeftPosition.Y;
-                }
-
-                position.Y += MathF.Max(0, parentBoundingRectangle.Top - boundingRectangle.Top)
-                    + MathF.Min(0, parentBoundingRectangle.Bottom - boundingRectangle.Bottom);
-            }
-
-            return position;
         }
 
         public override Vector2 CalculatePreferredSize()

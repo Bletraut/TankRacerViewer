@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
@@ -25,7 +24,7 @@ namespace ComposableUi
 
         public RootElement Root { get; private set; }
 
-        private uint _layer;
+        private uint _layer = BuiltInLayer.Main;
         public uint Layer
         {
             get => _layer;
