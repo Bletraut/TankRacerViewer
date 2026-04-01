@@ -82,7 +82,9 @@ namespace ComposableUi
 
             var currentValue = Vector2.Dot(Button.LocalPosition - min, MainAxis);
             var maxValue = Vector2.Dot(max - min, MainAxis);
-            _progressValue = currentValue / maxValue;
+            _progressValue = maxValue != 0 
+                ? currentValue / maxValue
+                : 0;
             OnProgressValueChanged();
         }
 

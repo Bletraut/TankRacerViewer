@@ -117,6 +117,8 @@ namespace ComposableUi
 
         private void RefreshPreferredSize()
         {
+            _preferredSize = Vector2.Zero;
+
             foreach (var data in _data)
                 RefreshPreferredSize(data);
         }

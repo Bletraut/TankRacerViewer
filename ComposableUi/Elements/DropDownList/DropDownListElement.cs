@@ -13,7 +13,7 @@ namespace ComposableUi
     public sealed class DropDownListElement : DropDownListElement<DropDownListTextItemElement>
     {
         public DropDownListElement(Vector2? size = default,
-            float maxHeight = default,
+            float maxHeight = DefaultMaxListHeight,
             IEnumerable<DropDownListTextItemElement> items = default)
             : base(size,
                   maxHeight,
@@ -28,12 +28,12 @@ namespace ComposableUi
         public const int EmptyItemIndex = -1;
 
         public const float DefaultPaddings = 2;
-        public const float DefaultMaxListHeight = 400;
+        public const float DefaultMaxListHeight = 150;
 
         // Static.
-        public static readonly Vector2 DefaultSize = new(10, 26);
+        public static readonly Vector2 DefaultSize = new(100, 24);
 
-        public static readonly Vector2 DefaultButtonSize = new(26);
+        public static readonly Vector2 DefaultButtonSize = new(24);
         public static readonly Vector2 DefaultButtonIconSize = new(10);
 
         public float MaxListHeight { get; set; }
@@ -54,9 +54,13 @@ namespace ComposableUi
         private readonly PointerInputHandlerElement _overlayInputInterceptor;
 
         private readonly ContainerElement _itemContainer;
+        private readonly ExpandedElement _itemScrollViewParent;
+        private readonly ScrollViewElement _itemScrollView;
         private readonly ColumnLayout _itemLayout;
 
         private readonly ExpandedElement _itemPreviewParent;
+
+        private bool _canOpenItemList = true;
 
         private TItem _itemPreview;
 
@@ -79,6 +83,7 @@ namespace ComposableUi
                 iconSize: DefaultButtonIconSize,
                 iconSkin: StandardSkin.DownArrowIcon
             );
+            OpenButton.PointerUp += OnOpenButtonPointerUp;
             OpenButton.PointerClick += OnOpenButtonPointerClick;
 
             _itemPreviewParent = new ExpandedElement(
@@ -118,13 +123,25 @@ namespace ComposableUi
             );
             _overlayInputInterceptorParent = new ExpandedElement(_overlayInputInterceptor);
             _overlayInputInterceptor.PointerDown += OnOverlayInputInterceptorPointerDown;
-            _overlayInputInterceptor.PointerSecondaryDown += OnOverlayInputInterceptorPointerDown;
+            _overlayInputInterceptor.PointerSecondaryDown += OnOverlayInputInterceptorPointerSecondaryDown;
             _overlayInputInterceptor.ScrollWheel += OnOverlayInputInterceptorScrollWheel;
             _overlayInputInterceptor.HorizontalScrollWheel += OnOverlayInputInterceptorScrollWheel;
 
             _itemLayout = new ColumnLayout(
+                topPadding: DefaultPaddings,
+                bottomPadding: DefaultPaddings,
                 sizeMainAxisToContent: true,
-                sizeCrossAxisToContent: true
+                sizeCrossAxisToContent: true,
+                expandChildrenCrossAxis: true
+            );
+            _itemScrollView = new ScrollViewElement(
+                expandingContentWidthMode: ScrollViewElement.ExpandingMode.ExpandToFit,
+                content: _itemLayout
+            );
+            _itemScrollViewParent = new ExpandedElement(
+                leftPadding: DefaultPaddings,
+                rightPadding: DefaultPaddings,
+                innerElement: _itemScrollView
             );
             _itemContainer = new ContainerElement(
                 children: [
@@ -133,19 +150,12 @@ namespace ComposableUi
                             innerElement: ContentBackground
                         )
                     ),
-                    new ExpandedElement(
-                        leftPadding: DefaultPaddings,
-                        rightPadding: DefaultPaddings,
-                        topPadding: DefaultPaddings,
-                        bottomPadding: DefaultPaddings,
-                        innerElement: new ScrollViewElement(
-                            content: _itemLayout
-                        )
-                    )
+                    _itemScrollViewParent
                 ]
             )
             {
-                Pivot = Alignment.TopLeft
+                Pivot = Alignment.TopLeft,
+                IsEnabled = false
             };
 
             if (items is not null)
@@ -178,21 +188,37 @@ namespace ComposableUi
             }
         }
 
+        public void ClearItems()
+        {
+            foreach (var item in _items)
+            {
+                _itemLayout.RemoveChild(item);
+                item.Selected -= OnItemSelected;
+            }
+
+            _items.Clear();
+            SelectItem(0);
+        }
+
         public void SelectItem(int index)
         {
-            if (CurrentItemIndex == index)
-                return;
-
-            CurrentItem?.SetSelected(false);
-
             var hasItem = index >= 0 && index < _items.Count;
             if (!hasItem)
             {
                 CurrentItemIndex = EmptyItemIndex;
+                CurrentItem?.SetSelected(false);
                 CurrentItem = null;
+
+                if (_itemPreview is not null)
+                    _itemPreview.IsEnabled = false;
 
                 return;
             }
+
+            if (CurrentItemIndex == index)
+                return;
+
+            CurrentItem?.SetSelected(false);
 
             var item = _items[index];
             item.SetSelected(true);
@@ -206,6 +232,7 @@ namespace ComposableUi
                 _itemPreview.IsSelectable = false;
                 _itemPreviewParent.AddChild(_itemPreview);
             }
+            _itemPreview.IsEnabled = true;
             _itemPreview.Clone(item);
 
             ItemSelected?.Invoke(item, _items.IndexOf(item));
@@ -213,23 +240,32 @@ namespace ComposableUi
 
         private void ShowItemList()
         {
-            var boundingRectangle = BoundingRectangle;
+            if (_items.Count <= 0)
+                return;
+
+            var visibleRectangle = ClipMask ?? BoundingRectangle;
 
             var contentSize = _itemLayout.CalculatePreferredSize();
+            var contentWidth = contentSize.X + _itemScrollViewParent.TotalHorizontalPaddings;
+            var extraHeight =  contentWidth > visibleRectangle.Size.X
+                ? _itemScrollView.HorizontalScrollBar.CrossAxisSize
+                : 0;
             var size = new Vector2()
             {
-                X = boundingRectangle.Size.X,
-                Y = MathF.Min(MaxListHeight, contentSize.Y + DefaultPaddings * 2)
+                X = visibleRectangle.Size.X,
+                Y = MathF.Min(MaxListHeight, contentSize.Y + extraHeight)
             };
             _itemContainer.Size = size;
 
-            var position = new Vector2(boundingRectangle.Left,
-                boundingRectangle.Bottom - DefaultPaddings);
+            var position = new Vector2(visibleRectangle.Left,
+                visibleRectangle.Bottom - DefaultPaddings);
             var fallbackPosition = new Vector2()
             {
-                X = boundingRectangle.Left,
-                Y = boundingRectangle.Top - size.Y + DefaultPaddings
+                X = visibleRectangle.Left,
+                Y = visibleRectangle.Top - size.Y + DefaultPaddings
             };
+
+            Layer = BuiltInLayer.Overlay;
 
             Root.ShowInOverlay(_overlayInputInterceptorParent,
                 Vector2.Zero, Vector2.Zero, false, false);
@@ -240,6 +276,8 @@ namespace ComposableUi
         {
             _itemContainer.IsEnabled = false;
             _overlayInputInterceptorParent.IsEnabled = false;
+
+            Layer = BuiltInLayer.Main;
         }
 
         private void OnItemSelected(TItem item)
@@ -248,13 +286,37 @@ namespace ComposableUi
             HideItemList();
         }
 
+        private void OnOpenButtonPointerUp(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            if (OpenButton.IsHover)
+                return;
+
+            _canOpenItemList = true;
+        }
+
         private void OnOpenButtonPointerClick(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
+            if (!_canOpenItemList)
+            {
+                _canOpenItemList = true;
+                return;
+            }
+
             ShowItemList();
         }
 
         private void OnOverlayInputInterceptorPointerDown(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            if (OpenButton.IsHover)
+                _canOpenItemList = false;
+
+            HideItemList();
+        }
+
+        private void OnOverlayInputInterceptorPointerSecondaryDown(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
             HideItemList();

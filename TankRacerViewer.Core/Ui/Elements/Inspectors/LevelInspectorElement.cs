@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 using ComposableUi;
+using ComposableUi.Elements.DropDownList;
 
 using Microsoft.Xna.Framework;
 
@@ -13,10 +16,15 @@ namespace TankRacerViewer.Core
         public Action<LevelObject> LevelObjectSelectedAction { get; set; }
 
         private readonly FoldableGroupElement _backgroundGroup;
-        private readonly DropDownListElement<DropDownListTextItemElement> _backgroundList;
+        private readonly DropDownListElement _backgroundDropDownList;
 
         private readonly FoldableGroupElement _objectsGroup;
+        private readonly DropDownListElement _containerDropDownList;
+        private readonly DropDownListElement _lapDropDownList;
         private readonly LazyListViewElement<LevelObject, LevelObjectElement> _lazyListView;
+
+        private readonly Stack<DropDownListTextItemElement> _pool = [];
+        private readonly List<BackgroundAssetView> _backgrounds = [];
 
         public LevelInspectorElement() 
         {
@@ -37,25 +45,46 @@ namespace TankRacerViewer.Core
                 sizeToTextHeight: true
             ));
 
-            _backgroundList = new();
-            _backgroundList.AddItem(new DropDownListTextItemElement("SHIT"));
-            _backgroundList.AddItem(new DropDownListTextItemElement("FUCK"));
-            _backgroundList.AddItem(new DropDownListTextItemElement("DICK"));
-            _backgroundList.AddItem(new DropDownListTextItemElement("Who dem a program"));
-            _backgroundList.SelectItem(0);
-            _backgroundGroup.ContentLayout.AddChild(_backgroundList);
+            _backgroundDropDownList = new DropDownListElement();
+            _backgroundGroup.ContentLayout.AddChild(_backgroundDropDownList);
+            _backgroundDropDownList.ItemSelected += OnBackgroundSelected;
 
             _objectsGroup = new FoldableGroupElement(
                 name: "Objects Container"
             );
             _objectsGroup.Icon.IsEnabled = false;
-            _objectsGroup.ContentBackground.Color = Color.DarkSlateBlue;
-            _objectsGroup.ContentLayout.LeftPadding = 0;
-            _objectsGroup.ContentLayout.TopPadding = 0;
-            _objectsGroup.ContentLayout.BottomPadding = 0;
+            _objectsGroup.ContentLayout.RightPadding = _objectsGroup.ContentLayout.LeftPadding;
             _objectsGroup.ContentLayout.ExpandChildrenCrossAxis = true;
             GroupLayout.AddChild(_objectsGroup);
 
+            _objectsGroup.ContentLayout.AddChild(new TextElement(
+                text: "Container:",
+                textAlignmentFactor: Alignment.TopLeft,
+                sizeToTextWidth: true,
+                sizeToTextHeight: true
+            ));
+            _containerDropDownList = new DropDownListElement();
+            _objectsGroup.ContentLayout.AddChild(_containerDropDownList);
+            _containerDropDownList.ItemSelected += OnContainerSelected;
+
+            _objectsGroup.ContentLayout.AddChild(new TextElement(
+                text: "Lap:",
+                textAlignmentFactor: Alignment.TopLeft,
+                sizeToTextWidth: true,
+                sizeToTextHeight: true
+            ));
+            _lapDropDownList = new DropDownListElement(
+                items: [new("1"), new("2"), new("3")]
+            );
+            _objectsGroup.ContentLayout.AddChild(_lapDropDownList);
+            _lapDropDownList.ItemSelected += OnLapSelected;
+
+            _objectsGroup.ContentLayout.AddChild(new TextElement(
+                text: "Objects:",
+                textAlignmentFactor: Alignment.TopLeft,
+                sizeToTextWidth: true,
+                sizeToTextHeight: true
+            ));
             _lazyListView = new LazyListViewElement<LevelObject, LevelObjectElement>(
                 itemFactory: CreateLevelObject
             );
@@ -67,14 +96,106 @@ namespace TankRacerViewer.Core
         private LevelObjectElement CreateLevelObject()
         {
             var element = new LevelObjectElement();
-            element.TargetSelected += OnTargetSelected;
+            element.TargetSelected += OnLevelObjectSelected;
 
             return element;
         }
 
-        private void OnTargetSelected(LevelObject levelObject)
+        private DropDownListTextItemElement GetBackgroundListItem()
+        {
+            if (_pool.Count > 0)
+                return _pool.Pop();
+
+            return new DropDownListTextItemElement();
+        }
+
+        private void ClearAllAndReturnToPool(DropDownListElement dropDownList)
+        {
+            foreach (var item in dropDownList.Items)
+                _pool.Push(item);
+
+            dropDownList.ClearItems();
+        }
+
+        private void ApplyCurrentBackgroundIfPossible()
+        {
+            ClearAllAndReturnToPool(_backgroundDropDownList);
+
+            var currentIndex = 0;
+            if (Target.BackgroundAssetViews.Count > 0)
+            {
+                _backgrounds.Clear();
+                foreach (var value in Target.BackgroundAssetViews.Values)
+                {
+                    var listItem = GetBackgroundListItem();
+                    listItem.Value.Text = value.FullName;
+                    _backgroundDropDownList.AddItem(listItem);
+
+                    if (value == Target.BackgroundAssetView)
+                        currentIndex = _backgrounds.Count;
+
+                    _backgrounds.Add(value);
+                }
+            }
+            _backgroundDropDownList.SelectItem(currentIndex);
+        }
+
+        private void ApplyCurrentContainerIfPossible()
+        {
+            ClearAllAndReturnToPool(_containerDropDownList);
+
+            var currentIndex = 0;
+            for (var i = 0; i < Target.LevelObjectContainers.Count; i++)
+            {
+                var container = Target.LevelObjectContainers[i];
+
+                var listItem = GetBackgroundListItem();
+                listItem.Value.Text = container.FullName;
+                _containerDropDownList.AddItem(listItem);
+
+                if (container == Target.CurrentLevelObjectContainer)
+                    currentIndex = i;
+            }
+            _containerDropDownList.SelectItem(currentIndex);
+
+            ApplyCurrentLevelObjectContainer();
+        }
+
+        private void ApplyCurrentLevelObjectContainer()
+        {
+            _lazyListView.ClearData();
+            foreach (var levelObject in Target.CurrentLevelObjectContainer.LevelObjects)
+                _lazyListView.AddData(levelObject);
+        }
+
+        private void OnLevelObjectSelected(LevelObject levelObject)
         {
             LevelObjectSelectedAction?.Invoke(levelObject);
+        }
+
+        private void OnBackgroundSelected(DropDownListTextItemElement sender, int index)
+        {
+            if (Target.BackgroundAssetViews.Count <= 0)
+                return;
+
+            Target.BackgroundAssetView = _backgrounds[index];
+        }
+
+        private void OnContainerSelected(DropDownListTextItemElement sender, int index)
+        {
+            if (Target.LevelObjectContainers.Count <= 0)
+                return;
+
+            Target.CurrentLevelObjectContainer = Target.LevelObjectContainers[index];
+            ApplyCurrentLevelObjectContainer();
+        }
+
+        private void OnLapSelected(DropDownListTextItemElement sender, int index)
+        {
+            Target.CurrentLap = index + 1;
+
+            foreach (var item in _lazyListView.Items)
+                item.RefreshButtonsVisualState();
         }
 
         protected override void OnTargetSet()
@@ -85,10 +206,10 @@ namespace TankRacerViewer.Core
             StringBuilder.Append($"Backgrounds: {Target.BackgroundAssetViews.Count}");
             InfoText.Text = StringBuilder.ToString();
 
-            _lazyListView.ClearData();
+            ApplyCurrentBackgroundIfPossible();
+            ApplyCurrentContainerIfPossible();
 
-            foreach (var levelObject in Target.CurrentLevelObjectContainer.LevelObjects)
-                _lazyListView.AddData(levelObject);
+            _lapDropDownList.SelectItem(Target.CurrentLap - 1);
         }
     }
 }

@@ -27,10 +27,10 @@ namespace TankRacerViewer.Core
             _lazyListView = new LazyListViewElement<HierarchyNodeData, HierarchyNodeElement>(
                 itemFactory: CreateHierarchyNode
             );
+            _lazyListView.ItemColumn.ExpandChildrenCrossAxis = true;
 
             _scrollView = new ScrollViewElement(
-                sizeToContentWidth: true,
-                sizeToContentHeight: true,
+                expandingContentWidthMode: ScrollViewElement.ExpandingMode.ExpandToFit,
                 content: _lazyListView
             );
 

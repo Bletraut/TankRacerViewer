@@ -307,11 +307,11 @@ namespace ComposableUi
                 totalMainAxisLayoutOffset -= MainAxis * (childSize + new Vector2(Spacing));
             }
         }
-    }
 
-    public enum ExpandingMode
-    {
-        FlexFactor,
-        Size
+        public enum ExpandingMode
+        {
+            FlexFactor,
+            Size
+        }
     }
 }

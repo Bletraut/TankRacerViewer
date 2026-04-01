@@ -213,7 +213,7 @@ namespace TankRacerViewer.Core
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
             // TODO: Add your drawing code here
             _info.Clear();
@@ -258,6 +258,9 @@ namespace TankRacerViewer.Core
 
         private void OnAssetViewSelected(AssetView assetView)
         {
+            if (_selectedAssetView == assetView)
+                return;
+
             _selectedAssetView = assetView;
             if (_selectedAssetView is not null)
             {

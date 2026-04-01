@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
-    public sealed class LevelObjectElement : SizedToContentHolderElement,
+    public sealed class LevelObjectElement : ClipMaskElement,
         ILazyListItem<LevelObject>
     {
         public const int DefaultHeight = 30;
@@ -19,7 +19,7 @@ namespace TankRacerViewer.Core
         public static readonly Color EnabledBoundingBoxColor = Color.Fuchsia;
         public static readonly Color SelectedBoundingBoxColor = Color.GreenYellow;
 
-        public static readonly Color DefaultNormalBackgroundColor = Color.MediumSlateBlue;
+        public static readonly Color DefaultNormalBackgroundColor = Color.DarkSlateBlue;
         public static readonly Color DefaultHoverBackgroundColor = Color.DeepSkyBlue;
 
         private static readonly StringBuilder _stringBuilder = new();
@@ -94,6 +94,12 @@ namespace TankRacerViewer.Core
             );
         }
 
+        public void RefreshButtonsVisualState()
+        {
+            RefreshVisibilityButtonVisualState();
+            RefreshBoundingBoxButtonVisualState();
+        }
+
         private void RefreshBackgroundColor()
         {
             _background.Color = _hoverInputHandler.IsHover
@@ -146,8 +152,7 @@ namespace TankRacerViewer.Core
 
             RefreshBackgroundColor();
             RefreshBoundingBoxColor();
-            RefreshVisibilityButtonVisualState();
-            RefreshBoundingBoxButtonVisualState();
+            RefreshButtonsVisualState();
         }
 
         void ILazyListItem<LevelObject>.ClearData()

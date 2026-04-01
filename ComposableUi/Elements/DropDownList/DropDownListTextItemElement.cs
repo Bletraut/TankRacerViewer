@@ -16,7 +16,7 @@ namespace ComposableUi
 
         public readonly Color DefaultNormalValueColor = Color.Black;
         public readonly Color DefaultHoverValueColor = Color.White;
-        public readonly Color DefaultSelectedValueColor = Color.Black;
+        public readonly Color DefaultSelectedValueColor = Color.White;
 
         // Class.
         public bool IsSelectable
@@ -129,6 +129,7 @@ namespace ComposableUi
                 leftPadding: DefaultValueIndent,
                 sizeMainAxisToContent: true,
                 sizeCrossAxisToContent: true,
+                expandChildrenMainAxis: true,
                 children: [
                     new LayoutElement(
                         ignoreLayout: true,

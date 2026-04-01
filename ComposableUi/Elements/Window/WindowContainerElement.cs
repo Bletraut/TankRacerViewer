@@ -134,7 +134,7 @@ namespace ComposableUi
         {
             layout.ExpandChildrenCrossAxis = true;
             layout.ExpandChildrenMainAxis = true;
-            layout.MainAxisChildrenExpandingMode = ExpandingMode.Size;
+            layout.MainAxisChildrenExpandingMode = LineLayout.ExpandingMode.Size;
 
             layout.AddChild(new LayoutElement(
                 ignoreLayout: true,

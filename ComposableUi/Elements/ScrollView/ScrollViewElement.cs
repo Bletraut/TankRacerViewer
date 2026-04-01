@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Reflection;
 
 using Microsoft.Xna.Framework;
 
@@ -16,32 +14,18 @@ namespace ComposableUi
             set => _contentParent.InnerElement = value;
         }
 
-        private bool _sizeToContentWidth;
-        public bool SizeToContentWidth
+        private ExpandingMode _expandingContentWidthMode;
+        public ExpandingMode ExpandingContentWidthMode
         {
-            get => _sizeToContentWidth;
-            set => SetAndChangeState(ref _sizeToContentWidth, value);
+            get => _expandingContentWidthMode;
+            set => SetAndChangeState(ref _expandingContentWidthMode, value);
         }
 
-        private bool _sizeToContentHeight;
-        public bool SizeToContentHeight
+        private ExpandingMode _expandingContentHeightMode;
+        public ExpandingMode ExpandingContentHeightMode
         {
-            get => _sizeToContentHeight;
-            set => SetAndChangeState(ref _sizeToContentHeight, value);
-        }
-
-        private bool _expandContentWidth;
-        public bool ExpandContentWidth
-        {
-            get => _expandContentWidth;
-            set => SetAndChangeState(ref _expandContentWidth, value);
-        }
-
-        private bool _expandContentHeight;
-        public bool ExpandContentHeight
-        {
-            get => _expandContentHeight;
-            set => SetAndChangeState(ref _expandContentHeight, value);
+            get => _expandingContentHeightMode;
+            set => SetAndChangeState(ref _expandingContentHeightMode, value);
         }
 
         public float ScrollWheelMultiplier { get; set; }
@@ -70,17 +54,13 @@ namespace ComposableUi
 
         public ScrollViewElement(Vector2? size = default,
             Element content = default,
-            bool sizeToContentWidth = default,
-            bool sizeToContentHeight = default,
-            bool expandContentWidth = default,
-            bool expandContentHeight = default,
+            ExpandingMode expandingContentWidthMode = default,
+            ExpandingMode expandingContentHeightMode = default,
             float scrollWheelMultiplier = 0.5f)
         {
             Size = size ?? DefaultSize;
-            SizeToContentWidth = sizeToContentWidth;
-            SizeToContentHeight = sizeToContentHeight;
-            ExpandContentWidth = expandContentWidth;
-            ExpandContentHeight = expandContentHeight;
+            ExpandingContentWidthMode = expandingContentWidthMode;
+            ExpandingContentHeightMode = expandingContentHeightMode;
             ScrollWheelMultiplier = scrollWheelMultiplier;
 
             Background = new SpriteElement();
@@ -91,8 +71,8 @@ namespace ComposableUi
                 pivot: Alignment.TopLeft);
 
             _contentExpanded = new ExpandedElement(
-                expandWidth: ExpandContentWidth,
-                expandHeight: ExpandContentHeight,
+                expandWidth: ExpandingContentWidthMode is ExpandingMode.FillParent,
+                expandHeight: ExpandingContentHeightMode is ExpandingMode.FillParent,
                 innerElement: _contentParent);
 
             _view = new ClipMaskElement(
@@ -188,23 +168,60 @@ namespace ComposableUi
             }
 
             var preferredContentSize = Content.CalculatePreferredSize();
-            var contentSize = new Vector2()
+
+            var extraWidth = ExpandingContentWidthMode is not ExpandingMode.FillParent
+                ? VerticalScrollBar.CrossAxisSize
+                : 0;
+            var extraHeight = ExpandingContentHeightMode is not ExpandingMode.FillParent
+                ? HorizontalScrollBar.CrossAxisSize
+                : 0;
+
+            var contentWidth = preferredContentSize.X;
+            switch (ExpandingContentWidthMode)
             {
-                X = ExpandContentWidth ? Size.X : preferredContentSize.X,
-                Y = ExpandContentHeight ? Size.Y : preferredContentSize.Y
-            };
+                case ExpandingMode.FillParent:
+                    contentWidth = Size.X;
+                    break;
+                case ExpandingMode.ExpandToFit:
+                    contentWidth = MathF.Max(preferredContentSize.X,
+                        Size.X - preferredContentSize.Y > Size.Y ? extraWidth : 0);
+                    break;
+            }
+            var contentHeight = preferredContentSize.Y;
+            switch (ExpandingContentHeightMode)
+            {
+                case ExpandingMode.FillParent:
+                    contentHeight = Size.Y;
+                    break;
+                case ExpandingMode.ExpandToFit:
+                    contentHeight = MathF.Max(preferredContentSize.Y,
+                        Size.Y - preferredContentSize.X > Size.X ? extraHeight : 0);
+                    break;
+            }
+            var contentSize = new Vector2(contentWidth, contentHeight);
 
             var deltaSize = contentSize - Size;
-            var extraDeltaSize = deltaSize + new Vector2()
-            {
-                X = ExpandContentWidth ? 0 : VerticalScrollBar.CrossAxisSize,
-                Y = ExpandContentHeight ? 0 : HorizontalScrollBar.CrossAxisSize
-            };
+            var extraDeltaSize = deltaSize + new Vector2(extraWidth, extraHeight);
 
             HorizontalScrollBar.IsEnabled = deltaSize.X > 0
                 || (extraDeltaSize.X > 0 && deltaSize.Y > 0);
             VerticalScrollBar.IsEnabled = deltaSize.Y > 0
                 || (extraDeltaSize.Y > 0 && deltaSize.X > 0);
+
+            _contentExpanded.ExpandWidth = ExpandingContentWidthMode switch
+            {
+                ExpandingMode.None => false,
+                ExpandingMode.FillParent => true,
+                ExpandingMode.ExpandToFit => !HorizontalScrollBar.IsEnabled,
+                _ => false
+            };
+            _contentExpanded.ExpandHeight = ExpandingContentHeightMode switch
+            {
+                ExpandingMode.None => false,
+                ExpandingMode.FillParent => true,
+                ExpandingMode.ExpandToFit => !VerticalScrollBar.IsEnabled,
+                _ => false
+            };
 
             _bottomRightPlug.IsEnabled = HorizontalScrollBar.IsEnabled
                 && VerticalScrollBar.IsEnabled;
@@ -336,6 +353,13 @@ namespace ComposableUi
         private void OnHorizontalScrollWheel(Element sender, PointerScrollEvent pointerEvent)
         {
             ScrollContentIfPossible(Vector2.UnitX, pointerEvent.Delta);
+        }
+
+        public enum ExpandingMode
+        {
+            None,
+            FillParent,
+            ExpandToFit
         }
     }
 }

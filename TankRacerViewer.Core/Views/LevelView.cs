@@ -228,7 +228,7 @@ namespace TankRacerViewer.Core
 
                 if (levelObject.Type == LevelObject.PowerupTypeName)
                 {
-                    var id = Array.IndexOf(_powerupIdOrder, levelObject.Id[0]) + 1;
+                    var id = Math.Max(1, Array.IndexOf(_powerupIdOrder, levelObject.Id[0]) + 1);
 
                     var shouldShow = id == CurrentLap;
                     if (levelObject.Properties.ContainsKey(LevelObject.IncrementLapForNextPropertyName))

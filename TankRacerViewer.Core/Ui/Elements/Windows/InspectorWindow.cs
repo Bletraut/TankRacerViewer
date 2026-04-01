@@ -15,8 +15,7 @@ namespace TankRacerViewer.Core
         public InspectorWindow() : base("Inspector")
         {
             _scrollView = new ScrollViewElement(
-                expandContentWidth: true,
-                sizeToContentHeight: true
+                expandingContentWidthMode: ScrollViewElement.ExpandingMode.FillParent
             );
             ContentContainer.AddChild(new ExpandedElement(_scrollView));
 

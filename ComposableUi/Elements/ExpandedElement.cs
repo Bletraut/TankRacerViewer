@@ -4,6 +4,9 @@ namespace ComposableUi
 {
     public sealed class ExpandedElement : HolderElement
     {
+        public float TotalHorizontalPaddings => LeftPadding + RightPadding;
+        public float TotalVerticalPaddings => TopPadding + BottomPadding;
+
         private float _leftPadding;
         public float LeftPadding
         {

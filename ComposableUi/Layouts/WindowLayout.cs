@@ -376,7 +376,8 @@ namespace ComposableUi
 
             HideEmbeddedPreviewWindow();
 
-            var canShowFloatPreviewWindow = !_isTabPreviewShown
+            var canShowFloatPreviewWindow = _embedPreviewInputArea.IsEnabled
+                && !_isTabPreviewShown
                 && !_isEmbeddedPreviewShown;
             if (canShowFloatPreviewWindow)
                 ShowFloatPreviewWindow();
