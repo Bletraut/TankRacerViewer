@@ -42,7 +42,9 @@ namespace TankRacerViewer.Core
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            _mainWindow.Window.ClientSizeChanged -= OnClientSizeChanged;
+
+            if (_mainWindow.Window is not null)
+                _mainWindow.Window.ClientSizeChanged -= OnClientSizeChanged;
         }
 
         public override void Update(GameTime gameTime)

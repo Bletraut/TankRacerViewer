@@ -75,7 +75,7 @@ namespace TankRacerViewer.Core
                 if (modelAssetView is null)
                     continue;
 
-                tankNodes.Add(new LevelObject(string.Empty, propertyName,
+                tankNodes.Add(new LevelObject(propertyName, propertyName,
                     modelAssetView, _emptyProperties)
                 {
                     Position = position

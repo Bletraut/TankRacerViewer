@@ -7,6 +7,8 @@
 	#define PS_SHADERMODEL ps_4_0
 #endif
 
+#include "Common.fx" 
+
 sampler2D BaseColorSampler;
 
 matrix ModelMatrix;
@@ -50,7 +52,7 @@ FragmentShaderOuput MainPS(VertexShaderOutput input)
     float4 resultColor = float4(baseColor.rgb * input.Color.rgb, baseColor.a);
     
     FragmentShaderOuput output;
-    output.Color = resultColor;
+    output.Color = Highlight(resultColor, HighlightColor);
     output.Depth = 0;
 	
     return output;

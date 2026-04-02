@@ -1,12 +1,12 @@
 ﻿namespace TankRacerViewer.Core
 {
-    public sealed class ModelInspectorElement : InspectorElement<ModelAssetView>
+    public sealed class BackgroundInspectorElement : InspectorElement<BackgroundAssetView>
     {
         private readonly UsedTexturesGroupElement _usedTexturesGroup;
 
-        public ModelInspectorElement()
+        public BackgroundInspectorElement() 
         {
-            InfoGroup.Name.Text = "Model Info";
+            InfoGroup.Name.Text = "Background Info";
 
             _usedTexturesGroup = new UsedTexturesGroupElement(
                 name: "Used Textures"
@@ -20,12 +20,10 @@
 
             StringBuilder.Clear();
             StringBuilder.AppendLine($"Name: {Target.FullName}");
-            StringBuilder.AppendLine($"Triangles: {Target.PolygonCount}");
-            StringBuilder.AppendLine($"Opaque: {Target.Opaque.Count + Target.OpaqueDoubleSided.Count}");
-            StringBuilder.Append($"Transparent: {Target.Transparent.Count + Target.TransparentDoubleSided.Count}");
+            StringBuilder.Append($"Models: {Target.ModelAssetViews.Count}");
             InfoText.Text = StringBuilder.ToString();
 
-            _usedTexturesGroup.ApplyModel(Target);
+            _usedTexturesGroup.ApplyModels(Target.ModelAssetViews);
         }
     }
 }

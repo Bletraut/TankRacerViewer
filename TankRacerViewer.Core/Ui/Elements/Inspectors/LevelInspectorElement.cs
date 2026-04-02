@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using ComposableUi;
-using ComposableUi.Elements.DropDownList;
-
-using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
@@ -13,7 +9,11 @@ namespace TankRacerViewer.Core
     {
         public const float DefaultContentSpacing = 4;
 
-        public Action<LevelObject> LevelObjectSelectedAction { get; set; }
+        public Action<LevelObject> LevelObjectSelectedAction
+        {
+            get => _containerExplorer.LevelObjectSelectedAction;
+            set => _containerExplorer.LevelObjectSelectedAction = value;
+        }
 
         private readonly FoldableGroupElement _backgroundGroup;
         private readonly DropDownListElement _backgroundDropDownList;
@@ -21,7 +21,7 @@ namespace TankRacerViewer.Core
         private readonly FoldableGroupElement _objectsGroup;
         private readonly DropDownListElement _containerDropDownList;
         private readonly DropDownListElement _lapDropDownList;
-        private readonly LazyListViewElement<LevelObject, LevelObjectElement> _lazyListView;
+        private readonly LevelObjectContainerExplorerElement _containerExplorer;
 
         private readonly Stack<DropDownListTextItemElement> _pool = [];
         private readonly List<BackgroundAssetView> _backgrounds = [];
@@ -50,7 +50,7 @@ namespace TankRacerViewer.Core
             _backgroundDropDownList.ItemSelected += OnBackgroundSelected;
 
             _objectsGroup = new FoldableGroupElement(
-                name: "Objects Container"
+                name: "Objects"
             );
             _objectsGroup.Icon.IsEnabled = false;
             _objectsGroup.ContentLayout.RightPadding = _objectsGroup.ContentLayout.LeftPadding;
@@ -79,26 +79,8 @@ namespace TankRacerViewer.Core
             _objectsGroup.ContentLayout.AddChild(_lapDropDownList);
             _lapDropDownList.ItemSelected += OnLapSelected;
 
-            _objectsGroup.ContentLayout.AddChild(new TextElement(
-                text: "Objects:",
-                textAlignmentFactor: Alignment.TopLeft,
-                sizeToTextWidth: true,
-                sizeToTextHeight: true
-            ));
-            _lazyListView = new LazyListViewElement<LevelObject, LevelObjectElement>(
-                itemFactory: CreateLevelObject
-            );
-            _lazyListView.ItemColumn.Spacing = DefaultContentSpacing;
-            _lazyListView.ItemColumn.ExpandChildrenCrossAxis = true;
-            _objectsGroup.ContentLayout.AddChild(_lazyListView);
-        }
-
-        private LevelObjectElement CreateLevelObject()
-        {
-            var element = new LevelObjectElement();
-            element.TargetSelected += OnLevelObjectSelected;
-
-            return element;
+            _containerExplorer = new LevelObjectContainerExplorerElement("Objects:");
+            _objectsGroup.ContentLayout.AddChild(_containerExplorer);
         }
 
         private DropDownListTextItemElement GetBackgroundListItem()
@@ -158,19 +140,13 @@ namespace TankRacerViewer.Core
             }
             _containerDropDownList.SelectItem(currentIndex);
 
-            ApplyCurrentLevelObjectContainer();
+            ApplyContainer(Target.CurrentLevelObjectContainer);
         }
 
-        private void ApplyCurrentLevelObjectContainer()
+        private void ApplyContainer(LevelObjectContainer container)
         {
-            _lazyListView.ClearData();
-            foreach (var levelObject in Target.CurrentLevelObjectContainer.LevelObjects)
-                _lazyListView.AddData(levelObject);
-        }
-
-        private void OnLevelObjectSelected(LevelObject levelObject)
-        {
-            LevelObjectSelectedAction?.Invoke(levelObject);
+            _containerExplorer.ApplyContainer(container);
+            _containerExplorer.IsEnabled = container.LevelObjects.Count > 0;
         }
 
         private void OnBackgroundSelected(DropDownListTextItemElement sender, int index)
@@ -187,15 +163,13 @@ namespace TankRacerViewer.Core
                 return;
 
             Target.CurrentLevelObjectContainer = Target.LevelObjectContainers[index];
-            ApplyCurrentLevelObjectContainer();
+            ApplyContainer(Target.CurrentLevelObjectContainer);
         }
 
         private void OnLapSelected(DropDownListTextItemElement sender, int index)
         {
             Target.CurrentLap = index + 1;
-
-            foreach (var item in _lazyListView.Items)
-                item.RefreshButtonsVisualState();
+            _containerExplorer.Refresh();
         }
 
         protected override void OnTargetSet()

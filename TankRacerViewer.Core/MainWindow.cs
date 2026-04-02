@@ -271,7 +271,7 @@ namespace TankRacerViewer.Core
                 }
                 else if (_selectedAssetView is BackgroundAssetView backgroundAssetView)
                 {
-                    _uiComponent.InspectorWindow.HideInspector();
+                    _uiComponent.InspectorWindow.ShowBackgroundInspector(backgroundAssetView);
                     _uiComponent.ViewerWindow.Show3DViewer();
                 }
                 else if (_selectedAssetView is TextureAssetView textureAssetView)
@@ -295,9 +295,10 @@ namespace TankRacerViewer.Core
                         _levelObjectSelectedAction);
                     _uiComponent.ViewerWindow.Show3DViewer();
                 }
-                else if (_selectedAssetView is TankView)
+                else if (_selectedAssetView is TankView tankView)
                 {
-                    _uiComponent.InspectorWindow.HideInspector();
+                    _uiComponent.InspectorWindow.ShowTankInspector(tankView,
+                        _levelObjectSelectedAction);
                     _uiComponent.ViewerWindow.Show3DViewer();
                 }
             }

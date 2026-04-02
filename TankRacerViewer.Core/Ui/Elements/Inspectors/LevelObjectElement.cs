@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 
 using ComposableUi;
@@ -25,6 +26,8 @@ namespace TankRacerViewer.Core
         private static readonly StringBuilder _stringBuilder = new();
 
         // Class.
+        public event Action<LevelObject> VisibilityChanged;
+        public event Action<LevelObject> BoundingBoxVisibilityChanged;
         public event Action<LevelObject> TargetSelected;
 
         private readonly SpriteElement _background;
@@ -96,6 +99,8 @@ namespace TankRacerViewer.Core
 
         public void RefreshButtonsVisualState()
         {
+            _isBoundingBoxEnabled = _data.IsBoundingBoxEnabled;
+
             RefreshVisibilityButtonVisualState();
             RefreshBoundingBoxButtonVisualState();
         }
@@ -143,16 +148,16 @@ namespace TankRacerViewer.Core
                 return;
 
             _data = data;
-            _isBoundingBoxEnabled = _data.IsBoundingBoxEnabled;
 
             _stringBuilder.Clear();
             _stringBuilder.AppendLine($"Name: {_data.ModelAssetView.Name}");
             _stringBuilder.Append($"Type: {_data.Type}");
             _name.Text = _stringBuilder.ToString();
 
+            RefreshButtonsVisualState();
+
             RefreshBackgroundColor();
             RefreshBoundingBoxColor();
-            RefreshButtonsVisualState();
         }
 
         void ILazyListItem<LevelObject>.ClearData()
@@ -167,6 +172,8 @@ namespace TankRacerViewer.Core
         {
             _data.IsEnabled = !_data.IsEnabled;
             RefreshVisibilityButtonVisualState();
+
+            VisibilityChanged?.Invoke(_data);
         }
 
         private void OnBoundingBoxButtonPointerClick(PointerInputHandlerElement sender,
@@ -176,6 +183,8 @@ namespace TankRacerViewer.Core
 
             RefreshBoundingBoxColor();
             RefreshBoundingBoxButtonVisualState();
+
+            BoundingBoxVisibilityChanged?.Invoke(_data);
         }
 
         private void OnLookAtButtonPointerClick(PointerInputHandlerElement sender,

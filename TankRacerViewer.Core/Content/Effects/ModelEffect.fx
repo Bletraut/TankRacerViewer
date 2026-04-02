@@ -7,7 +7,7 @@
 	#define PS_SHADERMODEL ps_4_0
 #endif
 
-float4 HighlightColor;
+#include "Common.fx" 
 
 sampler2D BaseColorSampler;
 sampler2D OpaqueDepthSampler = sampler_state
@@ -89,15 +89,6 @@ float3 BlendHardLight(float3 baseColor, float3 blendColor)
     float3 b = 1 - 2 * (1 - baseColor) * (1 - blendColor);
 	
     return lerp(a, b, step(0.5, blendColor));
-}
-
-float4 Highlight(float4 baseColor, float4 highlightColor)
-{
-    float grayScale = dot(baseColor.rgb, float3(0.299, 0.587, 0.114));
-    float3 highlighted = lerp(highlightColor.rgb, 1, grayScale);
-    float3 color = lerp(baseColor.rgb, highlighted, 1 - highlightColor.a);
-
-    return float4(color, baseColor.a);
 }
 
 FragmentShaderOuput OpaquePS(VertexShaderOutput input)

@@ -238,6 +238,7 @@ namespace TankRacerViewer.Core
                 }
 
                 levelObject.IsEnabled = !levelObject.IsEditorType && shouldShowOnCurrentLap;
+                levelObject.IsBoundingBoxEnabled = false;
             }
         }
     }
