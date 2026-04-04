@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 
 using ComposableUi.Utilities;
 
@@ -54,18 +57,28 @@ namespace ComposableUi
 
         private void PrepareStandardSkinSprites()
         {
-            var atlasPath = Path.Combine(_contentManager.RootDirectory, "ComposableUi\\UiElementsAtlas.json");
-            if (!File.Exists(atlasPath))
-                return;
+            var assembly = Assembly.GetExecutingAssembly();
 
-            var atlasJson = File.ReadAllText(atlasPath);
-            if (AsepriteUtilities.TryGetSlices(atlasJson, out var slices))
+            try
             {
-                foreach (var slice in slices)
+                var atlasResourceName = assembly.GetManifestResourceNames()
+                    .First(resource => resource.EndsWith("UiElementsAtlas.json"));
+
+                using var stream = assembly.GetManifestResourceStream(atlasResourceName);
+                using var reader = new StreamReader(stream);
+                var atlasJson = reader.ReadToEnd();
+
+                if (AsepriteUtilities.TryGetSlices(atlasJson, out var slices))
                 {
-                    if (Enum.TryParse<StandardSkin>(slice.Name, out var standardSkin))
-                        _standardSkinSprites[standardSkin] = slice.ToSprite();
-                }    
+                    foreach (var slice in slices)
+                    {
+                        if (Enum.TryParse<StandardSkin>(slice.Name, out var standardSkin))
+                            _standardSkinSprites[standardSkin] = slice.ToSprite();
+                    }
+                }
+            }
+            catch
+            {
             }
         }
 
