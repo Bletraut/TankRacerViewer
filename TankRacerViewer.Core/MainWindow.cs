@@ -111,7 +111,7 @@ namespace TankRacerViewer.Core
                 return;
 
             CreateExtraAssetViewsIfPossible(_loadedAssetViewContainers.Select(data => data.AssetViewContainer));
-            _uiComponent.ExplorerWindow.AddFiles(_loadedAssetViewContainers);
+            _uiComponent.ExplorerWindow.AddFastFiles(_loadedAssetViewContainers);
         }
 
         public void RecreateAllExtraAssetViewsIfPossible()

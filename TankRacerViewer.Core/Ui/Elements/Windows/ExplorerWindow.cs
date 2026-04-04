@@ -20,6 +20,36 @@ namespace TankRacerViewer.Core
         private static readonly Stack<HierarchyNodeData> _stack = [];
         private static readonly List<HierarchyNodeData> _list = [];
 
+        private static void AddAssetViewGroup(string name,
+            HierarchyNodeData parentNode,
+            IEnumerable<AssetView> assetViews)
+        {
+            var hasItems = assetViews.TryGetNonEnumeratedCount(out var count) && count > 0
+                || assetViews.Any();
+            if (!hasItems)
+                return;
+
+            var assetGroupNodeData = new HierarchyNodeData()
+            {
+                Skin = StandardSkin.RectanglePanel,
+                Name = name,
+                IsFolded = true,
+            };
+            parentNode.AddChild(assetGroupNodeData);
+
+            foreach (var assetView in assetViews)
+            {
+                var assetNodeData = new HierarchyNodeData()
+                {
+                    File = assetView,
+                    Skin = StandardSkin.TextField,
+                    Name = assetView.FullName,
+                    IsFolded = true,
+                };
+                assetGroupNodeData.AddChild(assetNodeData);
+            }
+        }
+
         // Class.
         public event Action<AssetView> AssetViewSelected;
 
@@ -46,7 +76,7 @@ namespace TankRacerViewer.Core
             ContentContainer.AddChild(new ExpandedElement(_scrollView));
         }
 
-        public void AddFiles(List<(string Path, AssetViewContainer File)> files)
+        public void AddFastFiles(List<(string Path, AssetViewContainer File)> files)
         {
             foreach (var (path, file) in files)
                 AddFastFileNode(path, file);
@@ -54,7 +84,7 @@ namespace TankRacerViewer.Core
             RefreshLazyListViewItems();
         }
 
-        public void AddFile(string path, AssetViewContainer file)
+        public void AddFastFile(string path, AssetViewContainer file)
         {
             AddFastFileNode(path, file);
             RefreshLazyListViewItems();
@@ -80,6 +110,9 @@ namespace TankRacerViewer.Core
             OnStateChanged();
         }
 
+        public void FoldAll() => SetFoldedStateForAllNodes(true);
+        public void ExpandAll() => SetFoldedStateForAllNodes(false);
+
         public void RefreshExtraAssetViewNodes()
         {
             foreach (var fileNode in _fastFileNodes)
@@ -97,6 +130,8 @@ namespace TankRacerViewer.Core
 
                 AddAssetViewGroup(ExtraGroupName, fileNode, assetViewContainer.ExtraAssetViews.Values);
             }
+
+            RefreshLazyListViewItems();
         }
 
         private void AddFastFileNode(string filePath, AssetViewContainer file)
@@ -181,6 +216,21 @@ namespace TankRacerViewer.Core
             }
         }
 
+        private void SetFoldedStateForAllNodes(bool value)
+        {
+            for (var i = _rootNodes.Count - 1; i >= 0; i--)
+                _stack.Push(_rootNodes[i]);
+
+            while (_stack.Count > 0)
+            {
+                var node = _stack.Pop();
+                node.IsFolded = value;
+
+                for (var i = node.Children.Count - 1; i >= 0; i--)
+                    _stack.Push(node.Children[i]);
+            }
+        }
+
         private void FoldNode(HierarchyNodeData nodeData)
         {
             if (nodeData.IsFolded)
@@ -239,36 +289,6 @@ namespace TankRacerViewer.Core
             _lazyListView.InsertDataRange(dataIndex + 1, CollectionsMarshal.AsSpan(_list));
 
             nodeData.IsFolded = false;
-        }
-
-        private void AddAssetViewGroup(string name,
-            HierarchyNodeData parentNode,
-            IEnumerable<AssetView> assetViews)
-        {
-            var hasItems = assetViews.TryGetNonEnumeratedCount(out var count) && count > 0
-                || assetViews.Any();
-            if (!hasItems)
-                return;
-
-            var assetGroupNodeData = new HierarchyNodeData()
-            {
-                Skin = StandardSkin.RectanglePanel,
-                Name = name,
-                IsFolded = true,
-            };
-            parentNode.AddChild(assetGroupNodeData);
-
-            foreach (var assetView in assetViews)
-            {
-                var assetNodeData = new HierarchyNodeData()
-                {
-                    File = assetView,
-                    Skin = StandardSkin.TextField,
-                    Name = assetView.FullName,
-                    IsFolded = true,
-                };
-                assetGroupNodeData.AddChild(assetNodeData);
-            }
         }
 
         private HierarchyNodeElement CreateHierarchyNode()
