@@ -11,11 +11,13 @@ namespace TankRacerViewer.Core
         public const float DefaultSpacing = 4;
         public const float DefaultVerticalPaddings = 8;
 
+        // Static.
         public static readonly Vector2 DefaultSpriteSize = new(120);
         public static readonly Color DefaultEvenBackgroundColor = Color.MediumSlateBlue;
         public static readonly Color DefaultOddBackgroundColor = Color.SlateBlue;
         public static readonly Color DefaultHoverBackgroundColor = Color.CornflowerBlue;
 
+        // Class.
         public UsedTextureData Data { get; private set; }
 
         private readonly SpriteElement _background;

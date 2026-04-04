@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Text;
 
 using ComposableUi;
@@ -12,11 +11,18 @@ namespace TankRacerViewer.Core
         ILazyListItem<LevelObject>
     {
         public const int DefaultHeight = 30;
+        public const int DefaultButtonPaddings = 2;
 
         public const int DefaultContentSpacing = 4;
         public const int DefaultContentPaddings = 4;
 
         // Static.
+        public static readonly Vector2 DefaultIconSize = new(18);
+
+        public static readonly Color DefaultNormalButtonColor = Color.Plum;
+        public static readonly Color DefaultHoverButtonColor = Color.Coral;
+        public static readonly Color DefaultPressedButtonColor = Color.LightSlateGray;
+
         public static readonly Color EnabledBoundingBoxColor = Color.Fuchsia;
         public static readonly Color SelectedBoundingBoxColor = Color.GreenYellow;
 
@@ -25,15 +31,37 @@ namespace TankRacerViewer.Core
 
         private static readonly StringBuilder _stringBuilder = new();
 
+        public static ContentButtonElement CreateButton(StandardSkin iconSkin = default)
+        {
+            var button = new ContentButtonElement(
+                iconSize: DefaultIconSize,
+                iconSkin: iconSkin,
+                normalSkin: StandardSkin.WhitePixel,
+                hoverSkin: StandardSkin.WhitePixel,
+                pressedSkin: StandardSkin.WhitePixel,
+                disabledSkin: StandardSkin.WhitePixel,
+                normalColor: DefaultNormalButtonColor,
+                hoverColor: DefaultHoverButtonColor,
+                pressedColor: DefaultPressedButtonColor
+            );
+            button.Text.IsEnabled = false;
+            button.ContentLayout.LeftPadding = DefaultButtonPaddings;
+            button.ContentLayout.RightPadding = DefaultButtonPaddings;
+            button.ContentLayout.TopPadding = DefaultButtonPaddings;
+            button.ContentLayout.BottomPadding = DefaultButtonPaddings;
+
+            return button;
+        }
+
         // Class.
         public event Action<LevelObject> VisibilityChanged;
         public event Action<LevelObject> BoundingBoxVisibilityChanged;
         public event Action<LevelObject> TargetSelected;
 
         private readonly SpriteElement _background;
-        private readonly IconButtonElement _visibilityButton;
-        private readonly IconButtonElement _boundingBoxButton;
-        private readonly IconButtonElement _lookAtButton;
+        private readonly ContentButtonElement _visibilityButton;
+        private readonly ContentButtonElement _boundingBoxButton;
+        private readonly ContentButtonElement _lookAtButton;
         private readonly PointerInputHandlerElement _hoverInputHandler;
 
         private readonly TextElement _name;
@@ -48,13 +76,13 @@ namespace TankRacerViewer.Core
                 color: DefaultNormalBackgroundColor
             );
 
-            _visibilityButton = new IconButtonElement();
+            _visibilityButton = CreateButton();
             _visibilityButton.PointerClick += OnVisibilityButtonPointerClick;
 
-            _boundingBoxButton = new IconButtonElement();
+            _boundingBoxButton = CreateButton();
             _boundingBoxButton.PointerClick += OnBoundingBoxButtonPointerClick;
 
-            _lookAtButton = new IconButtonElement(iconSkin: StandardSkin.ScrollButton);
+            _lookAtButton = CreateButton(iconSkin: StandardSkin.ScrollButton);
             _lookAtButton.PointerClick += OnLookAtButtonPointerClick;
 
             _name = new TextElement(

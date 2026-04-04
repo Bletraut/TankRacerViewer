@@ -74,8 +74,8 @@ namespace TankRacerViewer.Core
         // Class.
         public Action<LevelObject> LevelObjectSelectedAction { get; set; }
 
-        private readonly IconButtonElement _visibilityModeButton;
-        private readonly IconButtonElement _boundingBoxModeButton;
+        private readonly ContentButtonElement _visibilityModeButton;
+        private readonly ContentButtonElement _boundingBoxModeButton;
         private readonly RowLayout _modeButtonLayout;
 
         private readonly LazyListViewElement<LevelObject, LevelObjectElement> _lazyListView;
@@ -87,10 +87,10 @@ namespace TankRacerViewer.Core
 
         public LevelObjectContainerExplorerElement(string title)
         {
-            _visibilityModeButton = new IconButtonElement();
+            _visibilityModeButton = LevelObjectElement.CreateButton();
             _visibilityModeButton.PointerClick += OnVisibilityModeButtonPointerClick;
 
-            _boundingBoxModeButton = new IconButtonElement();
+            _boundingBoxModeButton = LevelObjectElement.CreateButton();
             _boundingBoxModeButton.PointerClick += OnBoundingBoxModeButtonPointerClick;
 
             _modeButtonLayout = new RowLayout(

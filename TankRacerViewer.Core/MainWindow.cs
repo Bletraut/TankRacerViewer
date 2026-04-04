@@ -19,7 +19,7 @@ namespace TankRacerViewer.Core
     {
         private const float ViewDistance = 1500;
 
-        public IFileDialogService FileDialogService { get; }
+        public IFileDialogProvider FileDialogProvider { get; }
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -47,9 +47,9 @@ namespace TankRacerViewer.Core
 
         private readonly StringBuilder _info = new();
 
-        public MainWindow(IFileDialogService fileDialogService)
+        public MainWindow(IFileDialogProvider fileDialogProvider)
         {
-            FileDialogService = fileDialogService;
+            FileDialogProvider = fileDialogProvider;
 
             _graphics = new GraphicsDeviceManager(this)
             {

@@ -5,11 +5,11 @@ namespace ComposableUi
     public class WindowNodeElement<T> : ResizableElement
         where T : Element
     {
-        internal T Container { get; private set; }
-
         internal T RootContainer { get; private set; }
 
         internal ExpandedElement ViewHolder { get; }
+
+        public T Container { get; private set; }
 
         private readonly AlignmentElement _overlayAlignment;
         private readonly ExpandedElement _overlayExpanded;

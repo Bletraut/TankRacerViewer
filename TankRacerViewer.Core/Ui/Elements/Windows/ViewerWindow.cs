@@ -3,8 +3,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-using static System.Net.Mime.MediaTypeNames;
-
 namespace TankRacerViewer.Core
 {
     public sealed class ViewerWindow : WindowElement

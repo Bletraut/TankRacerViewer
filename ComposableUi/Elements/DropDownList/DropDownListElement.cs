@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using ComposableUi.Elements.DropDownList;
 
 using Microsoft.Xna.Framework;
-
-using TankRacerViewer.Core;
 
 namespace ComposableUi
 {
@@ -39,7 +36,7 @@ namespace ComposableUi
         public float MaxListHeight { get; set; }
 
         public SpriteElement Background { get; }
-        public IconButtonElement OpenButton { get; }
+        public ContentButtonElement OpenButton { get; }
         public SpriteElement ContentBackground { get; }
 
         public TItem CurrentItem { get; private set; }
@@ -78,11 +75,19 @@ namespace ComposableUi
                 skin: StandardSkin.TextField
             );
 
-            OpenButton = new IconButtonElement(
-                size: DefaultButtonSize,
+            OpenButton = new ContentButtonElement(
                 iconSize: DefaultButtonIconSize,
-                iconSkin: StandardSkin.DownArrowIcon
+                iconSkin: StandardSkin.DownArrowIcon,
+                normalSkin: StandardSkin.WhitePixel,
+                hoverSkin: StandardSkin.WhitePixel,
+                pressedSkin: StandardSkin.WhitePixel,
+                disabledSkin: StandardSkin.WhitePixel,
+                normalColor: Color.Plum,
+                hoverColor: Color.Coral,
+                pressedColor: Color.LightSlateGray
             );
+            OpenButton.Text.IsEnabled = false;
+            OpenButton.ContentLayout.LeftPadding = OpenButton.ContentLayout.RightPadding = 6;
             OpenButton.PointerUp += OnOpenButtonPointerUp;
             OpenButton.PointerClick += OnOpenButtonPointerClick;
 

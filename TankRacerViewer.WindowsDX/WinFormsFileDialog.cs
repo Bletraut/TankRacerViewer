@@ -5,9 +5,9 @@ using TankRacerViewer.Core.Ui;
 
 namespace TankRacerViewer.WindowsDX
 {
-    public sealed class WinFormsFileDialog : IFileDialogService
+    public sealed class WinFormsFileDialog : IFileDialogProvider
     {
-        string IFileDialogService.OpenFileDialog(string filterList, string defaultPath)
+        string IFileDialogProvider.OpenFileDialog(string filterList, string defaultPath)
         {
             var result = string.Empty;
 
@@ -30,7 +30,7 @@ namespace TankRacerViewer.WindowsDX
             return result;
         }
 
-        string IFileDialogService.OpenFolderDialog(string defaultPath)
+        string IFileDialogProvider.OpenFolderDialog(string defaultPath)
         {
             var result = string.Empty;
 

@@ -1,6 +1,6 @@
 ﻿namespace TankRacerViewer.Core.Ui
 {
-    public interface IFileDialogService
+    public interface IFileDialogProvider
     {
         public string OpenFileDialog(string filterList = default,
             string defaultPath = default);

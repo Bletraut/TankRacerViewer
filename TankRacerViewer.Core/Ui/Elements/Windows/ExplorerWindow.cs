@@ -33,7 +33,6 @@ namespace TankRacerViewer.Core
                 expandingContentWidthMode: ScrollViewElement.ExpandingMode.ExpandToFit,
                 content: _lazyListView
             );
-
             ContentContainer.AddChild(new ExpandedElement(_scrollView));
         }
 

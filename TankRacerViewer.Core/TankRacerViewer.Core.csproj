@@ -70,6 +70,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Ui\Elements\Common\" />
     <Folder Include="Ui\Windows\" />
   </ItemGroup>
 </Project>

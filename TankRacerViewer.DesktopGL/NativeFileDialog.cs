@@ -3,9 +3,9 @@ using NativeFileDialogSharp;
 
 namespace TankRacerViewer.DesktopGL
 {
-    public class NativeFileDialog : IFileDialogService
+    public class NativeFileDialog : IFileDialogProvider
     {
-        string IFileDialogService.OpenFileDialog(string filerList, string defaultPath)
+        string IFileDialogProvider.OpenFileDialog(string filerList, string defaultPath)
         {
             var result = Dialog.FileOpen(filerList, defaultPath);
 
@@ -15,7 +15,7 @@ namespace TankRacerViewer.DesktopGL
             return string.Empty;
         }
 
-        string IFileDialogService.OpenFolderDialog(string defaultPath)
+        string IFileDialogProvider.OpenFolderDialog(string defaultPath)
         {
             var result = Dialog.FolderPicker(defaultPath);
 

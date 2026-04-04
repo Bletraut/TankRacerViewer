@@ -245,7 +245,7 @@ namespace ComposableUi
             var mainAxisPreferredChildrenSize = MainAxis * (!ExpandChildrenMainAxis
                 ? CalculatePreferredChildrenSize()
                 : Size);
-            var totalMainAxisLayoutOffset = MainAxis * (PivotOffset - AlignmentFactor * (Size - mainAxisPreferredChildrenSize));
+            var totalMainAxisLayoutOffset = MainAxis * (PivotOffset - AlignmentFactor * (Size - mainAxisPreferredChildrenSize - paddings));
 
 #warning Implement offset correctly. For now it works only for left alignment.
             var offset = new Vector2(LeftPadding, TopPadding);

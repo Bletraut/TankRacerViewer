@@ -70,6 +70,10 @@ namespace TankRacerViewer.Core
                     name: "Inspector",
                     clickAction: _ => SelectContextMenuItem(() => ShowWindow(InspectorWindow))
                 ),
+                new ContextMenuItemElement(
+                    name: "Console",
+                    clickAction: _ => SelectContextMenuItem(() => ShowWindow(ConsoleWindow))
+                ),
             ]);
 
             _menuBar = new MenuBarElement();
@@ -114,7 +118,7 @@ namespace TankRacerViewer.Core
 
         private void OpenGameFolder()
         {
-            var folderPath = _mainWindow.FileDialogService.OpenFolderDialog();
+            var folderPath = _mainWindow.FileDialogProvider.OpenFolderDialog();
             if (string.IsNullOrEmpty(folderPath))
                 return;
 
