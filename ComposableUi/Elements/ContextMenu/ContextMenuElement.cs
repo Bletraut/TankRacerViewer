@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 using Microsoft.Xna.Framework;
 
@@ -14,6 +15,7 @@ namespace ComposableUi
         private const int DefaultSubmenuOffset = -2;
 
         // Static.
+        private static char[] _directorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
         private static readonly Stack<Submenu> _stack = [];
 
         // Class.
@@ -116,7 +118,7 @@ namespace ComposableUi
         {
             var targetMenu = this;
 
-            var pathSegments = item.Key.Split('\\', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            var pathSegments = item.Key.Split(_directorySeparators, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             if (pathSegments.Length > 0)
             {
                 for (var i = 0; i < pathSegments.Length; i++)

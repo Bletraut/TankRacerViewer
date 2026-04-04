@@ -19,6 +19,7 @@ namespace TankRacerViewer.Core
         {
             var toggle = new ContentButtonElement(
                 iconSize: new Vector2(20),
+                text: "0",
                 normalSkin: StandardSkin.RectanglePanel,
                 hoverSkin: StandardSkin.RectanglePanel,
                 pressedSkin: StandardSkin.RectanglePanel,
@@ -129,13 +130,6 @@ namespace TankRacerViewer.Core
                 topPadding: DefaultToolPanelHeight,
                 innerElement: _scrollView
             ));
-
-            LogMessage(MessageType.Warning, "Warn! A--------------A");
-            LogMessage(MessageType.Warning, "Hello!!!");
-            LogMessage(MessageType.Info, "Info_22228");
-            LogMessage(MessageType.Info, "Some long info");
-            LogMessage(MessageType.Warning, "Warning!!!!!");
-            LogMessage(MessageType.Error, "This is ERROR!");
         }
 
         public void LogMessage(MessageType type, string message)
@@ -179,7 +173,7 @@ namespace TankRacerViewer.Core
             _errorToggle.Text.Text = _errorCount.ToString();
         }
 
-        private void RefreshLazyListView()
+        private void RefreshLazyListViewItems()
         {
             _lazyListView.ClearData();
             foreach (var messageData in _messages)
@@ -206,21 +200,21 @@ namespace TankRacerViewer.Core
             PointerEvent pointerEvent)
         {
             _isInfoEnabled = !_isInfoEnabled;
-            RefreshLazyListView();
+            RefreshLazyListViewItems();
         }
 
         private void OnWarningToggleClicked(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
             _isWarningEnabled = !_isWarningEnabled;
-            RefreshLazyListView();
+            RefreshLazyListViewItems();
         }
 
         private void OnErrorToggleClicked(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
             _isErrorEnabled = !_isErrorEnabled;
-            RefreshLazyListView();
+            RefreshLazyListViewItems();
         }
     }
 

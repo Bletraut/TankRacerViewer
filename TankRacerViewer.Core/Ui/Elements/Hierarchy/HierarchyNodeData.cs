@@ -17,10 +17,11 @@ namespace TankRacerViewer.Core
         public Sprite Sprite { get; set; }
         public StandardSkin Skin { get; set; }
 
-        public float Indent => Parent is not null ? Parent.Indent + DefaultIndent : 0;
+        public float Indent => Parent is not null && !Parent.IsHidden ? Parent.Indent + DefaultIndent : 0;
 
         public bool IsFolded { get; set; }
         public bool IsSelected { get; set; }
+        public bool IsHidden { get; set; }
 
         public void AddChild(HierarchyNodeData child)
         {

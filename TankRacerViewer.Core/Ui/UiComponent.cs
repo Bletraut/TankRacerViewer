@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 
 using ComposableUi;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace TankRacerViewer.Core
 {
@@ -50,6 +52,11 @@ namespace TankRacerViewer.Core
         public override void Update(GameTime gameTime)
         {
             UiManager.Update(gameTime);
+
+            var isControlPressed = Input.IsKeyPressed(Keys.LeftControl)
+                || Input.IsKeyPressed(Keys.RightControl);
+            if (isControlPressed && Input.IsKeyDown(Keys.O))
+                OpenGameFolder();
         }
 
         public override void Draw(GameTime gameTime)

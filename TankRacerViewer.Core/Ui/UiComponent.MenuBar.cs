@@ -6,6 +6,7 @@ using System.IO;
 using ComposableUi;
 
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace TankRacerViewer.Core
 {
@@ -48,13 +49,9 @@ namespace TankRacerViewer.Core
 
             _editContextMenu = CreateAndAddContextMenu([
                 new ContextMenuItemElement(
-                    name: "Add tank view",
-                    clickAction: _ => SelectContextMenuItem(null)
-                ),
-                new ContextMenuItemElement(
-                    name: "Add level view",
-                    clickAction: _ => SelectContextMenuItem(null)
-                ),
+                    name: "Try Recreate Extra Assets Views",
+                    clickAction: _ => SelectContextMenuItem(RecreateAllExtraAssetViewsIfPossible)
+                )
             ]);
 
             _windowContextMenu = CreateAndAddContextMenu([
@@ -122,8 +119,19 @@ namespace TankRacerViewer.Core
             if (string.IsNullOrEmpty(folderPath))
                 return;
 
+            if (!Directory.Exists(folderPath))
+            {
+                ConsoleWindow.LogMessage(MessageType.Error, $"Directory not found: '{folderPath}'.");
+                return;
+            }
+
             var filePaths = Directory.GetFiles(folderPath, "*.dat", SearchOption.AllDirectories);
             _mainWindow.OpenGameFolder(filePaths);
+        }
+
+        private void RecreateAllExtraAssetViewsIfPossible()
+        {
+            _mainWindow.RecreateAllExtraAssetViewsIfPossible();
         }
     }
 }

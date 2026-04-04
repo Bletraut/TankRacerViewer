@@ -39,6 +39,7 @@ namespace TankRacerViewer.Core
 
         private AssetView _selectedAssetView;
 
+        private readonly List<(string Path, AssetViewContainer AssetViewContainer)> _loadedAssetViewContainers = [];
         private readonly Dictionary<string, AssetViewContainer> _assetViewContainers = [];
         private AssetViewContainer _dataAssetViewContainer;
         private AssetViewContainer _commonAssetViewContainer;
@@ -100,9 +101,27 @@ namespace TankRacerViewer.Core
 
         public void OpenGameFolder(string[] filePaths)
         {
+            _loadedAssetViewContainers.Clear();
             foreach (var filePath in filePaths)
                 LoadFile(filePath);
 
+            _uiComponent.ConsoleWindow.LogMessage(MessageType.Info, $"FastFiles loaded: {_loadedAssetViewContainers.Count}.");
+
+            if (_loadedAssetViewContainers.Count <= 0)
+                return;
+
+            CreateExtraAssetViewsIfPossible(_loadedAssetViewContainers.Select(data => data.AssetViewContainer));
+            _uiComponent.ExplorerWindow.AddFiles(_loadedAssetViewContainers);
+        }
+
+        public void RecreateAllExtraAssetViewsIfPossible()
+        {
+            if (CreateExtraAssetViewsIfPossible(_assetViewContainers.Values) > 0)
+                _uiComponent.ExplorerWindow.RefreshExtraAssetViewNodes();
+        }
+
+        private int CreateExtraAssetViewsIfPossible(IEnumerable<AssetViewContainer> assetViewContainers)
+        {
             _dataAssetViewContainer = _assetViewContainers.Values
                 .FirstOrDefault(container => container.DataAssetViews.ContainsKey("tank1"));
             _commonAssetViewContainer = _assetViewContainers.Values
@@ -110,35 +129,58 @@ namespace TankRacerViewer.Core
             var canCreateExtraAssetViews = _dataAssetViewContainer is not null
                 && _commonAssetViewContainer is not null;
 
-            foreach (var (path, assetViewContainer) in _assetViewContainers)
+            if (!canCreateExtraAssetViews)
             {
-                if (canCreateExtraAssetViews)
+                _uiComponent.ConsoleWindow.LogMessage(MessageType.Error,
+                    "Cannot create additional asset views: FastFiles 'Data' and 'Ingame' were not found.");
+                return 0;
+            }
+
+            var levelViewCount = 0;
+            var tankViewCount = 0;
+
+            foreach (var assetViewContainer in assetViewContainers)
+            {
+                var mapAsset = assetViewContainer.FastFile.Assets.FirstOrDefault(asset => asset is MapAsset);
+                var canCreateMapAsset = mapAsset is not null
+                    && !assetViewContainer.ExtraAssetViews.ContainsKey(mapAsset.FullName);
+                if (canCreateMapAsset)
                 {
-                    var mapAsset = assetViewContainer.FastFile.Assets.FirstOrDefault(asset => asset is MapAsset);
-                    if (mapAsset is not null)
-                    {
-                        var levelView = new LevelView(mapAsset.FullName,
-                            _commonAssetViewContainer, assetViewContainer);
-                        assetViewContainer.ExtraAssetViews.Add(mapAsset.FullName, levelView);
-                    }
+                    levelViewCount++;
 
-                    foreach (var dataAssetView in _dataAssetViewContainer.DataAssetViews.Values)
-                    {
-                        if (!TankView.IsTankData(dataAssetView))
-                            continue;
-
-                        if (assetViewContainer.ModelAssetViews.TryGetValue($"{dataAssetView.Name.ToLower()}t",
-                            out var tankTurretModel))
-                        {
-                            var tankView = new TankView(dataAssetView.Name, dataAssetView,
-                                _commonAssetViewContainer, assetViewContainer);
-                            assetViewContainer.ExtraAssetViews.Add(dataAssetView.Name, tankView);
-                        }
-                    }
+                    var levelView = new LevelView(mapAsset.FullName,
+                        _commonAssetViewContainer, assetViewContainer);
+                    assetViewContainer.ExtraAssetViews.Add(mapAsset.FullName, levelView);
                 }
 
-                _uiComponent.ExplorerWindow.AddFile(path, assetViewContainer);
+                foreach (var dataAssetView in _dataAssetViewContainer.DataAssetViews.Values)
+                {
+                    if (!TankView.IsTankData(dataAssetView))
+                        continue;
+
+                    if (!assetViewContainer.ModelAssetViews.TryGetValue($"{dataAssetView.Name.ToLower()}t",
+                        out var tankTurretModel))
+                        continue;
+
+                    if (assetViewContainer.ExtraAssetViews.ContainsKey(dataAssetView.Name))
+                        continue;
+
+                    tankViewCount++;
+
+                    var tankView = new TankView(dataAssetView.Name, dataAssetView,
+                        _commonAssetViewContainer, assetViewContainer);
+                    assetViewContainer.ExtraAssetViews.Add(dataAssetView.Name, tankView);
+                }
             }
+
+            var createdExtraAssetCount = levelViewCount + tankViewCount;
+            if (createdExtraAssetCount > 0)
+            {
+                _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
+                    $"Additional assets created: TankViews={tankViewCount}, LevelViews={levelViewCount}.");
+            }
+
+            return createdExtraAssetCount;
         }
 
         private void LoadFile(string filePath)
@@ -153,6 +195,7 @@ namespace TankRacerViewer.Core
                 {
                     var assetViewContainer = new AssetViewContainer(GraphicsDevice, fastFile);
                     _assetViewContainers.Add(filePath, assetViewContainer);
+                    _loadedAssetViewContainers.Add((filePath, assetViewContainer));
                 }
             }
             catch (Exception exception)
