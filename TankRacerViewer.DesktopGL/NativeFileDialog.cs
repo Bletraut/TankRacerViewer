@@ -1,13 +1,18 @@
 ﻿using TankRacerViewer.Core.Ui;
 using NativeFileDialogSharp;
+using System.Linq;
 
 namespace TankRacerViewer.DesktopGL
 {
     public class NativeFileDialog : IFileDialogProvider
     {
-        string IFileDialogProvider.OpenFileDialog(string filerList, string defaultPath)
+        string IFileDialogProvider.OpenFileDialog(ItemFilter[] filters, string defaultPath)
         {
-            var result = Dialog.FileOpen(filerList, defaultPath);
+            var filterList = filters is not null
+                ? string.Join(";", filters.Where(item => item.Extension != "*").Select(item => item.Extension))
+                : string.Empty;
+
+            var result = Dialog.FileOpen(filterList, defaultPath);
 
             if (result.IsOk)
                 return result.Path;

@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
 
 using ComposableUi;
 
-using FastFileUnpacker;
+using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
@@ -60,6 +58,12 @@ namespace TankRacerViewer.Core
         private readonly List<HierarchyNodeData> _fastFileNodes = [];
         private readonly Dictionary<string, HierarchyNodeData> _folderNodeCache = [];
 
+        private readonly ContextMenuElement _contextMenu;
+        private readonly PointerInputHandlerElement _inputArea;
+
+        private readonly ExpandedElement _overlayInputInterceptorParent;
+        private readonly PointerInputHandlerElement _overlayInputInterceptor;
+
         private HierarchyNodeData _selectedNodeData;
 
         public ExplorerWindow() : base("Explorer")
@@ -74,6 +78,35 @@ namespace TankRacerViewer.Core
                 content: _lazyListView
             );
             ContentContainer.AddChild(new ExpandedElement(_scrollView));
+
+            _contextMenu = new ContextMenuElement(
+                items: [
+                    new ContextMenuItemElement(
+                        name: "Fold All",
+                        clickAction: _ => SelectContextMenuItem(FoldAll)
+                    ),
+                    new ContextMenuItemElement(
+                        name: "Expand All",
+                        clickAction: _ => SelectContextMenuItem(ExpandAll)
+                    ),
+                ]
+            )
+            {
+                Pivot = Alignment.TopLeft,
+                IsEnabled = false
+            };
+            ContentContainer.AddChild(_contextMenu);
+
+            _inputArea = new PointerInputHandlerElement(blockInput: false);
+            ContentContainer.AddChild(new ExpandedElement(_inputArea));
+            _inputArea.PointerSecondaryClick += OnInputAreaClicked;
+
+            _overlayInputInterceptor = new PointerInputHandlerElement(
+                blockInput: false
+            );
+            _overlayInputInterceptorParent = new ExpandedElement(_overlayInputInterceptor);
+            _overlayInputInterceptor.PointerDown += OnOverlayInputInterceptorPointerDown;
+            _overlayInputInterceptor.PointerSecondaryDown += OnOverlayInputInterceptorPointerDown;
         }
 
         public void AddFastFiles(List<(string Path, AssetViewContainer File)> files)
@@ -166,10 +199,11 @@ namespace TankRacerViewer.Core
             if (_folderNodeCache.TryGetValue(directory, out var folderNode))
                 return folderNode;
 
+            var directoryName = Path.GetFileName(directory);
             folderNode = new HierarchyNodeData()
             {
                 Skin = StandardSkin.HoverRoundedButton,
-                Name = Path.GetFileName(directory),
+                Name = string.IsNullOrEmpty(directoryName) ? directory : directoryName,
                 IsFolded = false
             };
             _folderNodeCache.Add(directory, folderNode);
@@ -201,7 +235,7 @@ namespace TankRacerViewer.Core
 
                 node.IsHidden = node.File is null
                     && (node.Parent is null || node.Parent.IsHidden)
-                    && node.Children.Count <= 1 
+                    && node.Children.Count <= 1
                     && node.Children[0]?.File is null;
                 if (!node.IsHidden)
                 {
@@ -229,6 +263,8 @@ namespace TankRacerViewer.Core
                 for (var i = node.Children.Count - 1; i >= 0; i--)
                     _stack.Push(node.Children[i]);
             }
+
+            RefreshLazyListViewItems();
         }
 
         private void FoldNode(HierarchyNodeData nodeData)
@@ -321,6 +357,18 @@ namespace TankRacerViewer.Core
             AssetViewSelected?.Invoke(_selectedNodeData.File as AssetView);
         }
 
+        private void SelectContextMenuItem(Action action)
+        {
+            HideContextMenu();
+            action?.Invoke();
+        }
+
+        private void HideContextMenu()
+        {
+            _contextMenu.IsEnabled = false;
+            _overlayInputInterceptorParent.IsEnabled = false;
+        }
+
         private void OnNodeClicked(HierarchyNodeElement node)
         {
             SelectNode(node.Data);
@@ -338,6 +386,20 @@ namespace TankRacerViewer.Core
                 FoldNode(node.Data);
             }
             node.RefreshFoldButtonSkin();
+        }
+
+        private void OnInputAreaClicked(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            Root.ShowInOverlay(_overlayInputInterceptorParent,
+                Vector2.Zero, Vector2.Zero, false, false);
+            _contextMenu.Show(pointerEvent.Position.ToVector2());
+        }
+
+        private void OnOverlayInputInterceptorPointerDown(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            HideContextMenu();
         }
     }
 }

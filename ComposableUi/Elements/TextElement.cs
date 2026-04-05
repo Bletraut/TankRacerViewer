@@ -5,7 +5,7 @@ namespace ComposableUi
 {
     public sealed class TextElement : Element, IDrawableElement
     {
-        internal static SpriteFont DefaultSpriteFont { get; set; }
+        public static SpriteFont DefaultSpriteFont { get; internal set; }
 
         public static readonly Vector2 DefaultSize = new(200, 50);
 

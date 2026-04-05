@@ -19,7 +19,12 @@ namespace TankRacerViewer.Core
     {
         private const float ViewDistance = 1500;
 
+        private const string AdvancedModeHitMessage = "Press Esc or Ctrl+F to exit Advanced Mode";
+        private const float AdvancedModeHitDurationSeconds = 3f;
+
         public IFileDialogProvider FileDialogProvider { get; }
+
+        private bool IsRenderingToGameWindow => _renderer.RenderContext == _gameWindowRenderContext;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -47,6 +52,8 @@ namespace TankRacerViewer.Core
         private readonly Action<LevelObject> _levelObjectSelectedAction;
 
         private readonly StringBuilder _info = new();
+
+        private float _advancedModeHintCountdown;
 
         public MainWindow(IFileDialogProvider fileDialogProvider)
         {
@@ -81,6 +88,7 @@ namespace TankRacerViewer.Core
             _mainFont = Content.Load<SpriteFont>("Fonts\\MainFont");
 
             _uiComponent = new UiComponent(this, _spriteBatch);
+            _uiComponent.ViewerWindow.HideViewer();
             Components.Add(_uiComponent);
 
             _uiComponent.ExplorerWindow.AssetViewSelected += OnAssetViewSelected;
@@ -105,22 +113,47 @@ namespace TankRacerViewer.Core
             foreach (var filePath in filePaths)
                 LoadFile(filePath);
 
-            _uiComponent.ConsoleWindow.LogMessage(MessageType.Info, $"FastFiles loaded: {_loadedAssetViewContainers.Count}.");
+            _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
+                $"FastFiles loaded: {_loadedAssetViewContainers.Count}.");
 
             if (_loadedAssetViewContainers.Count <= 0)
                 return;
 
-            CreateExtraAssetViewsIfPossible(_loadedAssetViewContainers.Select(data => data.AssetViewContainer));
+            TryCreateExtraAssetViewsIfPossible(_loadedAssetViewContainers.Select(data => data.AssetViewContainer));
             _uiComponent.ExplorerWindow.AddFastFiles(_loadedAssetViewContainers);
         }
 
+        public void OpenFile(string filePath)
+            => OpenGameFolder([filePath]);
+
         public void RecreateAllExtraAssetViewsIfPossible()
         {
-            if (CreateExtraAssetViewsIfPossible(_assetViewContainers.Values) > 0)
+            if (TryCreateExtraAssetViewsIfPossible(_assetViewContainers.Values))
                 _uiComponent.ExplorerWindow.RefreshExtraAssetViewNodes();
         }
 
-        private int CreateExtraAssetViewsIfPossible(IEnumerable<AssetViewContainer> assetViewContainers)
+        public void ToggleRenderContext()
+        {
+            if (IsRenderingToGameWindow)
+            {
+                _advancedModeHintCountdown = 0;
+
+                _uiComponent.Enabled = true;
+                _uiComponent.Visible = true;
+                _renderer.ApplyRenderContext(_uiComponent.ViewerWindow.RenderContext);
+            }
+            else
+            {
+                _advancedModeHintCountdown = AdvancedModeHitDurationSeconds;
+
+                _uiComponent.Enabled = false;
+                _uiComponent.Visible = false;
+                _renderer.ApplyRenderContext(_gameWindowRenderContext);
+            }
+            _camera.ApplyRenderContext(_renderer.RenderContext);
+        }
+
+        private bool TryCreateExtraAssetViewsIfPossible(IEnumerable<AssetViewContainer> assetViewContainers)
         {
             _dataAssetViewContainer = _assetViewContainers.Values
                 .FirstOrDefault(container => container.DataAssetViews.ContainsKey("tank1"));
@@ -133,7 +166,8 @@ namespace TankRacerViewer.Core
             {
                 _uiComponent.ConsoleWindow.LogMessage(MessageType.Error,
                     "Cannot create additional asset views: FastFiles 'Data' and 'Ingame' were not found.");
-                return 0;
+
+                return false;
             }
 
             var levelViewCount = 0;
@@ -178,9 +212,14 @@ namespace TankRacerViewer.Core
             {
                 _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
                     $"Additional assets created: TankViews={tankViewCount}, LevelViews={levelViewCount}.");
+
+                return true;
             }
 
-            return createdExtraAssetCount;
+            _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
+                "No extra assets created (already exist).");
+
+            return false;
         }
 
         private void LoadFile(string filePath)
@@ -212,16 +251,23 @@ namespace TankRacerViewer.Core
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
             // TODO: Add your update logic here
             Input.Update();
+
+            if (Input.IsKeyPressed(Keys.LeftControl) && Input.IsKeyDown(Keys.F))
+                ToggleRenderContext();
+
+            if (!IsRenderingToGameWindow && Input.IsKeyDown(Keys.Escape))
+                ToggleRenderContext();
 
             if (Input.IsKeyDown(Keys.R))
                 ResetCameraToDefaults();
 
-            if (_uiComponent.ExplorerWindow.IsSelected)
+            _advancedModeHintCountdown -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            var canSelectNode = IsRenderingToGameWindow
+                && _uiComponent.ExplorerWindow.IsSelected;
+            if (canSelectNode)
             {
                 var isUpPressed = Input.IsKeyDown(Keys.Up)
                     || Input.IsKeyDown(Keys.W)
@@ -259,7 +305,6 @@ namespace TankRacerViewer.Core
             GraphicsDevice.Clear(Color.Black);
 
             // TODO: Add your drawing code here
-            _info.Clear();
 
             if (_selectedAssetView is not null)
             {
@@ -287,16 +332,30 @@ namespace TankRacerViewer.Core
 
             base.Draw(gameTime);
 
-            _info.AppendLine($"Draw Calls: {GraphicsDevice.Metrics.DrawCount}");
+            _info.Clear();
+            _info.AppendLine($"Draw Count: {_renderer.DrawCount}");
+            _info.AppendLine($"Triangle Count: {_renderer.TriangleCount}");
             _info.Append($"Fps: {1 / gameTime.ElapsedGameTime.TotalSeconds:00.0}");
+            _uiComponent.ViewerWindow.RenderInfo.Text = _info.ToString();
 
-            var infoString = _info.ToString();
-            var infoSize = _mainFont.MeasureString(infoString);
-            var infoPosition = new Vector2(0, GraphicsDevice.Viewport.Height - infoSize.Y);
+            if (_advancedModeHintCountdown > 0)
+            {
+                var infoSize = _mainFont.MeasureString(AdvancedModeHitMessage);
+                var infoPosition = new Vector2()
+                {
+                    X = (GraphicsDevice.Viewport.Width - infoSize.X) / 2,
+                    Y = infoSize.Y * 2
+                };
 
-            _spriteBatch.Begin();
-            _spriteBatch.DrawString(_mainFont, infoString, infoPosition, Color.White);
-            _spriteBatch.End();
+                _spriteBatch.Begin();
+                _spriteBatch.Draw(WorldRenderer.WhitePixelTexture, infoPosition - infoSize / 2, null,
+                    new Color(Color.Black, 0.85f), 0, Vector2.Zero, infoSize * 2, SpriteEffects.None, 0);
+                _spriteBatch.End();
+
+                _spriteBatch.Begin();
+                _spriteBatch.DrawString(_mainFont, AdvancedModeHitMessage, infoPosition, Color.White);
+                _spriteBatch.End();
+            }
         }
 
         private void OnAssetViewSelected(AssetView assetView)

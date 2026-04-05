@@ -12,12 +12,16 @@ namespace TankRacerViewer.Core
             && !IsResizingInternally && !IsResizing
             && (_isPointerInInputArea || _isPointerPressedInInputArea);
 
-        public RenderContextElement RenderContext { get; private set; }
+        public RenderContextElement RenderContext
+        {
+            get => _viewer3d.RenderContext;
+            set => _viewer3d.RenderContext = value;
+        }
 
-        private readonly GraphicsDevice _graphicsDevice;
+        public RenderInfoElement RenderInfo => _viewer3d.RenderInfo;
 
-        private readonly AspectRatioFitterElement _3dViewer;
-        private readonly ButtonElement _aspectRationModeButton;
+        private readonly Viewer3D _viewer3d;
+        private readonly ExpandedElement _viewer3dParent;
         private readonly PointerInputHandlerElement _inputArea;
 
         private readonly TextElement _text;
@@ -32,15 +36,9 @@ namespace TankRacerViewer.Core
 
         public ViewerWindow(GraphicsDevice graphicsDevice) : base("Viewer")
         {
-            _graphicsDevice = graphicsDevice;
-
-            RenderContext = new RenderContextElement(_graphicsDevice);
-            _3dViewer = new AspectRatioFitterElement(
-                aspectRatioMode: AspectRatioMode.FitInParent,
-                aspectRatio: RenderContext.AspectRatio,
-                innerElement: RenderContext
-            );
-            ContentContainer.AddChild(_3dViewer);
+            _viewer3d = new Viewer3D(graphicsDevice);
+            _viewer3dParent = new ExpandedElement(_viewer3d);
+            ContentContainer.AddChild(_viewer3dParent);
 
             _text = new TextElement(
                 textAlignmentFactor: Alignment.TopLeft,
@@ -77,9 +75,6 @@ namespace TankRacerViewer.Core
             );
             ContentContainer.AddChild(_textureViewer);
 
-            _aspectRationModeButton = InsertButton(1, null, StandardSkin.HoverRectangleButton);
-            _aspectRationModeButton.PointerClick += OnAspectRationModeButtonClicked;
-
             _inputArea = new PointerInputHandlerElement(blockInput: false);
             ContentContainer.AddChild(new ExpandedElement(_inputArea));
 
@@ -96,14 +91,12 @@ namespace TankRacerViewer.Core
             _textViewer.IsEnabled = false;
             _textureViewer.IsEnabled = false;
 
-            _3dViewer.IsEnabled = true;
-            _aspectRationModeButton.IsEnabled = true;
+            _viewer3dParent.IsEnabled = true;
         }
 
         public void ShowTextureViewer(Texture2D texture)
         {
-            _3dViewer.IsEnabled = false;
-            _aspectRationModeButton.IsEnabled = false;
+            _viewer3dParent.IsEnabled = false;
             _textViewer.IsEnabled = false;
 
             _sprite.Texture = texture;
@@ -114,8 +107,7 @@ namespace TankRacerViewer.Core
 
         public void ShowTextViewer(string text)
         {
-            _3dViewer.IsEnabled = false;
-            _aspectRationModeButton.IsEnabled = false;
+            _viewer3dParent.IsEnabled = false;
             _textureViewer.IsEnabled = false;
 
             _textViewer.IsEnabled = true;
@@ -124,18 +116,9 @@ namespace TankRacerViewer.Core
 
         public void HideViewer()
         {
-            _3dViewer.IsEnabled = false;
-            _aspectRationModeButton.IsEnabled = false;
+            _viewer3dParent.IsEnabled = false;
             _textureViewer.IsEnabled = false;
             _textViewer.IsEnabled = false;
-        }
-
-        private void OnAspectRationModeButtonClicked(PointerInputHandlerElement sender,
-            PointerEvent pointerEvent)
-        {
-            _3dViewer.AspectRatioMode = _3dViewer.AspectRatioMode is AspectRatioMode.FitInParent
-                ? AspectRatioMode.EnvelopeParent
-                : AspectRatioMode.FitInParent;
         }
 
         private void OnInputAreaPointerEnter(PointerInputHandlerElement sender,

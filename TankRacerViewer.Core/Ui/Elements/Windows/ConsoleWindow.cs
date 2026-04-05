@@ -15,23 +15,6 @@ namespace TankRacerViewer.Core
         private static MessageElement CreateMessageElement()
             => new MessageElement();
 
-        private static ContentButtonElement CreateToggle()
-        {
-            var toggle = new ContentButtonElement(
-                iconSize: new Vector2(20),
-                text: "0",
-                normalSkin: StandardSkin.RectanglePanel,
-                hoverSkin: StandardSkin.RectanglePanel,
-                pressedSkin: StandardSkin.RectanglePanel,
-                disabledSkin: StandardSkin.RectanglePanel,
-                hoverColor: Color.LightCyan,
-                pressedColor: Color.DarkGoldenrod
-            );
-            toggle.Text.Color = Color.Black;
-
-            return toggle;
-        }
-
         // Class.
         private readonly ContentButtonElement _clearButton;
         private readonly ContentButtonElement _infoToggle;
@@ -67,14 +50,14 @@ namespace TankRacerViewer.Core
             _clearButton.Text.Color = Color.Black;
             _clearButton.PointerClick += OnClearButtonClicked;
 
-            _infoToggle = CreateToggle();
+            _infoToggle = UiElementFactory.CreateToggleButton("0");
             _infoToggle.PointerClick += OnInfoToggleClicked;
 
-            _warningToggle = CreateToggle();
+            _warningToggle = UiElementFactory.CreateToggleButton("0");
             _warningToggle.Icon.Color = Color.Yellow;
             _warningToggle.PointerClick += OnWarningToggleClicked;
 
-            _errorToggle = CreateToggle();
+            _errorToggle = UiElementFactory.CreateToggleButton("0");
             _errorToggle.Icon.Color = Color.Red;
             _errorToggle.PointerClick += OnErrorToggleClicked;
 

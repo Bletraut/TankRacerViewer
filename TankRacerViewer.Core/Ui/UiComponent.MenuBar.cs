@@ -8,11 +8,18 @@ using ComposableUi;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
+using TankRacerViewer.Core.Ui;
+
 namespace TankRacerViewer.Core
 {
     public sealed partial class UiComponent
     {
         // Static.
+        private static readonly ItemFilter[] _itemFilters = [
+            new("FastFile files", "DAT"),
+            new("All Files", "*")
+        ];
+
         private static void ShowContextMenu(ContextMenuElement menu, MenuBarItemElement item)
         {
             var boundingRectangle = item.BoundingRectangle;
@@ -25,11 +32,13 @@ namespace TankRacerViewer.Core
         private MenuBarItemElement _fileMenuItem;
         private MenuBarItemElement _editMenuItem;
         private MenuBarItemElement _windowMenuItem;
+        private MenuBarItemElement _viewMenuItem;
         private MenuBarItemElement _aboutMenuItem;
 
         private ContextMenuElement _fileContextMenu;
         private ContextMenuElement _editContextMenu;
         private ContextMenuElement _windowContextMenu;
+        private ContextMenuElement _viewContextMenu;
         private ContextMenuElement _aboutContextMenu;
 
         private void CreateMenuBar()
@@ -39,6 +48,10 @@ namespace TankRacerViewer.Core
                     name: "Open Game Folder...",
                     keyBindings: "Ctrl+O",
                     clickAction: _ => SelectContextMenuItem(OpenGameFolder)
+                ),
+                new ContextMenuItemElement(
+                    name: "Open File...",
+                    clickAction: _ => SelectContextMenuItem(OpenFile)
                 ),
                 new ContextMenuItemElement(
                     name: "Exit",
@@ -73,6 +86,14 @@ namespace TankRacerViewer.Core
                 ),
             ]);
 
+            _viewContextMenu = CreateAndAddContextMenu([
+                new ContextMenuItemElement(
+                    keyBindings: "Ctrl+F",
+                    name: "Advanced Mode",
+                    clickAction: _ => SelectContextMenuItem(_mainWindow.ToggleRenderContext)
+                )
+            ]);
+
             _menuBar = new MenuBarElement();
             _mainLayer.AddChild(new ExpandedElement(_menuBar));
 
@@ -90,6 +111,11 @@ namespace TankRacerViewer.Core
                 () => ShowContextMenu(_windowContextMenu, _windowMenuItem),
                 _windowContextMenu.Hide);
             _menuBar.AddItem(_windowMenuItem);
+
+            _viewMenuItem = new MenuBarItemElement("View",
+                () => ShowContextMenu(_viewContextMenu, _viewMenuItem),
+                _viewContextMenu.Hide);
+            _menuBar.AddItem(_viewMenuItem);
 
             _aboutMenuItem = new MenuBarItemElement("About", null, null);
             _menuBar.AddItem(_aboutMenuItem);
@@ -127,6 +153,21 @@ namespace TankRacerViewer.Core
 
             var filePaths = Directory.GetFiles(folderPath, "*.dat", SearchOption.AllDirectories);
             _mainWindow.OpenGameFolder(filePaths);
+        }
+
+        private void OpenFile()
+        {
+            var filePath = _mainWindow.FileDialogProvider.OpenFileDialog(_itemFilters);
+            if (string.IsNullOrEmpty(filePath))
+                return;
+
+            if (!File.Exists(filePath))
+            {
+                ConsoleWindow.LogMessage(MessageType.Error, $"File not found: '{filePath}'.");
+                return;
+            }
+
+            _mainWindow.OpenFile(filePath);
         }
 
         private void RecreateAllExtraAssetViewsIfPossible()

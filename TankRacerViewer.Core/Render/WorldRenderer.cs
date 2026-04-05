@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using FastFileUnpacker;
 
@@ -18,13 +17,16 @@ namespace TankRacerViewer.Core
         private const float DefaultBackgroundSize = 0.75f;
 
         // Static.
-        private static Texture2D _whitePixelTexture;
-        private static Texture2D _grayPixelTexture;
+        public static Texture2D WhitePixelTexture { get; private set; }
+        public static Texture2D GrayPixelTexture { get; private set; }
 
         // Class.
         public IRenderContext RenderContext { get; private set; }
 
         public Matrix WorldScaleMatrix { get; private set; }
+
+        public long DrawCount { get; private set; }
+        public int TriangleCount { get; private set; }
 
         private bool HasRenderContext => RenderContext is not null;
 
@@ -65,15 +67,15 @@ namespace TankRacerViewer.Core
             _backgroundEffect = contentManager.Load<Effect>("Effects\\BackgroundEffect");
             _clearEffect = contentManager.Load<Effect>("Effects\\ClearEffect");
 
-            if (_whitePixelTexture is null)
+            if (WhitePixelTexture is null)
             {
-                _whitePixelTexture = new Texture2D(_graphicsDevice, 1, 1);
-                _whitePixelTexture.SetData([Color.White]);
+                WhitePixelTexture = new Texture2D(_graphicsDevice, 1, 1);
+                WhitePixelTexture.SetData([Color.White]);
             }
-            if (_grayPixelTexture is null)
+            if (GrayPixelTexture is null)
             {
-                _grayPixelTexture = new Texture2D(_graphicsDevice, 1, 1);
-                _grayPixelTexture.SetData([Color.Gray]);
+                GrayPixelTexture = new Texture2D(_graphicsDevice, 1, 1);
+                GrayPixelTexture.SetData([Color.Gray]);
             }
 
             WorldScaleMatrix = Matrix.CreateScale(DefaultWorldScale);
@@ -98,8 +100,15 @@ namespace TankRacerViewer.Core
 
         public void Begin(Color clearColor = default, float depth = 1)
         {
+            TriangleCount = 0;
+
             if (!HasRenderContext)
+            {
+                DrawCount = 0;
                 return;
+            }
+
+            DrawCount = _graphicsDevice.Metrics.DrawCount;
 
             _renderTargetBindings[0] = _opaqueRenderTarget;
             _renderTargetBindings[1] = _depthRenderTarget;
@@ -108,7 +117,7 @@ namespace TankRacerViewer.Core
 
             _clearEffect.Parameters["DepthValue"].SetValue(depth);
             _spriteBatch.Begin(effect: _clearEffect);
-            _spriteBatch.Draw(_whitePixelTexture, _graphicsDevice.Viewport.Bounds, clearColor);
+            _spriteBatch.Draw(WhitePixelTexture, _graphicsDevice.Viewport.Bounds, clearColor);
             _spriteBatch.End();
         }
 
@@ -119,6 +128,8 @@ namespace TankRacerViewer.Core
 
             DrawRenderQueue();
             Present();
+
+            DrawCount = _graphicsDevice.Metrics.DrawCount - DrawCount;
         }
 
         public void Draw(BackgroundAssetView backgroundAssetView, Camera camera)
@@ -156,13 +167,13 @@ namespace TankRacerViewer.Core
                 _backgroundEffect.Parameters["ModelMatrix"]?.SetValue(scaleMatrix * translationMatrix);
 
                 DrawMeshParts(modelAssetView.Opaque,
-                    RasterizerState.CullClockwise, BlendState.NonPremultiplied, _backgroundEffect, 0, _whitePixelTexture);
+                    RasterizerState.CullClockwise, BlendState.NonPremultiplied, _backgroundEffect, 0, WhitePixelTexture);
                 DrawMeshParts(modelAssetView.OpaqueDoubleSided,
-                    RasterizerState.CullNone, BlendState.NonPremultiplied, _backgroundEffect, 0, _whitePixelTexture);
+                    RasterizerState.CullNone, BlendState.NonPremultiplied, _backgroundEffect, 0, WhitePixelTexture);
                 DrawMeshParts(modelAssetView.Transparent,
-                    RasterizerState.CullClockwise, BlendState.NonPremultiplied, _backgroundEffect, 0, _whitePixelTexture);
+                    RasterizerState.CullClockwise, BlendState.NonPremultiplied, _backgroundEffect, 0, WhitePixelTexture);
                 DrawMeshParts(modelAssetView.TransparentDoubleSided,
-                    RasterizerState.CullNone, BlendState.NonPremultiplied, _backgroundEffect, 0, _whitePixelTexture);
+                    RasterizerState.CullNone, BlendState.NonPremultiplied, _backgroundEffect, 0, WhitePixelTexture);
             }
         }
 
@@ -286,17 +297,17 @@ namespace TankRacerViewer.Core
         private void DrawOpaqueMeshParts(ModelAssetView modelAssetView)
         {
             DrawMeshParts(modelAssetView.Opaque,
-                RasterizerState.CullClockwise, BlendState.Opaque, _modelEffect, 0, _grayPixelTexture);
+                RasterizerState.CullClockwise, BlendState.Opaque, _modelEffect, 0, GrayPixelTexture);
             DrawMeshParts(modelAssetView.OpaqueDoubleSided,
-                RasterizerState.CullNone, BlendState.Opaque, _modelEffect, 0, _grayPixelTexture);
+                RasterizerState.CullNone, BlendState.Opaque, _modelEffect, 0, GrayPixelTexture);
         }
 
         private void DrawTransparentMeshParts(ModelAssetView modelAssetView)
         {
             DrawMeshParts(modelAssetView.Transparent,
-                RasterizerState.CullClockwise, BlendState.Opaque, _modelEffect, 1, _grayPixelTexture);
+                RasterizerState.CullClockwise, BlendState.Opaque, _modelEffect, 1, GrayPixelTexture);
             DrawMeshParts(modelAssetView.TransparentDoubleSided,
-                RasterizerState.CullNone, BlendState.Opaque, _modelEffect, 1, _grayPixelTexture);
+                RasterizerState.CullNone, BlendState.Opaque, _modelEffect, 1, GrayPixelTexture);
         }
 
         private void DrawMeshParts(IReadOnlyList<MeshPart> meshParts,
@@ -329,6 +340,8 @@ namespace TankRacerViewer.Core
                 _graphicsDevice.Indices = meshPart.IndexBuffer;
 
                 _graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshPart.PrimitiveCount);
+
+                TriangleCount += meshPart.PrimitiveCount;
             }
         }
 
