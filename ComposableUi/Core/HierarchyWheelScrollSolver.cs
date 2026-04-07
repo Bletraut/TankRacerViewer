@@ -29,11 +29,4 @@ namespace ComposableUi
             ScrollAction = null;
         }
     }
-
-    public struct WheelScrollIntent
-    {
-        public Vector2 Axis;
-        public int Delta;
-        public Action<Vector2, int> ScrollAction;
-    }
 }

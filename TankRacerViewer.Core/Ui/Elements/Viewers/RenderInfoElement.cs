@@ -45,14 +45,15 @@ namespace TankRacerViewer.Core
             if (string.IsNullOrEmpty(Text))
                 return;
 
+            var clipMask = ClipMask;
             var boundingRectangle = BoundingRectangle;
             var textPosition = TextOffset + boundingRectangle.Location.ToVector2();
 
             renderer.DrawSkinnedRectangle(StandardSkin.WhitePixel, DrawMode.Simple,
-                boundingRectangle, ClipMask, BackgroundColor);
+                boundingRectangle, clipMask, BackgroundColor);
 
             renderer.DrawString(SpriteFont, Text, textPosition,
-                boundingRectangle, TextColor);
+                clipMask, TextColor);
         }
     }
 }

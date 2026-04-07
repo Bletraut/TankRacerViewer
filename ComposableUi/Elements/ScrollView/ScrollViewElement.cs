@@ -284,7 +284,7 @@ namespace ComposableUi
             RefreshScrollBarsButtons();
         }
 
-        private void ScrollContentIfPossible(Vector2 axis, int delta)
+        private void WheelScrollContentIfPossible(Vector2 axis, int delta)
         {
             var isAnyScrollButtonPressed = HorizontalScrollBar.Button.IsPressed
                 || VerticalScrollBar.Button.IsPressed;
@@ -347,12 +347,12 @@ namespace ComposableUi
 
         private void OnScrollWheel(Element sender, PointerScrollEvent pointerEvent)
         {
-            ScrollContentIfPossible(Vector2.UnitY, pointerEvent.Delta);
+            WheelScrollContentIfPossible(Vector2.UnitY, pointerEvent.Delta);
         }
 
         private void OnHorizontalScrollWheel(Element sender, PointerScrollEvent pointerEvent)
         {
-            ScrollContentIfPossible(Vector2.UnitX, pointerEvent.Delta);
+            WheelScrollContentIfPossible(Vector2.UnitX, pointerEvent.Delta);
         }
 
         public enum ExpandingMode

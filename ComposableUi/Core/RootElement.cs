@@ -33,6 +33,8 @@ namespace ComposableUi
             if (!shouldClamp)
                 return position;
 
+            var clampedPosition = position;
+
             var size = element.CalculatePreferredSize();
             var pivotOffset = size * element.Pivot;
             var boundingRectangle = new Rectangle((position - pivotOffset).ToPoint(), size.ToPoint());
@@ -42,28 +44,44 @@ namespace ComposableUi
 
             if (clampToRootWidth)
             {
-                if (boundingRectangle.Right > rootBoundingRectangle.Right)
+                var rightOverflow = boundingRectangle.Right - rootBoundingRectangle.Right;
+                if (rightOverflow > 0)
                 {
-                    position.X = fallbackPosition.X;
-                    boundingRectangle.X = (int)fallbackTopLeftPosition.X;
-                }
+                    clampedPosition.X = fallbackPosition.X;
+                    boundingRectangle.X = (int)(clampedPosition.X - pivotOffset.X);
 
-                position.X += MathF.Max(0, rootBoundingRectangle.Left - boundingRectangle.Left)
-                    + MathF.Min(0, rootBoundingRectangle.Right - boundingRectangle.Right);
+                    var leftOverflow = rootBoundingRectangle.Left - boundingRectangle.Left;
+                    if (leftOverflow > 0)
+                    {
+                        clampedPosition.X = position.X - rightOverflow;
+                        boundingRectangle.X = (int)(clampedPosition.X - pivotOffset.X);
+                    }
+
+                    clampedPosition.X += MathF.Max(0, rootBoundingRectangle.Left - boundingRectangle.Left)
+                        + MathF.Min(0, rootBoundingRectangle.Right - boundingRectangle.Right);
+                }
             }
             if (clampToRootHeight)
             {
-                if (boundingRectangle.Bottom > rootBoundingRectangle.Bottom)
+                var bottomOverflow = boundingRectangle.Bottom - rootBoundingRectangle.Bottom;
+                if (bottomOverflow > 0)
                 {
-                    position.Y = fallbackPosition.Y;
-                    boundingRectangle.Y = (int)fallbackTopLeftPosition.Y;
-                }
+                    clampedPosition.Y = fallbackPosition.Y;
+                    boundingRectangle.Y = (int)(clampedPosition.Y - pivotOffset.Y);
 
-                position.Y += MathF.Max(0, rootBoundingRectangle.Top - boundingRectangle.Top)
-                    + MathF.Min(0, rootBoundingRectangle.Bottom - boundingRectangle.Bottom);
+                    var topOverflow = rootBoundingRectangle.Top - boundingRectangle.Top;
+                    if (topOverflow > 0)
+                    {
+                        clampedPosition.Y = position.Y - bottomOverflow;
+                        boundingRectangle.Y = (int)(clampedPosition.Y - pivotOffset.Y);
+                    }
+
+                    clampedPosition.Y += MathF.Max(0, rootBoundingRectangle.Top - boundingRectangle.Top)
+                        + MathF.Min(0, rootBoundingRectangle.Bottom - boundingRectangle.Bottom);
+                }
             }
 
-            return position;
+            return clampedPosition;
         }
 
         public override void Rebuild(Vector2 size, bool excludeChildren)

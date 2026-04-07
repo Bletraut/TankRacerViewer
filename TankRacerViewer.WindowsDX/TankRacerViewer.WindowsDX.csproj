@@ -26,6 +26,7 @@
 		</MonoGameContentReference>
 	</ItemGroup>
 	<ItemGroup>
+	  <ProjectReference Include="..\DesktopCommon\DesktopCommon.csproj" />
 	  <ProjectReference Include="..\TankRacerViewer.Core\TankRacerViewer.Core.csproj" />
 	</ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">

@@ -15,7 +15,7 @@ namespace ComposableUi
         private const int DefaultSubmenuOffset = -2;
 
         // Static.
-        private static char[] _directorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
+        private static readonly char[] _directorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
         private static readonly Stack<Submenu> _stack = [];
 
         // Class.
@@ -118,7 +118,8 @@ namespace ComposableUi
         {
             var targetMenu = this;
 
-            var pathSegments = item.Key.Split(_directorySeparators, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            var pathSegments = item.Key.Split(_directorySeparators,
+                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             if (pathSegments.Length > 0)
             {
                 for (var i = 0; i < pathSegments.Length; i++)
@@ -145,6 +146,7 @@ namespace ComposableUi
                         parentMenu.AppendToView(submenu.Button);
                         parentMenu._submenus.Add(targetMenuKey, submenu);
                     }
+                    submenu.Button.IsEnabled = true;
                     targetMenu = submenu.Menu;
                 }
             }
@@ -219,7 +221,11 @@ namespace ComposableUi
         public void Hide()
         {
             IsEnabled = false;
+            HideAllSubmenus();
         }
+
+        public bool TryGetSubmenu(string key, out Submenu submenu)
+            => _submenus.TryGetValue(key, out submenu);
 
         private void AppendToView(ContextMenuItemElement item)
         {

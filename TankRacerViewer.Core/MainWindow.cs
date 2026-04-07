@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 using FastFileUnpacker;
 
@@ -17,6 +18,9 @@ namespace TankRacerViewer.Core
 {
     public class MainWindow : Game
     {
+        private const string RecentPathsDataKey = "save";
+        private const int MaxRecentPathCount = 5;
+
         private const float ViewDistance = 1500;
 
         private const string AdvancedModeHitMessage = "Press Esc or Ctrl+F to exit Advanced Mode";
@@ -28,6 +32,7 @@ namespace TankRacerViewer.Core
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        private PersistentDataService _persistentDataService;
 
         private SpriteFont _mainFont;
 
@@ -55,8 +60,13 @@ namespace TankRacerViewer.Core
 
         private float _advancedModeHintCountdown;
 
-        public MainWindow(IFileDialogProvider fileDialogProvider)
+        private List<string> _recentPaths = [];
+
+        public MainWindow(IPlatformStorage platformStorage,
+            IFileDialogProvider fileDialogProvider)
         {
+            _persistentDataService = new PersistentDataService(platformStorage);
+
             FileDialogProvider = fileDialogProvider;
 
             _graphics = new GraphicsDeviceManager(this)
@@ -105,26 +115,57 @@ namespace TankRacerViewer.Core
 
             _cameraController = new CameraController(_camera);
             _cameraController.EulerAngles = _cameraDefaultRotation;
+
+            var data = _persistentDataService.LoadAsync<List<string>>(RecentPathsDataKey)
+                .GetAwaiter().GetResult();
+            _recentPaths = data ?? _recentPaths;
+
+            _uiComponent.RecentPaths = _recentPaths;
+            _uiComponent.RefreshRecentPaths();
         }
 
-        public void OpenGameFolder(string[] filePaths)
+        public void OpenGameFolder(string folderPath)
         {
+            if (!Directory.Exists(folderPath))
+            {
+                _uiComponent.ConsoleWindow.LogMessage(MessageType.Error,
+                    $"Directory not found: '{folderPath}'.");
+                return;
+            }
+
+            var filePaths = Directory.GetFiles(folderPath, "*.dat", SearchOption.AllDirectories);
+
             _loadedAssetViewContainers.Clear();
             foreach (var filePath in filePaths)
                 LoadFile(filePath);
 
-            _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
-                $"FastFiles loaded: {_loadedAssetViewContainers.Count}.");
-
-            if (_loadedAssetViewContainers.Count <= 0)
-                return;
-
-            TryCreateExtraAssetViewsIfPossible(_loadedAssetViewContainers.Select(data => data.AssetViewContainer));
-            _uiComponent.ExplorerWindow.AddFastFiles(_loadedAssetViewContainers);
+            AddPathToRecentAndRefresh(folderPath);
+            ProcessLoadedAssetViewContainers();
         }
 
         public void OpenFile(string filePath)
-            => OpenGameFolder([filePath]);
+        {
+            if (!File.Exists(filePath))
+            {
+                _uiComponent.ConsoleWindow.LogMessage(MessageType.Error,
+                    $"File not found: '{filePath}'.");
+                return;
+            }
+
+            _loadedAssetViewContainers.Clear();
+            LoadFile(filePath);
+
+            AddPathToRecentAndRefresh(filePath);
+            ProcessLoadedAssetViewContainers();
+        }
+
+        public void ClearRecentPaths()
+        {
+            _recentPaths.Clear();
+            _uiComponent.RefreshRecentPaths();
+
+            SaveRecentPaths();
+        }
 
         public void RecreateAllExtraAssetViewsIfPossible()
         {
@@ -151,6 +192,46 @@ namespace TankRacerViewer.Core
                 _renderer.ApplyRenderContext(_gameWindowRenderContext);
             }
             _camera.ApplyRenderContext(_renderer.RenderContext);
+        }
+
+        private void AddPathToRecentAndRefresh(string path)
+        {
+            while (_recentPaths.Count > MaxRecentPathCount)
+                _recentPaths.RemoveAt(_recentPaths.Count - 1);
+
+            _recentPaths.Remove(path);
+            _recentPaths.Insert(0, path);
+
+            _uiComponent.RefreshRecentPaths();
+
+            SaveRecentPaths();
+        }
+
+        private void SaveRecentPaths()
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await _persistentDataService.SaveAsync(RecentPathsDataKey, _recentPaths);
+                }
+                catch (Exception exception)
+                {
+                    _uiComponent.ConsoleWindow.LogMessage(MessageType.Error, exception.Message);
+                }
+            });
+        }
+
+        private void ProcessLoadedAssetViewContainers()
+        {
+            _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
+                $"FastFiles loaded: {_loadedAssetViewContainers.Count}.");
+
+            if (_loadedAssetViewContainers.Count <= 0)
+                return;
+
+            TryCreateExtraAssetViewsIfPossible(_loadedAssetViewContainers.Select(data => data.AssetViewContainer));
+            _uiComponent.ExplorerWindow.AddFastFiles(_loadedAssetViewContainers);
         }
 
         private bool TryCreateExtraAssetViewsIfPossible(IEnumerable<AssetViewContainer> assetViewContainers)
@@ -257,7 +338,7 @@ namespace TankRacerViewer.Core
             if (Input.IsKeyPressed(Keys.LeftControl) && Input.IsKeyDown(Keys.F))
                 ToggleRenderContext();
 
-            if (!IsRenderingToGameWindow && Input.IsKeyDown(Keys.Escape))
+            if (IsRenderingToGameWindow && Input.IsKeyDown(Keys.Escape))
                 ToggleRenderContext();
 
             if (Input.IsKeyDown(Keys.R))
@@ -265,7 +346,7 @@ namespace TankRacerViewer.Core
 
             _advancedModeHintCountdown -= (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            var canSelectNode = IsRenderingToGameWindow
+            var canSelectNode = !IsRenderingToGameWindow
                 && _uiComponent.ExplorerWindow.IsSelected;
             if (canSelectNode)
             {
@@ -424,16 +505,16 @@ namespace TankRacerViewer.Core
                 var minDistance = float.MaxValue;
                 LevelObject closestWayPoint = null;
 
-                foreach (var levelObjectA in levelView.CurrentLevelObjectContainer.LevelObjects)
+                foreach (var wayPoint in levelView.CurrentLevelObjectContainer.LevelObjects)
                 {
-                    if (!levelObjectA.IsWayPoint)
+                    if (!wayPoint.IsWayPoint)
                         continue;
 
-                    var distance = Vector3.DistanceSquared(levelObjectA.Position, objectPosition);
+                    var distance = Vector3.DistanceSquared(wayPoint.Position, objectPosition);
                     if (distance < minDistance)
                     {
                         minDistance = distance;
-                        closestWayPoint = levelObjectA;
+                        closestWayPoint = wayPoint;
                     }
                 }
 

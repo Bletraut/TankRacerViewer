@@ -11,8 +11,8 @@ namespace TankRacerViewer.Core
     {
         public const float DefaultToolPanelHeight = 22;
 
-        public const float DefaultResolutionListWidth = 120;
-        public const float DefaultViewModeListWidth = 180;
+        public const float DefaultResolutionListWidth = 110;
+        public const float DefaultViewModeListWidth = 150;
 
         public const float DefaultInfoPaddings = 4;
 

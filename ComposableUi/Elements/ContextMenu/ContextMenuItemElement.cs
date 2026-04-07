@@ -23,7 +23,16 @@ namespace ComposableUi
             set
             {
                 Button.IsInteractable = value;
-                SetContentColor(Button.IsInteractable ? ContentNormalColor : ContentDisabledColor);
+
+                if (Button.IsInteractable)
+                {
+                    SetContentColor(ContentNormalColor);
+                }
+                else
+                {
+                    _buttonBackground.Skin = StandardSkin.None;
+                    SetContentColor(ContentDisabledColor);
+                }
             }
         }
 

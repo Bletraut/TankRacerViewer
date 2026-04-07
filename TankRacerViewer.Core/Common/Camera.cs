@@ -172,6 +172,7 @@ namespace TankRacerViewer.Core
             _currentRenderContext.ResolutionChanged += OnRenderContextResolutionChanged;
 
             _projectionMatrix = null;
+            _viewProjectionMatrix = null;
         }
 
         public Vector3 GetRayDirection(Vector2 screenPosition)

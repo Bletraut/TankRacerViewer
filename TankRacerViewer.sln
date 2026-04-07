@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TankRacerViewer.WindowsDX",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComposableUi", "ComposableUi\ComposableUi.csproj", "{145CE53C-6D51-4ADB-8698-FBA117691D52}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DesktopCommon", "DesktopCommon\DesktopCommon.csproj", "{39CECB67-1BB2-4962-BA3F-8FDB98C456A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{145CE53C-6D51-4ADB-8698-FBA117691D52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{145CE53C-6D51-4ADB-8698-FBA117691D52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{145CE53C-6D51-4ADB-8698-FBA117691D52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39CECB67-1BB2-4962-BA3F-8FDB98C456A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39CECB67-1BB2-4962-BA3F-8FDB98C456A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39CECB67-1BB2-4962-BA3F-8FDB98C456A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39CECB67-1BB2-4962-BA3F-8FDB98C456A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

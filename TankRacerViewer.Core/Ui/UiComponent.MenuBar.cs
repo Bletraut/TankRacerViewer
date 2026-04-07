@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
 using ComposableUi;
 
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 
 using TankRacerViewer.Core.Ui;
 
@@ -14,6 +12,8 @@ namespace TankRacerViewer.Core
 {
     public sealed partial class UiComponent
     {
+        private const string RecentPathsKey = "Open Recent";
+
         // Static.
         private static readonly ItemFilter[] _itemFilters = [
             new("FastFile files", "DAT"),
@@ -27,6 +27,11 @@ namespace TankRacerViewer.Core
         }
 
         // Class.
+        public List<string> RecentPaths { get; set; }
+
+        private readonly List<ContextMenuItemElement> _recentPathItems = [];
+        private readonly Stack<ContextMenuItemElement> _pool = [];
+
         private MenuBarElement _menuBar;
 
         private MenuBarItemElement _fileMenuItem;
@@ -41,8 +46,45 @@ namespace TankRacerViewer.Core
         private ContextMenuElement _viewContextMenu;
         private ContextMenuElement _aboutContextMenu;
 
+        private ContextMenuItemElement _clearRecentPathsMenuItem;
+        private ContextMenuItemElement _recentPathsMenuItem;
+
+        public void RefreshRecentPaths()
+        {
+            foreach (var item in _recentPathItems)
+            {
+                _fileContextMenu.RemoveItem(item);
+                _pool.Push(item);
+            }
+            _fileContextMenu.RemoveItem(_clearRecentPathsMenuItem);
+
+            _recentPathItems.Clear();
+
+            foreach (var path in RecentPaths)
+            {
+                var item = GetRecentPathMenuItem();
+                item.Name = path;
+                Action<string> action = Directory.Exists(path)
+                    ? _mainWindow.OpenGameFolder
+                    : _mainWindow.OpenFile;
+                item.ClickAction = _ => SelectContextMenuItem(() => action(path));
+                _fileContextMenu.AddItem(item);
+
+                _recentPathItems.Add(item);
+            }
+            _fileContextMenu.AddItem(_clearRecentPathsMenuItem);
+
+            _recentPathsMenuItem.IsInteractable = RecentPaths.Count > 0;
+        }
+
         private void CreateMenuBar()
         {
+            _clearRecentPathsMenuItem = new ContextMenuItemElement(
+                key: RecentPathsKey,
+                name: "Clear Recent Paths",
+                clickAction: _ => SelectContextMenuItem(_mainWindow.ClearRecentPaths)
+            );
+
             _fileContextMenu = CreateAndAddContextMenu([
                 new ContextMenuItemElement(
                     name: "Open Game Folder...",
@@ -53,12 +95,15 @@ namespace TankRacerViewer.Core
                     name: "Open File...",
                     clickAction: _ => SelectContextMenuItem(OpenFile)
                 ),
+                _clearRecentPathsMenuItem,
                 new ContextMenuItemElement(
                     name: "Exit",
                     keyBindings: "Alt+F4",
-                    clickAction: _ => SelectContextMenuItem(null)
+                    clickAction: _ => SelectContextMenuItem(_mainWindow.Exit)
                 ),
             ]);
+            if (_fileContextMenu.TryGetSubmenu(RecentPathsKey, out var submenu))
+                _recentPathsMenuItem = submenu.Button;
 
             _editContextMenu = CreateAndAddContextMenu([
                 new ContextMenuItemElement(
@@ -121,6 +166,16 @@ namespace TankRacerViewer.Core
             _menuBar.AddItem(_aboutMenuItem);
         }
 
+        private ContextMenuItemElement GetRecentPathMenuItem()
+        {
+            if (_pool.Count > 0)
+                return _pool.Pop();
+
+            return new ContextMenuItemElement(
+                key: RecentPathsKey
+            );
+        }
+
         private ContextMenuElement CreateAndAddContextMenu(IEnumerable<ContextMenuItemElement> items)
         {
             var contextMenu = new ContextMenuElement(items)
@@ -145,14 +200,7 @@ namespace TankRacerViewer.Core
             if (string.IsNullOrEmpty(folderPath))
                 return;
 
-            if (!Directory.Exists(folderPath))
-            {
-                ConsoleWindow.LogMessage(MessageType.Error, $"Directory not found: '{folderPath}'.");
-                return;
-            }
-
-            var filePaths = Directory.GetFiles(folderPath, "*.dat", SearchOption.AllDirectories);
-            _mainWindow.OpenGameFolder(filePaths);
+            _mainWindow.OpenGameFolder(folderPath);
         }
 
         private void OpenFile()
@@ -160,12 +208,6 @@ namespace TankRacerViewer.Core
             var filePath = _mainWindow.FileDialogProvider.OpenFileDialog(_itemFilters);
             if (string.IsNullOrEmpty(filePath))
                 return;
-
-            if (!File.Exists(filePath))
-            {
-                ConsoleWindow.LogMessage(MessageType.Error, $"File not found: '{filePath}'.");
-                return;
-            }
 
             _mainWindow.OpenFile(filePath);
         }

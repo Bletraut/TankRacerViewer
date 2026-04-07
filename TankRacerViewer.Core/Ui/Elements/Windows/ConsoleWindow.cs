@@ -147,6 +147,8 @@ namespace TankRacerViewer.Core
 
             _messages.Clear();
             _lazyListView.ClearData();
+
+            RefreshMessageCounters();
         }
 
         private void RefreshMessageCounters()
