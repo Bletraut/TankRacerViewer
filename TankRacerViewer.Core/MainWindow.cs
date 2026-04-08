@@ -12,8 +12,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-using TankRacerViewer.Core.Ui;
-
 namespace TankRacerViewer.Core
 {
     public class MainWindow : Game
@@ -27,12 +25,13 @@ namespace TankRacerViewer.Core
         private const float AdvancedModeHitDurationSeconds = 3f;
 
         public IFileDialogProvider FileDialogProvider { get; }
+        public IPlatformUrlOpener UrlOpener { get; }
 
         private bool IsRenderingToGameWindow => _renderer.RenderContext == _gameWindowRenderContext;
 
-        private GraphicsDeviceManager _graphics;
+        private readonly GraphicsDeviceManager _graphics;
+        private readonly PersistentDataService _persistentDataService;
         private SpriteBatch _spriteBatch;
-        private PersistentDataService _persistentDataService;
 
         private SpriteFont _mainFont;
 
@@ -63,10 +62,12 @@ namespace TankRacerViewer.Core
         private List<string> _recentPaths = [];
 
         public MainWindow(IPlatformStorage platformStorage,
+            IPlatformUrlOpener urlOpener,
             IFileDialogProvider fileDialogProvider)
         {
             _persistentDataService = new PersistentDataService(platformStorage);
 
+            UrlOpener = urlOpener;
             FileDialogProvider = fileDialogProvider;
 
             _graphics = new GraphicsDeviceManager(this)

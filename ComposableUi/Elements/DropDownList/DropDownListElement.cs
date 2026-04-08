@@ -82,9 +82,9 @@ namespace ComposableUi
                 hoverSkin: StandardSkin.WhitePixel,
                 pressedSkin: StandardSkin.WhitePixel,
                 disabledSkin: StandardSkin.WhitePixel,
-                normalColor: Color.Plum,
-                hoverColor: Color.Coral,
-                pressedColor: Color.LightSlateGray
+                normalButtonColor: Color.Plum,
+                hoverButtonColor: Color.Coral,
+                pressedButtonColor: Color.LightSlateGray
             );
             OpenButton.Text.IsEnabled = false;
             OpenButton.ContentLayout.LeftPadding = OpenButton.ContentLayout.RightPadding = 6;

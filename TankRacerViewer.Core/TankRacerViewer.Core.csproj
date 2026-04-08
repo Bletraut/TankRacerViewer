@@ -1,6 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+	<Version>1.0.0</Version>
+	<Company>Bletraut</Company>
+	<Product>Tank Racer Viewer</Product>
+	<Copyright>Copyright (C) 2026 Aleksandr Pachaev</Copyright>
+	<RepositoryUrl>https://github.com/Bletraut/TankRacerViewer</RepositoryUrl>
+	<Description>Reverse-engineering tool for inspecting and extracting assets from Tank Racer file formats.</Description>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Content\bin\**" />
@@ -21,55 +29,5 @@
   <ItemGroup>
     <ProjectReference Include="..\ComposableUi\ComposableUi.csproj" />
     <ProjectReference Include="..\FastFileUpacker\FastFileUnpacker.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Content\FastFiles\BIO.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\BM8.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\CIRCUIT.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\COMMON.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\DATA.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\EAST.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\ENGLAND.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\ENGLAND_TEST.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\GUI.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\INGAME.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\MEXICO.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\MONACO.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\SWAMP.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\TANKS.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\FastFiles\THEME.DAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Ui\Windows\" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-﻿namespace TankRacerViewer.Core.Ui
+﻿namespace TankRacerViewer.Core
 {
     public interface IFileDialogProvider
     {

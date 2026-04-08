@@ -60,8 +60,8 @@ namespace FastFileUnpacker
             {
                 var polygonDataOffset = headerSize + polygonsDataOffset + PolygonColorOffset + PolygonDataSize * i;
 
-                var rgb565 = BitConverter.ToUInt16(data.AsSpan(polygonDataOffset, PolygonColorSize));
-                var color = ColorUtilities.Bgra5551ToColor(rgb565);
+                var bgra5551 = BitConverter.ToUInt16(data.AsSpan(polygonDataOffset, PolygonColorSize));
+                var color = ColorUtilities.Bgra5551ToColor(bgra5551);
                 polygonDataOffset += PolygonColorSize;
 
                 var v1 = _vertices[data[polygonDataOffset++]];

@@ -40,9 +40,9 @@ namespace TankRacerViewer.Core
                 hoverSkin: StandardSkin.WhitePixel,
                 pressedSkin: StandardSkin.WhitePixel,
                 disabledSkin: StandardSkin.WhitePixel,
-                normalColor: DefaultNormalButtonColor,
-                hoverColor: DefaultHoverButtonColor,
-                pressedColor: DefaultPressedButtonColor
+                normalButtonColor: DefaultNormalButtonColor,
+                hoverButtonColor: DefaultHoverButtonColor,
+                pressedButtonColor: DefaultPressedButtonColor
             );
             button.Text.IsEnabled = false;
             button.ContentLayout.LeftPadding = DefaultButtonPaddings;

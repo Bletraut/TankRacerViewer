@@ -131,7 +131,8 @@ namespace ComposableUi
 
         public bool IsPressed { get; private set; }
 
-        private InteractionState _currentInteractionState;
+        protected InteractionState CurrentInteractionState { get; private set; }
+
         private (Sprite Sprite, StandardSkin Skin, Color Color) _currentVisualState;
 
         private bool _isVisualStateDirty = true;
@@ -180,7 +181,7 @@ namespace ComposableUi
             OnInteractionStateChanged(isInteractable ? InteractionState.Normal : InteractionState.Disabled);
         }
 
-        public void MarkVisualStateDirty()
+        private void MarkVisualStateDirty()
         {
             _isVisualStateDirty = true;
         }
@@ -192,7 +193,7 @@ namespace ComposableUi
 
             _isVisualStateDirty = false;
 
-            _currentVisualState = _currentInteractionState switch
+            _currentVisualState = CurrentInteractionState switch
             {
                 InteractionState.Normal => (NormalSprite, NormalSkin, NormalColor),
                 InteractionState.Hover => (HoverSprite, HoverSkin, HoverColor),
@@ -220,10 +221,10 @@ namespace ComposableUi
 
         protected virtual void OnInteractionStateChanged(InteractionState state)
         {
-            if (_currentInteractionState == state)
+            if (CurrentInteractionState == state)
                 return;
 
-            _currentInteractionState = state;
+            CurrentInteractionState = state;
             MarkVisualStateDirty();
         }
 

@@ -6,8 +6,6 @@ using ComposableUi;
 
 using Microsoft.Xna.Framework;
 
-using TankRacerViewer.Core.Ui;
-
 namespace TankRacerViewer.Core
 {
     public sealed partial class UiComponent
@@ -42,8 +40,8 @@ namespace TankRacerViewer.Core
 
         private ContextMenuElement _fileContextMenu;
         private ContextMenuElement _editContextMenu;
-        private ContextMenuElement _windowContextMenu;
         private ContextMenuElement _viewContextMenu;
+        private ContextMenuElement _windowContextMenu;
         private ContextMenuElement _aboutContextMenu;
 
         private ContextMenuItemElement _clearRecentPathsMenuItem;
@@ -112,6 +110,14 @@ namespace TankRacerViewer.Core
                 )
             ]);
 
+            _viewContextMenu = CreateAndAddContextMenu([
+                new ContextMenuItemElement(
+                    keyBindings: "Ctrl+F",
+                    name: "Advanced Mode",
+                    clickAction: _ => SelectContextMenuItem(_mainWindow.ToggleRenderContext)
+                )
+            ]);
+
             _windowContextMenu = CreateAndAddContextMenu([
                 new ContextMenuItemElement(
                     name: "Viewer",
@@ -131,11 +137,10 @@ namespace TankRacerViewer.Core
                 ),
             ]);
 
-            _viewContextMenu = CreateAndAddContextMenu([
+            _aboutContextMenu = CreateAndAddContextMenu([
                 new ContextMenuItemElement(
-                    keyBindings: "Ctrl+F",
-                    name: "Advanced Mode",
-                    clickAction: _ => SelectContextMenuItem(_mainWindow.ToggleRenderContext)
+                    name: "About",
+                    clickAction: _ => SelectContextMenuItem(ShowAboutWindow)
                 )
             ]);
 
@@ -152,17 +157,19 @@ namespace TankRacerViewer.Core
                 _editContextMenu.Hide);
             _menuBar.AddItem(_editMenuItem);
 
-            _windowMenuItem = new MenuBarItemElement("Window",
-                () => ShowContextMenu(_windowContextMenu, _windowMenuItem),
-                _windowContextMenu.Hide);
-            _menuBar.AddItem(_windowMenuItem);
-
             _viewMenuItem = new MenuBarItemElement("View",
                 () => ShowContextMenu(_viewContextMenu, _viewMenuItem),
                 _viewContextMenu.Hide);
             _menuBar.AddItem(_viewMenuItem);
 
-            _aboutMenuItem = new MenuBarItemElement("About", null, null);
+            _windowMenuItem = new MenuBarItemElement("Window",
+                () => ShowContextMenu(_windowContextMenu, _windowMenuItem),
+                _windowContextMenu.Hide);
+            _menuBar.AddItem(_windowMenuItem);
+
+            _aboutMenuItem = new MenuBarItemElement("About",
+                () => ShowContextMenu(_aboutContextMenu, _aboutMenuItem),
+                _aboutContextMenu.Hide);
             _menuBar.AddItem(_aboutMenuItem);
         }
 

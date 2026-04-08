@@ -43,8 +43,8 @@ namespace TankRacerViewer.Core
                 hoverSkin: StandardSkin.RectanglePanel,
                 pressedSkin: StandardSkin.RectanglePanel,
                 disabledSkin: StandardSkin.RectanglePanel,
-                hoverColor: Color.LightCyan,
-                pressedColor: Color.DarkGoldenrod
+                hoverButtonColor: Color.LightCyan,
+                pressedButtonColor: Color.DarkGoldenrod
             );
             _clearButton.Icon.IsEnabled = false;
             _clearButton.Text.Color = Color.Black;

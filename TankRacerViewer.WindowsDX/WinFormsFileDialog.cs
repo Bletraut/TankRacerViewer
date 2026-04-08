@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Windows.Forms;
 
-using TankRacerViewer.Core.Ui;
+using TankRacerViewer.Core;
 
 namespace TankRacerViewer.WindowsDX
 {

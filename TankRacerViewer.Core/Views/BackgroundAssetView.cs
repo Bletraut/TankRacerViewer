@@ -23,7 +23,6 @@ namespace TankRacerViewer.Core
                 _modelAssetViews.Add(new ModelAssetView(graphicsDevice, fullName,
                     polygons, textureAssetViewCache));
             }
-
         }
     }
 }
