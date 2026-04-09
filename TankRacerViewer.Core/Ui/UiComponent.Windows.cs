@@ -1,4 +1,6 @@
-﻿using ComposableUi;
+﻿using System.Diagnostics;
+
+using ComposableUi;
 
 using Microsoft.Xna.Framework;
 
@@ -80,7 +82,7 @@ namespace TankRacerViewer.Core
             UiManager.Root.ShowInOverlay(AboutWindow,
                 _windowLayout.Position, Vector2.Zero);
 
-            AboutWindow.InnerElement.Size = WindowElement.DefaultSize;
+            AboutWindow.InnerElement.Size = new Vector2(400, 320);
             AboutWindow.IsEnabled = true;
 
             AboutWindow.Select();

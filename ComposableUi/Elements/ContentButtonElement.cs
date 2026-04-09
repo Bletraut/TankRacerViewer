@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Diagnostics;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -183,6 +185,12 @@ namespace ComposableUi
 
         private void RefreshContentVisualState()
         {
+            if (Icon is null)
+                return;
+
+            if (Text is null)
+                return;
+
             var (iconColor, textColor) = CurrentInteractionState switch
             {
                 InteractionState.Normal => (NormalIconColor, NormalTextColor),
@@ -194,6 +202,12 @@ namespace ComposableUi
 
             Icon.Color = iconColor;
             Text.Color = textColor;
+        }
+
+        protected override void OnInteractionStateChanged(InteractionState state)
+        {
+            base.OnInteractionStateChanged(state);
+            RefreshContentVisualState();
         }
     }
 }
