@@ -1,4 +1,6 @@
-﻿using TankRacerViewer.Core;
+﻿using System.Diagnostics;
+
+using TankRacerViewer.Core;
 
 namespace DesktopCommon
 {
@@ -19,7 +21,8 @@ namespace DesktopCommon
             var path = GetPath(key);
 
             var tempPath = path + ".tmp";
-            await File.WriteAllBytesAsync(tempPath, bytes, cancellationToken);
+            await File.WriteAllBytesAsync(tempPath, bytes, cancellationToken)
+                .ConfigureAwait(false);
 
             if (File.Exists(path))
             {
@@ -38,7 +41,8 @@ namespace DesktopCommon
             if (!File.Exists(path))
                 return null;
 
-            var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
+            var bytes = await File.ReadAllBytesAsync(path, cancellationToken)
+                .ConfigureAwait(false);
             return bytes;
         }
 
