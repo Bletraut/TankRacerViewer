@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using System.IO;
-
-using FastFileUnpacker;
 
 using Microsoft.Xna.Framework;
 

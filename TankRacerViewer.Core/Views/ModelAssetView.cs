@@ -51,7 +51,7 @@ namespace TankRacerViewer.Core
             Transparent = _transparent.AsReadOnly();
             TransparentDoubleSided = _transparentDoubleSided.AsReadOnly();
 
-            var cullModeGroups = polygons.GroupBy(polygon => polygon.isDoubleSided);
+            var cullModeGroups = polygons.GroupBy(polygon => polygon.IsDoubleSided);
             foreach (var cullModeGroup in cullModeGroups)
             {
                 var textureGroups = cullModeGroup.GroupBy(polygon => polygon.TextureName.ToLowerInvariant());
@@ -76,8 +76,6 @@ namespace TankRacerViewer.Core
                     _verticesData.Clear();
                     foreach (var polygon in textureGroup)
                     {
-                        var billboardFlag = polygon.IsBillboard ? 1 : 0;
-
                         var v1 = new Vector3(polygon.V1.X, polygon.V1.Y, polygon.V1.Z);
                         var v2 = new Vector3(polygon.V2.X, polygon.V2.Y, polygon.V2.Z);
                         var v3 = new Vector3(polygon.V3.X, polygon.V3.Y, polygon.V3.Z);
@@ -97,23 +95,33 @@ namespace TankRacerViewer.Core
                         boundingBox.Min = Vector3.Min(boundingBox.Min, min);
                         boundingBox.Max = Vector3.Max(boundingBox.Max, max);
 
-                        if (polygon.IsBillboard)
+                        if (polygon.BillboardSize > 0)
                         {
                             quadCenter = min + (max - min) / 2;
 
-                            var normal = Vector3.Normalize(Vector3.Cross(v2 - v1, v3 - v1));
+                            var flipFactor = polygon.IsBillboardTriangleFlipped ? 1 : -1;
 
-                            var angle = -MathF.Atan2(normal.X, normal.Z);
-                            var rotationMatrix = Matrix.CreateRotationY(angle);
+                            v1.Z = quadCenter.Z;
+                            v2.Z = quadCenter.Z;
+                            v3.Z = quadCenter.Z;
 
-                            v1 = quadCenter + Vector3.Transform(v1 - quadCenter, rotationMatrix);
-                            v2 = quadCenter + Vector3.Transform(v2 - quadCenter, rotationMatrix);
-                            v3 = quadCenter + Vector3.Transform(v3 - quadCenter, rotationMatrix);
+                            if (polygon.IsBillboardTriangleFlipped)
+                            {
+                                v1.X = quadCenter.X - polygon.BillboardSize;
+                                v2.X = quadCenter.X + polygon.BillboardSize;
+                                v3.X = quadCenter.X - polygon.BillboardSize;
+                            }
+                            else
+                            {
+                                v1.X = quadCenter.X - polygon.BillboardSize;
+                                v2.X = quadCenter.X + polygon.BillboardSize;
+                                v3.X = quadCenter.X + polygon.BillboardSize;
+                            }
                         }
 
                         _verticesData.Add(new()
                         {
-                            Position = new Vector4(v1, billboardFlag),
+                            Position = new Vector4(v1, polygon.BillboardSize),
                             Color = color1,
                             TextureCoordinate = uv1,
                             QuadCenter = quadCenter
@@ -121,7 +129,7 @@ namespace TankRacerViewer.Core
 
                         _verticesData.Add(new()
                         {
-                            Position = new Vector4(v2, billboardFlag),
+                            Position = new Vector4(v2, polygon.BillboardSize),
                             Color = color2,
                             TextureCoordinate = uv2,
                             QuadCenter = quadCenter
@@ -129,7 +137,7 @@ namespace TankRacerViewer.Core
 
                         _verticesData.Add(new()
                         {
-                            Position = new Vector4(v3, billboardFlag),
+                            Position = new Vector4(v3, polygon.BillboardSize),
                             Color = color3,
                             TextureCoordinate = uv3,
                             QuadCenter = quadCenter

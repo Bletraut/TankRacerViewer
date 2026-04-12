@@ -41,13 +41,13 @@ namespace FastFileUnpacker
             var v2 = _topRight;
             var v3 = _bottomLeft;
             polygons.Add(new Polygon(v1, v2, v3, Vector2.Zero, Vector2.Zero, Vector2.Zero,
-                color1, color2, color3, string.Empty, false, true));
+                color1, color2, color3, string.Empty, true, false, 0));
 
             v1 = _topRight;
             v2 = _bottomRight;
             v3 = _bottomLeft;
             polygons.Add(new Polygon(v1, v2, v3, Vector2.Zero, Vector2.Zero, Vector2.Zero,
-                color2, color4, color3, string.Empty, false, true));
+                color2, color4, color3, string.Empty, true, false, 0));
         }
 
         private static void AddCloudsQuad(List<Polygon> polygons,
@@ -86,13 +86,13 @@ namespace FastFileUnpacker
             var v2 = _bottomRight * scale + offset;
             var v3 = _bottomLeft * scale + offset;
             polygons.Add(new Polygon(v1, v2, v3, uv1, uv2, uv3,
-                color, color, color, textureName, false, true));
+                color, color, color, textureName, true, false, 0));
 
             v1 = _topLeft * scale + offset;
             v2 = _topRight * scale + offset;
             v3 = _bottomRight * scale + offset;
             polygons.Add(new Polygon(v1, v2, v3, uv1, uv4, uv2,
-                color, color, color, textureName, false, true));
+                color, color, color, textureName, true, false, 0));
         }
 
         // Class.

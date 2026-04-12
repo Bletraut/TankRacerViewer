@@ -320,7 +320,11 @@ namespace TankRacerViewer.Core
             }
             catch (Exception exception)
             {
-                Debug.WriteLine($"Can't load file '{filePath}'. {exception.Message}");
+                _uiComponent.ConsoleWindow.LogMessage(MessageType.Error,
+                    $"Can't load file '{filePath}'. {exception.Message}");
+#if DEBUG
+                throw;
+#endif
             }
         }
 

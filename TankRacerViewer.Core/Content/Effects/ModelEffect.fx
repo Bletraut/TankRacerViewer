@@ -52,12 +52,12 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 {
     VertexShaderOutput output = (VertexShaderOutput) 0;
 	
-    bool isBilliboard = input.Position.w > 0;
+    float billboardScale = input.Position.w;
     float4 position = float4(input.Position.xyz, 1);
     
     float4 clipSpacePosition;
-    if (isBilliboard)
-    {
+    if (billboardScale > 0)
+    {        
         float3 worldPosition = mul(position, ModelMatrix).xyz;
         float3 worldCenterPosition = mul(float4(input.Center, 1), ModelMatrix).xyz;
         float3 localPosition = worldPosition - worldCenterPosition;

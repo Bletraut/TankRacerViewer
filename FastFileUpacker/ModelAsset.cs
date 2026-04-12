@@ -5,8 +5,9 @@ namespace FastFileUnpacker
 {
     public sealed class ModelAsset : Asset
     {
-        private const byte BillboardFlagMask = 0b_0001_1110;
         private const byte DoubleSidedFlagMask = 0b_0000_0001;
+        private const byte BillboardScaleMask = 0b_0001_1110;
+        private const byte BillboardTriangleFlippedFlagMask = 0b_0010_0000;
 
         private const int VertexCountOffset = 0;
         private const int VertexCountSize = 2;
@@ -26,6 +27,8 @@ namespace FastFileUnpacker
         private const int PolygonColorSize = 2;
         private const int PolygonTextureNameOffsetSize = 4;
         private const int PolygonTextureNameSize = 16;
+
+        private const float BillboardScaleFactor = 64;
 
         // Static.
         private static readonly Vector3[] _vertices = new Vector3[byte.MaxValue];
@@ -78,8 +81,9 @@ namespace FastFileUnpacker
                 var uv3 = new Vector2(data[polygonDataOffset], data[polygonDataOffset + 1]) / byte.MaxValue;
                 polygonDataOffset += 2;
 
-                var isBillboard = (data[polygonDataOffset] & BillboardFlagMask) > 0;
                 var isDoubleSided = (data[polygonDataOffset] & DoubleSidedFlagMask) > 0;
+                var billboardSize = ((data[polygonDataOffset] & BillboardScaleMask) >> 1) * BillboardScaleFactor;
+                var isBillboardTriangleFlipped = (data[polygonDataOffset] & BillboardTriangleFlippedFlagMask) > 0;
                 polygonDataOffset += 2;
 
                 var textureName = string.Empty;
@@ -91,7 +95,8 @@ namespace FastFileUnpacker
                 }
 
                 yield return new Polygon(v1, v2, v3, uv1, uv2, uv3,
-                    color, color, color, textureName, isBillboard, isDoubleSided);
+                    color, color, color, textureName, isDoubleSided,
+                    isBillboardTriangleFlipped, billboardSize);
             }
         }
 
