@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-using ComposableUi.Utilities;
+﻿using ComposableUi.Utilities;
 
 using Microsoft.Xna.Framework;
 
@@ -43,10 +41,10 @@ namespace ComposableUi
             set => SetAndChangeState(ref _minSize, value);
         }
 
-        public bool IsResizing => _sizeDirection != Vector2.Zero;
+        public bool IsResizing => SizeDirection != Vector2.Zero;
 
-        private Vector2 _sizeDirection = Vector2.Zero;
-        private Vector2 _positionDirection = Vector2.Zero;
+        protected Vector2 SizeDirection { get; private set; } = Vector2.Zero;
+        protected Vector2 PositionDirection { get; private set; } = Vector2.Zero;
 
         public ResizableElement(Element innerElement = default,
             int handleSize = DefaultHandleSize,
@@ -59,6 +57,20 @@ namespace ComposableUi
         {
             HandleSize = handleSize;
             MinSize = minSize;
+        }
+
+        protected (Vector2 SizeDelta, Vector2 PositionDelta) CalculateResizeDeltas(Vector2 delta)
+        {
+            var size = InnerElement.Size;
+            // Prevents a sudden jump in size if the
+            // current size is less than the minimum size.
+            var minSize = Vector2.Min(size, MinSize);
+            var newSize = Vector2.Max(minSize, size + delta * SizeDirection);
+
+            var sizeDelta = size - newSize;
+            var localPositionDelta = sizeDelta * PositionDirection;
+
+            return (-sizeDelta, localPositionDelta);
         }
 
         private void ResolvePointerCursor(IPointer pointer, Point position)
@@ -105,8 +117,8 @@ namespace ComposableUi
         {
             base.OnPointerDown(pointerEvent);
 
-            _sizeDirection = InteractionRectangle.GetEdgeNormal(HandleSize, pointerEvent.Position);
-            _positionDirection = Vector2.Max(Vector2.Zero, -_sizeDirection) - Pivot;
+            SizeDirection = InteractionRectangle.GetEdgeNormal(HandleSize, pointerEvent.Position);
+            PositionDirection = Vector2.Max(Vector2.Zero, -SizeDirection) - Pivot;
         }
 
         protected override void OnPointerUp(in PointerEvent pointerEvent)
@@ -116,7 +128,7 @@ namespace ComposableUi
             if (IsResizing)
                 ResolvePointerCursor(pointerEvent.Pointer, pointerEvent.Position);
 
-            _sizeDirection = Vector2.Zero;
+            SizeDirection = Vector2.Zero;
         }
 
         protected override void OnPointerFixedDrag(in PointerDragEvent pointerEvent)
@@ -126,13 +138,11 @@ namespace ComposableUi
             var deltaVector = pointerEvent.Delta.ToVector2();
             if (HasEnabledInnerElement)
             {
-                var size = InnerElement.Size;
-                // Prevents a sudden jump in size if the
-                // current size is less than the minimum size.
-                var minSize = Vector2.Min(size, MinSize);
-                var newSize = Vector2.Max(minSize, size + deltaVector * _sizeDirection);
-                Size = InnerElement.Size = newSize;
-                LocalPosition += (size - newSize) * _positionDirection;
+                var (sizeDelta, localPositionDelta) = CalculateResizeDeltas(deltaVector);
+
+                Size += sizeDelta;
+                InnerElement.Size = Size;
+                LocalPosition += localPositionDelta;
             }
         }
     }

@@ -322,6 +322,17 @@ namespace ComposableUi
                             _stack.Push((layer, parentElement.GetChildAt(i)));
                     }
 
+                    if (element is PointerInputHandlerElement pointerInputHandler)
+                    {
+                        var isPressed = _primaryButtonPressedHandlers.Contains(pointerInputHandler)
+                            || _secondaryButtonPressedHandlers.Contains(pointerInputHandler);
+                        if (isPressed)
+                        {
+                            HandleElement(element);
+                            continue;
+                        }
+                    }
+
                     var boundingRectangle = element.BoundingRectangle;
                     var clipMask = element.ClipMask;
 

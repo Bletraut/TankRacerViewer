@@ -95,6 +95,28 @@ namespace ComposableUi
             IsInteractable = isInteractable;
         }
 
+        public Point CalculateFixedDragDelta(Rectangle boundingRectangle,
+            in PointerDragEvent pointerEvent)
+        {
+            var pointerDownPosition = new Vector2(boundingRectangle.Left, boundingRectangle.Top)
+                + Size * _pointerDownNormalizedPosition;
+
+            var vectorDelta = pointerEvent.Delta.ToVector2();
+            var vectorPosition = pointerEvent.Position.ToVector2();
+
+            var canDragX = MathF.Sign(vectorPosition.X - pointerDownPosition.X) == MathF.Sign(vectorDelta.X);
+            var canDragY = MathF.Sign(vectorPosition.Y - pointerDownPosition.Y) == MathF.Sign(vectorDelta.Y);
+
+            if (!canDragX && !canDragY)
+                return Point.Zero;
+
+            return new Point()
+            {
+                X = canDragX ? pointerEvent.Delta.X : 0,
+                Y = canDragY ? pointerEvent.Delta.Y : 0
+            };
+        }
+
         void IPointerInputHandler.OnScrollWheel(in PointerScrollEvent pointerEvent)
             => OnScrollWheel(pointerEvent);
 
@@ -171,31 +193,10 @@ namespace ComposableUi
         {
             PointerDrag?.Invoke((TSelf)this, pointerEvent);
 
-            var boundingBox = BoundingRectangle;
-            var pointerDownPosition = new Vector2(boundingBox.Left, boundingBox.Top)
-                + Size * _pointerDownNormalizedPosition;
-
-            var vectorPosition = pointerEvent.Position.ToVector2();
-            var axisXPointerPosition = Vector2.Dot(Vector2.UnitX, vectorPosition * Vector2.UnitX);
-            var axisXPointerDownPosition = Vector2.Dot(Vector2.UnitX, pointerDownPosition * Vector2.UnitX);
-            var axisYPointerPosition = Vector2.Dot(Vector2.UnitY, vectorPosition * Vector2.UnitY);
-            var axisYPointerDownPosition = Vector2.Dot(Vector2.UnitY, pointerDownPosition * Vector2.UnitY);
-
-            var vectorDelta = pointerEvent.Delta.ToVector2();
-            var axisXDelta = Vector2.Dot(Vector2.UnitX, vectorDelta);
-            var axisYDelta = Vector2.Dot(Vector2.UnitY, vectorDelta);
-
-            var canDragX = MathF.Sign(axisXPointerPosition - axisXPointerDownPosition) == MathF.Sign(axisXDelta);
-            var canDragY = MathF.Sign(axisYPointerPosition - axisYPointerDownPosition) == MathF.Sign(axisYDelta);
-
-            if (!canDragX && !canDragY)
+            var delta = CalculateFixedDragDelta(BoundingRectangle, pointerEvent);
+            if (delta == Point.Zero)
                 return;
 
-            var delta = new Point()
-            {
-                X = canDragX ? pointerEvent.Delta.X : 0,
-                Y = canDragY ? pointerEvent.Delta.Y : 0
-            };
             OnPointerFixedDrag(new PointerDragEvent(pointerEvent.Pointer, pointerEvent.Position,
                 pointerEvent.IsPrimaryButtonPressed, pointerEvent.IsSecondaryButtonPressed, delta));
         }

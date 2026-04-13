@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Diagnostics;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -62,6 +65,23 @@ namespace ComposableUi
         protected Element ResolveRootContainer()
             => RootContainer is not null ? RootContainer : this;
 
+        protected Point CalculateClampedInParentDragDelta(Rectangle boundingRectangle,
+            Rectangle parentBoundingRectangle)
+        {
+            parentBoundingRectangle.Location += new Point(20, 0);
+            parentBoundingRectangle.Size -= new Point(20 * 2, 30);
+
+            var delta = new Point()
+            {
+                X = Math.Min(parentBoundingRectangle.Right - boundingRectangle.Left, 0)
+                    - Math.Min(boundingRectangle.Right - parentBoundingRectangle.Left, 0),
+                Y = Math.Min(parentBoundingRectangle.Bottom - boundingRectangle.Top, 0)
+                    - Math.Min(boundingRectangle.Top - parentBoundingRectangle.Top, 0)
+            };
+
+            return delta;
+        }
+
         internal virtual void ApplyContainer(T container)
         {
             Container = container;
@@ -81,5 +101,34 @@ namespace ComposableUi
         }
 
         internal virtual void SetSelected(bool value) { }
+
+        protected override void OnPointerFixedDrag(in PointerDragEvent pointerEvent)
+        {
+            if (HasEnabledInnerElement && Parent is not null)
+            {
+                var (sizeDelta, localPositionDelta) = CalculateResizeDeltas(pointerEvent.Delta.ToVector2());
+
+                var boundingRectangle = BoundingRectangle;
+                boundingRectangle.Size += sizeDelta.ToPoint();
+                var sizedPivotOffset = boundingRectangle.Size.ToVector2() * Pivot;
+                boundingRectangle.Location -= (sizedPivotOffset - PivotOffset - localPositionDelta).ToPoint();
+
+                var clampedDelta = new Point()
+                {
+                    X = (int)(MathF.Abs(sizeDelta.X) * Math.Sign(pointerEvent.Delta.X)),
+                    Y = (int)(MathF.Abs(sizeDelta.Y) * Math.Sign(pointerEvent.Delta.Y)),
+                };
+                clampedDelta += CalculateClampedInParentDragDelta(boundingRectangle, Parent.BoundingRectangle);
+
+                var clampedPointerEvent = new PointerDragEvent(pointerEvent.Pointer, pointerEvent.Position,
+                    pointerEvent.IsPrimaryButtonPressed, pointerEvent.IsSecondaryButtonPressed, clampedDelta);
+
+                base.OnPointerFixedDrag(clampedPointerEvent);
+            }
+            else
+            {
+                base.OnPointerFixedDrag(pointerEvent);
+            }
+        }
     }
 }
