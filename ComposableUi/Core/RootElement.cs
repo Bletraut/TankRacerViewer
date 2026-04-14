@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
@@ -40,8 +41,6 @@ namespace ComposableUi
             var boundingRectangle = new Rectangle((position - pivotOffset).ToPoint(), size.ToPoint());
             var rootBoundingRectangle = BoundingRectangle;
 
-            var fallbackTopLeftPosition = fallbackPosition - pivotOffset;
-
             if (clampToRootWidth)
             {
                 var rightOverflow = boundingRectangle.Right - rootBoundingRectangle.Right;
@@ -50,17 +49,19 @@ namespace ComposableUi
                     clampedPosition.X = fallbackPosition.X;
                     boundingRectangle.X = (int)(clampedPosition.X - pivotOffset.X);
 
-                    var leftOverflow = rootBoundingRectangle.Left - boundingRectangle.Left;
-                    if (leftOverflow > 0)
+                    var isOutOfBounds = rootBoundingRectangle.Left - boundingRectangle.Left > 0
+                        || boundingRectangle.Right - rootBoundingRectangle.Right > 0;
+                    if (isOutOfBounds)
                     {
                         clampedPosition.X = position.X - rightOverflow;
                         boundingRectangle.X = (int)(clampedPosition.X - pivotOffset.X);
                     }
-
-                    clampedPosition.X += MathF.Max(0, rootBoundingRectangle.Left - boundingRectangle.Left)
-                        + MathF.Min(0, rootBoundingRectangle.Right - boundingRectangle.Right);
                 }
+
+                clampedPosition.X += MathF.Max(0, rootBoundingRectangle.Left - boundingRectangle.Left)
+                    + MathF.Min(0, rootBoundingRectangle.Right - boundingRectangle.Right);
             }
+
             if (clampToRootHeight)
             {
                 var bottomOverflow = boundingRectangle.Bottom - rootBoundingRectangle.Bottom;
@@ -69,16 +70,17 @@ namespace ComposableUi
                     clampedPosition.Y = fallbackPosition.Y;
                     boundingRectangle.Y = (int)(clampedPosition.Y - pivotOffset.Y);
 
-                    var topOverflow = rootBoundingRectangle.Top - boundingRectangle.Top;
-                    if (topOverflow > 0)
+                    var isOutOfBounds = rootBoundingRectangle.Top - boundingRectangle.Top > 0
+                        || boundingRectangle.Bottom - rootBoundingRectangle.Bottom > 0;
+                    if (isOutOfBounds)
                     {
                         clampedPosition.Y = position.Y - bottomOverflow;
                         boundingRectangle.Y = (int)(clampedPosition.Y - pivotOffset.Y);
                     }
-
-                    clampedPosition.Y += MathF.Max(0, rootBoundingRectangle.Top - boundingRectangle.Top)
-                        + MathF.Min(0, rootBoundingRectangle.Bottom - boundingRectangle.Bottom);
                 }
+
+                clampedPosition.Y += MathF.Max(0, rootBoundingRectangle.Top - boundingRectangle.Top)
+                    + MathF.Min(0, rootBoundingRectangle.Bottom - boundingRectangle.Bottom);
             }
 
             return clampedPosition;
