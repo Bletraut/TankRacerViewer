@@ -96,13 +96,13 @@ namespace ComposableUi
         }
 
         public Point CalculateFixedDragDelta(Rectangle boundingRectangle,
-            in PointerDragEvent pointerEvent)
+            Point delta, Point position)
         {
             var pointerDownPosition = new Vector2(boundingRectangle.Left, boundingRectangle.Top)
                 + Size * _pointerDownNormalizedPosition;
 
-            var vectorDelta = pointerEvent.Delta.ToVector2();
-            var vectorPosition = pointerEvent.Position.ToVector2();
+            var vectorDelta = delta.ToVector2();
+            var vectorPosition = position.ToVector2();
 
             var canDragX = MathF.Sign(vectorPosition.X - pointerDownPosition.X) == MathF.Sign(vectorDelta.X);
             var canDragY = MathF.Sign(vectorPosition.Y - pointerDownPosition.Y) == MathF.Sign(vectorDelta.Y);
@@ -112,8 +112,8 @@ namespace ComposableUi
 
             return new Point()
             {
-                X = canDragX ? pointerEvent.Delta.X : 0,
-                Y = canDragY ? pointerEvent.Delta.Y : 0
+                X = canDragX ? delta.X : 0,
+                Y = canDragY ? delta.Y : 0
             };
         }
 
@@ -193,7 +193,8 @@ namespace ComposableUi
         {
             PointerDrag?.Invoke((TSelf)this, pointerEvent);
 
-            var delta = CalculateFixedDragDelta(BoundingRectangle, pointerEvent);
+            var delta = CalculateFixedDragDelta(BoundingRectangle,
+                pointerEvent.Delta, pointerEvent.Position);
             if (delta == Point.Zero)
                 return;
 

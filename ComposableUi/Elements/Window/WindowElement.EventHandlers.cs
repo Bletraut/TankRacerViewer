@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
@@ -34,12 +35,14 @@ namespace ComposableUi
             var delta = pointerEvent.Delta;
             var root = ResolveRootContainer();
 
-            if (root.Parent is not null)
+            var shouldConstrainToParent = ConstrainToParent
+                && root.Parent is not null;
+            if (shouldConstrainToParent)
             {
                 var boundingRectangle = root.BoundingRectangle;
                 boundingRectangle.Location += pointerEvent.Delta;
 
-                delta += CalculateClampedInParentDragDelta(boundingRectangle,
+                delta += CalculateOffsetToConstrainToParent(boundingRectangle,
                     root.Parent.BoundingRectangle);
             }
             root.Position += delta.ToVector2();
@@ -124,36 +127,35 @@ namespace ComposableUi
 
                 _dragDeltaAccumulator = deltaVector;
             }
-            else
+
+            if (ConstrainToParent)
             {
                 var root = ResolveRootContainer();
-                if (root.Parent is null)
-                    return;
-
-                var boundingRectangle = BoundingRectangle;
-                boundingRectangle.Location += _dragDeltaAccumulator.ToPoint();
-
-                var tabBoundingRectangle = new Rectangle()
+                if (root.Parent is not null)
                 {
-                    Location = boundingRectangle.Location + _dragOffset.ToPoint(),
-                    Size = Tab.Size.ToPoint()
-                };
+                    var boundingRectangle = BoundingRectangle;
+                    boundingRectangle.Location += (_dragDeltaAccumulator + _dragOffset).ToPoint();
 
-                _dragDeltaAccumulator -= deltaVector;
+                    var tabBoundingRectangle = new Rectangle()
+                    {
+                        Location = boundingRectangle.Location,
+                        Size = Tab.Size.ToPoint()
+                    };
 
-                var fixedDragDelta = Tab.CalculateFixedDragDelta(tabBoundingRectangle, in pointerEvent);
-                if (fixedDragDelta == Point.Zero)
-                    return;
+                    _dragDeltaAccumulator -= deltaVector;
 
-                _dragDeltaAccumulator += fixedDragDelta.ToVector2();
+                    var fixedDragDelta = Tab.CalculateFixedDragDelta(tabBoundingRectangle,
+                        pointerEvent.Delta, pointerEvent.Position);
+                    if (fixedDragDelta == Point.Zero)
+                        return;
 
-                var clampedDragDelta = CalculateClampedInParentDragDelta(boundingRectangle,
-                    root.Parent.BoundingRectangle);
-                _dragDeltaAccumulator += clampedDragDelta.ToVector2();
+                    var constrainedDelta = CalculateOffsetToConstrainToParent(boundingRectangle,
+                        root.Parent.BoundingRectangle) + fixedDragDelta;
+                    _dragDeltaAccumulator += constrainedDelta.ToVector2();
 
-                pointerEvent = new PointerDragEvent(pointerEvent.Pointer, pointerEvent.Position,
-                    pointerEvent.IsPrimaryButtonPressed, pointerEvent.IsSecondaryButtonPressed,
-                    fixedDragDelta + clampedDragDelta);
+                    pointerEvent = new PointerDragEvent(pointerEvent.Pointer, pointerEvent.Position,
+                        pointerEvent.IsPrimaryButtonPressed, pointerEvent.IsSecondaryButtonPressed, constrainedDelta);
+                }
             }
 
             TabPointerDrag?.Invoke(this, pointerEvent);

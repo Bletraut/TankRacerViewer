@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
@@ -8,19 +7,67 @@ namespace ComposableUi
     public class WindowNodeElement<T> : ResizableElement
         where T : Element
     {
+        public const int DefaultLeftConstraintInset = 20;
+        public const int DefaultRightConstraintInset = 20;
+        public const int DefaultTopConstraintInset = 0;
+        public const int DefaultBottomConstraintInset = 30;
+
         internal T RootContainer { get; private set; }
 
         internal ExpandedElement ViewHolder { get; }
 
         public T Container { get; private set; }
 
+        private bool _constrainToParent;
+        public bool ConstrainToParent
+        {
+            get => _constrainToParent;
+            set => SetAndChangeState(ref _constrainToParent, value);
+        }
+
+        private int _leftConstraintInset;
+        public int LeftConstraintInset
+        {
+            get => _leftConstraintInset;
+            set => SetAndChangeState(ref _leftConstraintInset, value);
+        }
+        private int _rightConstraintInset;
+        public int RightConstraintInset
+        {
+            get => _rightConstraintInset;
+            set => SetAndChangeState(ref _rightConstraintInset, value);
+        }
+        private int _topConstraintInset;
+        public int TopConstraintInset
+        {
+            get => _topConstraintInset;
+            set => SetAndChangeState(ref _topConstraintInset, value);
+        }
+        private int _bottomConstraintInset;
+        public int BottomConstraintInset
+        {
+            get => _bottomConstraintInset;
+            set => SetAndChangeState(ref _bottomConstraintInset, value);
+        }
+
         private readonly AlignmentElement _overlayAlignment;
         private readonly ExpandedElement _overlayExpanded;
 
         public WindowNodeElement(Vector2? size = default,
-            Vector2? minSize = default) 
+            Vector2? minSize = default,
+            bool constrainToParent = true,
+            int leftConstraintInset = DefaultLeftConstraintInset, 
+            int rightConstraintInset = DefaultRightConstraintInset,
+            int topConstraintInset = DefaultTopConstraintInset,
+            int bottomConstraintInset = DefaultBottomConstraintInset) 
         {
             MinSize = minSize ?? Vector2.Zero;
+            ConstrainToParent = constrainToParent;
+
+            LeftConstraintInset = leftConstraintInset;
+            RightConstraintInset = rightConstraintInset;
+            TopConstraintInset = topConstraintInset;
+            BottomConstraintInset = bottomConstraintInset;
 
             ViewHolder = new ExpandedElement();
 
@@ -65,13 +112,17 @@ namespace ComposableUi
         protected Element ResolveRootContainer()
             => RootContainer is not null ? RootContainer : this;
 
-        protected Point CalculateClampedInParentDragDelta(Rectangle boundingRectangle,
+        protected Point CalculateOffsetToConstrainToParent(Rectangle boundingRectangle,
             Rectangle parentBoundingRectangle)
         {
-            parentBoundingRectangle.Location += new Point(20, 0);
-            parentBoundingRectangle.Size -= new Point(20 * 2, 30);
+            parentBoundingRectangle.Location += new Point(LeftConstraintInset, TopConstraintInset);
+            parentBoundingRectangle.Size -= new Point()
+            {
+                X = LeftConstraintInset + RightConstraintInset,
+                Y = TopConstraintInset + BottomConstraintInset
+            };
 
-            var delta = new Point()
+            var offset = new Point()
             {
                 X = Math.Min(parentBoundingRectangle.Right - boundingRectangle.Left, 0)
                     - Math.Min(boundingRectangle.Right - parentBoundingRectangle.Left, 0),
@@ -79,7 +130,7 @@ namespace ComposableUi
                     - Math.Min(boundingRectangle.Top - parentBoundingRectangle.Top, 0)
             };
 
-            return delta;
+            return offset;
         }
 
         internal virtual void ApplyContainer(T container)
@@ -102,9 +153,29 @@ namespace ComposableUi
 
         internal virtual void SetSelected(bool value) { }
 
+        public override void Rebuild(Vector2 size, bool excludeChildren)
+        {
+            base.Rebuild(size, excludeChildren);
+
+            var shouldConstrainToParent = ConstrainToParent
+                && Parent is not null;
+            if (shouldConstrainToParent)
+            {
+                var offset = CalculateOffsetToConstrainToParent(BoundingRectangle,
+                    Parent.BoundingRectangle);
+                if (offset == Point.Zero)
+                    return;
+
+                Position += offset.ToVector2();
+            }
+        }
+
         protected override void OnPointerFixedDrag(in PointerDragEvent pointerEvent)
         {
-            if (HasEnabledInnerElement && Parent is not null)
+            var shouldConstrainToParent = ConstrainToParent
+                && HasEnabledInnerElement
+                && Parent is not null;
+            if (shouldConstrainToParent)
             {
                 var (sizeDelta, localPositionDelta) = CalculateResizeDeltas(pointerEvent.Delta.ToVector2());
 
@@ -113,17 +184,17 @@ namespace ComposableUi
                 var sizedPivotOffset = boundingRectangle.Size.ToVector2() * Pivot;
                 boundingRectangle.Location -= (sizedPivotOffset - PivotOffset - localPositionDelta).ToPoint();
 
-                var clampedDelta = new Point()
+                var constrainedDelta = new Point()
                 {
                     X = (int)(MathF.Abs(sizeDelta.X) * Math.Sign(pointerEvent.Delta.X)),
                     Y = (int)(MathF.Abs(sizeDelta.Y) * Math.Sign(pointerEvent.Delta.Y)),
                 };
-                clampedDelta += CalculateClampedInParentDragDelta(boundingRectangle, Parent.BoundingRectangle);
+                constrainedDelta += CalculateOffsetToConstrainToParent(boundingRectangle, Parent.BoundingRectangle);
 
-                var clampedPointerEvent = new PointerDragEvent(pointerEvent.Pointer, pointerEvent.Position,
-                    pointerEvent.IsPrimaryButtonPressed, pointerEvent.IsSecondaryButtonPressed, clampedDelta);
+                var constrainPointerEvent = new PointerDragEvent(pointerEvent.Pointer, pointerEvent.Position,
+                    pointerEvent.IsPrimaryButtonPressed, pointerEvent.IsSecondaryButtonPressed, constrainedDelta);
 
-                base.OnPointerFixedDrag(clampedPointerEvent);
+                base.OnPointerFixedDrag(constrainPointerEvent);
             }
             else
             {
