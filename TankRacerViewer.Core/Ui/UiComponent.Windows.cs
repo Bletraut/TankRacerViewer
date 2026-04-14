@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-using ComposableUi;
+﻿using ComposableUi;
 
 using Microsoft.Xna.Framework;
 

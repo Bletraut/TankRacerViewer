@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-using TankRacerViewer.Core;
+﻿using TankRacerViewer.Core;
 
 namespace DesktopCommon
 {

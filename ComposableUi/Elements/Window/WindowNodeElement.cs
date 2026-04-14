@@ -181,7 +181,7 @@ namespace ComposableUi
 
                 var boundingRectangle = BoundingRectangle;
                 boundingRectangle.Size += sizeDelta.ToPoint();
-                var sizedPivotOffset = boundingRectangle.Size.ToVector2() * Pivot;
+                var sizedPivotOffset = (Size + sizeDelta) * Pivot;
                 boundingRectangle.Location -= (sizedPivotOffset - PivotOffset - localPositionDelta).ToPoint();
 
                 var constrainedDelta = new Point()
