@@ -24,7 +24,7 @@ namespace ComposableUi
 
         public static readonly Vector2 DefaultSize = new(250, 300);
         public static readonly Vector2 DefaultMinSize = new(80, 100);
-        public static readonly Vector2 DefaultContentPadding = new(10, 10);
+        public static readonly Vector4 DefaultContentPadding = new(4, 4, 2, 4);
 
         public static readonly Vector2 DefaultButtonSize = new(18, 22);
         public static readonly Vector2 DefaultButtonsPaddings = new(6, 6);
@@ -164,9 +164,9 @@ namespace ComposableUi
             ContentContainer = new ContainerElement();
             var contentContainerParent = new ExpandedElement(
                 leftPadding: DefaultContentPadding.X,
-                rightPadding: DefaultContentPadding.X,
-                topPadding: DefaultContentPadding.Y + DefaultHeaderHeight,
-                bottomPadding: DefaultContentPadding.Y,
+                rightPadding: DefaultContentPadding.Y,
+                topPadding: DefaultContentPadding.Z + DefaultHeaderHeight,
+                bottomPadding: DefaultContentPadding.W,
                 innerElement: new ClipMaskElement(ContentContainer)
             );
             if (content is not null)

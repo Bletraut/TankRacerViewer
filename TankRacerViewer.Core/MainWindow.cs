@@ -95,6 +95,8 @@ namespace TankRacerViewer.Core
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
+            IconCollection.Initialize(Content);
+
             _mainFont = Content.Load<SpriteFont>("Fonts\\MainFont");
 
             _uiComponent = new UiComponent(this, _spriteBatch);

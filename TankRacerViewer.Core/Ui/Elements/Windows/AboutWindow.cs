@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Reflection;
-using System.Text;
 
 using ComposableUi;
 
@@ -10,10 +9,6 @@ namespace TankRacerViewer.Core
 {
     public sealed class AboutWindow : WindowElement
     {
-        // Static.
-        private static readonly StringBuilder _stringBuilder = new();
-
-        // Class.
         private readonly IPlatformUrlOpener _urlOpener;
 
         private readonly string _repositoryUrl;
@@ -22,6 +17,8 @@ namespace TankRacerViewer.Core
 
         public AboutWindow(IPlatformUrlOpener urlOpener) : base("About")
         {
+            this.SetIcon(IconName.About);
+
             _urlOpener = urlOpener;
 
             var assembly = Assembly.GetExecutingAssembly();

@@ -4,6 +4,8 @@ namespace ComposableUi
 {
     public sealed class TabElement : PointerInputHandlerElement
     {
+        public const float DefaultIconSize = 22;
+
         public const int DefaultLeftPadding = 6;
         public const int DefaultRightPadding = 12;
         public const int DefaultItemSpacing = 4;
@@ -47,10 +49,9 @@ namespace ComposableUi
             );
 
             Icon = new SpriteElement(
-                size: new Vector2(10),
+                size: new Vector2(DefaultIconSize),
                 sprite: iconSprite,
-                skin: StandardSkin.RectangleButton,
-                sizeToSource: true
+                skin: StandardSkin.RectangleButton
             );
 
             Title = new TextElement(
@@ -91,6 +92,7 @@ namespace ComposableUi
 
         public void CopyHeaderFrom(TabElement tab)
         {
+            Icon.Size = tab.Icon.Size;
             Icon.Sprite = tab.Icon.Sprite;
             Title.Text = tab.Title.Text;
         }

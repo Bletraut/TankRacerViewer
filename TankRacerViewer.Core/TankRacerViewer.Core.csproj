@@ -3,7 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
-	<Version>1.2.0</Version>
+	<Version>1.0.0</Version>
 	<Company>Bletraut</Company>
 	<Product>Tank Racer Viewer</Product>
 	<Copyright>2026 Aleksandr Pachaev (Bletraut)</Copyright>
@@ -20,6 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Content\Content.mgcb" />
+    <None Remove="Content\Images\Icons.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Content\Images\Icons.json" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.2.1105">

@@ -37,6 +37,8 @@ namespace TankRacerViewer.Core
 
         public ConsoleWindow() : base("Console")
         {
+            this.SetIcon(IconName.Console);
+
             _clearButton = new ContentButtonElement(
                 text: "Clear",
                 normalSkin: StandardSkin.RectanglePanel,
