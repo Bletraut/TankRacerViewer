@@ -63,6 +63,7 @@ namespace TankRacerViewer.Core
         public const string About = "About";
 
         public const string Folder = "Folder";
+        public const string AssetGroup = "AssetGroup";
         public const string FastFile = "FastFile";
         public const string Texture = "Texture";
         public const string Model = "Model";

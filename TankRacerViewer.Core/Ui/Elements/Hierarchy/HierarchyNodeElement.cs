@@ -12,7 +12,7 @@ namespace TankRacerViewer.Core
         private readonly float DefaultTitleHorizontalPadding = 4;
 
         public readonly Vector2 DefaultFoldButtonSize = new(12);
-        public readonly Vector2 DefaultIconSize = new(12);
+        public readonly Vector2 DefaultIconSize = new(24);
 
         public readonly Color DefaultNormalBackgroundColor = Color.Transparent;
         public readonly Color DefaultHoverBackgroundColor = Color.Gray;
@@ -100,9 +100,9 @@ namespace TankRacerViewer.Core
 
             FoldButton = new ButtonElement(
                 size: DefaultFoldButtonSize,
-                normalColor: Color.Black,
+                normalColor: Color.FloralWhite,
                 hoverColor: Color.BlanchedAlmond,
-                pressedColor: Color.DarkCyan
+                pressedColor: Color.LightSteelBlue
             );
             _foldButtonPlaceholder = new Element
             {

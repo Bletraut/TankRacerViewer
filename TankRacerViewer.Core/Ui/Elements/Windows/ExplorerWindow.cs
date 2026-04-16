@@ -6,6 +6,8 @@ using System.Runtime.InteropServices;
 
 using ComposableUi;
 
+using FastFileUnpacker;
+
 using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
@@ -29,7 +31,7 @@ namespace TankRacerViewer.Core
 
             var assetGroupNodeData = new HierarchyNodeData()
             {
-                Skin = StandardSkin.RectanglePanel,
+                Sprite = IconCollection.Get(IconName.AssetGroup),
                 Name = name,
                 IsFolded = true,
             };
@@ -40,12 +42,35 @@ namespace TankRacerViewer.Core
                 var assetNodeData = new HierarchyNodeData()
                 {
                     File = assetView,
-                    Skin = StandardSkin.TextField,
+                    Sprite = GetAssetViewIcon(assetView),
                     Name = assetView.FullName,
                     IsFolded = true,
                 };
                 assetGroupNodeData.AddChild(assetNodeData);
             }
+        }
+
+        private static Sprite GetAssetViewIcon(AssetView assetView)
+        {
+            if (assetView is TextureAssetView)
+                return IconCollection.Get(IconName.Texture);
+
+            if (assetView is ModelAssetView)
+                return IconCollection.Get(IconName.Model);
+
+            if (assetView is BackgroundAssetView)
+                return IconCollection.Get(IconName.Background);
+
+            if (assetView is DataAssetView)
+                return IconCollection.Get(IconName.Data);
+
+            if (assetView is LevelView)
+                return IconCollection.Get(IconName.Level);
+
+            if (assetView is TankView)
+                return IconCollection.Get(IconName.Tank);
+
+            return IconCollection.Get(IconName.Unsupported);
         }
 
         // Class.
@@ -174,7 +199,7 @@ namespace TankRacerViewer.Core
             var fastFileNodeData = new HierarchyNodeData()
             {
                 File = file,
-                Skin = StandardSkin.ContentPanel,
+                Sprite = IconCollection.Get(IconName.FastFile),
                 Name = Path.GetFileName(filePath),
                 IsFolded = false
             };
@@ -204,7 +229,7 @@ namespace TankRacerViewer.Core
             var directoryName = Path.GetFileName(directory);
             folderNode = new HierarchyNodeData()
             {
-                Skin = StandardSkin.HoverRoundedButton,
+                Sprite = IconCollection.Get(IconName.Folder),
                 Name = string.IsNullOrEmpty(directoryName) ? directory : directoryName,
                 IsFolded = false
             };

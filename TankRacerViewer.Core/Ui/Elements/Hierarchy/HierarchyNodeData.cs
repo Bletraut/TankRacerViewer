@@ -6,7 +6,7 @@ namespace TankRacerViewer.Core
 {
     public sealed class HierarchyNodeData
     {
-        public const float DefaultIndent = 16;
+        public const float DefaultIndent = 22;
 
         public HierarchyNodeData Parent { get; private set; }
         public List<HierarchyNodeData> Children { get; } = [];

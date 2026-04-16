@@ -17,19 +17,20 @@
   "scale": "1",
   "slices": [
    { "name": "About", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 39, "y": 0, "w": 8, "h": 8 } }] },
-   { "name": "Unsupported", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 36, "w": 12, "h": 12 } }] },
-   { "name": "Data", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 36, "y": 24, "w": 12, "h": 12 } }] },
-   { "name": "Tank", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 24, "y": 24, "w": 12, "h": 12 } }] },
-   { "name": "Level", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 12, "y": 24, "w": 12, "h": 12 } }] },
-   { "name": "Background", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 24, "w": 12, "h": 12 } }] },
-   { "name": "Model", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 36, "y": 12, "w": 12, "h": 12 } }] },
-   { "name": "Texture", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 24, "y": 12, "w": 12, "h": 12 } }] },
-   { "name": "FastFile", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 12, "y": 12, "w": 12, "h": 12 } }] },
+   { "name": "Unsupported", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 12, "y": 36, "w": 12, "h": 12 } }] },
+   { "name": "Data", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 36, "w": 12, "h": 12 } }] },
+   { "name": "Tank", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 36, "y": 24, "w": 12, "h": 12 } }] },
+   { "name": "Level", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 24, "y": 24, "w": 12, "h": 12 } }] },
+   { "name": "Background", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 12, "y": 24, "w": 12, "h": 12 } }] },
+   { "name": "Model", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 24, "w": 12, "h": 12 } }] },
+   { "name": "Texture", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 36, "y": 12, "w": 12, "h": 12 } }] },
+   { "name": "FastFile", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 24, "y": 12, "w": 12, "h": 12 } }] },
    { "name": "Folder", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 12, "w": 12, "h": 12 } }] },
    { "name": "Console", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 29, "y": 0, "w": 10, "h": 8 } }] },
    { "name": "Inspector", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 19, "y": 0, "w": 10, "h": 8 } }] },
    { "name": "Viewer", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 9, "y": 0, "w": 10, "h": 6 } }] },
-   { "name": "Explorer", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 9, "h": 8 } }] }
+   { "name": "Explorer", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 9, "h": 8 } }] },
+   { "name": "AssetGroup", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 12, "y": 12, "w": 12, "h": 12 } }] }
   ]
  }
 }
