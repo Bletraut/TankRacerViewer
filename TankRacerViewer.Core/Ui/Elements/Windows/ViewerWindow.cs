@@ -36,7 +36,7 @@ namespace TankRacerViewer.Core
 
         public ViewerWindow(GraphicsDevice graphicsDevice) : base("Viewer")
         {
-            this.SetIcon(IconName.Viewer);
+            this.SetScaledIcon(IconName.Viewer, UiElementFactory.DefaultSpriteScale);
 
             _viewer3d = new Viewer3D(graphicsDevice);
             _viewer3dParent = new ExpandedElement(_viewer3d);

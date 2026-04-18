@@ -9,42 +9,42 @@ namespace TankRacerViewer.Core
     {
         public const float DefaultSpacing = 4;
 
+        public const StandardSkin DefaultNormalBackgroundSkin = StandardSkin.None;
+        public const StandardSkin DefaultHoverBackgroundSkin = StandardSkin.HoverSoftDarkPixel;
+        public const StandardSkin DefaultSelectedBackgroundSkin = StandardSkin.SelectionStrongDarkPixel;
+
         private readonly float DefaultTitleHorizontalPadding = 4;
 
         public readonly Vector2 DefaultFoldButtonSize = new(12);
         public readonly Vector2 DefaultIconSize = new(24);
 
-        public readonly Color DefaultNormalBackgroundColor = Color.Transparent;
-        public readonly Color DefaultHoverBackgroundColor = Color.Gray;
-        public readonly Color DefaultSelectedBackgroundColor = Color.BlueViolet;
-
-        private Color _normalBackgroundColor;
-        public Color NormalBackgroundColor
+        private StandardSkin _normalBackgroundSkin;
+        public StandardSkin NormalBackgroundSkin
         {
-            get => _normalBackgroundColor;
+            get => _normalBackgroundSkin;
             set
             {
-                _normalBackgroundColor = value;
+                _normalBackgroundSkin = value;
                 RefreshBackgroundVisualState();
             }
         }
-        private Color _hoverBackgroundColor;
-        public Color HoverBackgroundColor
+        private StandardSkin _hoverBackgroundSkin;
+        public StandardSkin HoverBackgroundSkin
         {
-            get => _hoverBackgroundColor;
+            get => _hoverBackgroundSkin;
             set
             {
-                _hoverBackgroundColor = value;
+                _hoverBackgroundSkin = value;
                 RefreshBackgroundVisualState();
             }
         }
-        private Color _selectedBackgroundColor;
-        public Color SelectedBackgroundColor
+        private StandardSkin _selectedBackgroundSkin;
+        public StandardSkin SelectedBackgroundSkin
         {
-            get => _selectedBackgroundColor;
+            get => _selectedBackgroundSkin;
             set
             {
-                _selectedBackgroundColor = value;
+                _selectedBackgroundSkin = value;
                 RefreshBackgroundVisualState();
             }
         }
@@ -72,17 +72,16 @@ namespace TankRacerViewer.Core
         private readonly Element _foldButtonPlaceholder;
         private readonly RowLayout _titleRow;
 
-        public HierarchyNodeElement(Color? normalBackgroundColor = default,
-            Color? hoverBackgroundColor = default,
-            Color? selectedBackgroundColor = default)
+        public HierarchyNodeElement(StandardSkin normalBackgroundSkin = DefaultNormalBackgroundSkin,
+            StandardSkin hoverBackgroundSkin = DefaultHoverBackgroundSkin,
+            StandardSkin selectedBackgroundSkin = DefaultSelectedBackgroundSkin)
         {
-            _normalBackgroundColor = normalBackgroundColor ?? DefaultNormalBackgroundColor;
-            _hoverBackgroundColor = hoverBackgroundColor ?? DefaultHoverBackgroundColor;
-            _selectedBackgroundColor = selectedBackgroundColor ?? DefaultSelectedBackgroundColor;
+            _normalBackgroundSkin = normalBackgroundSkin;
+            _hoverBackgroundSkin = hoverBackgroundSkin;
+            _selectedBackgroundSkin = selectedBackgroundSkin;
 
             Background = new SpriteElement(
-                skin: StandardSkin.WhitePixel,
-                color: _normalBackgroundColor
+                skin: _normalBackgroundSkin
             );
 
             ClickInputHandler = new PointerInputHandlerElement(
@@ -138,7 +137,6 @@ namespace TankRacerViewer.Core
 
             _titleRow = new RowLayout(
                 alignmentFactor: Alignment.MiddleLeft,
-                //leftPadding: DefaultIndent,
                 sizeMainAxisToContent: true,
                 sizeCrossAxisToContent: true,
                 children: [
@@ -183,13 +181,13 @@ namespace TankRacerViewer.Core
 
             if (Data.IsSelected)
             {
-                Background.Color = SelectedBackgroundColor;
+                Background.Skin = SelectedBackgroundSkin;
             }
             else
             {
-                Background.Color = HoverInputHandler.IsHover
-                    ? HoverBackgroundColor
-                    : NormalBackgroundColor;
+                Background.Skin = HoverInputHandler.IsHover
+                    ? HoverBackgroundSkin
+                    : NormalBackgroundSkin;
             }
         }
 

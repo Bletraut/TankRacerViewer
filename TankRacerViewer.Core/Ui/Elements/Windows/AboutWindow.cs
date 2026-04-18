@@ -17,7 +17,7 @@ namespace TankRacerViewer.Core
 
         public AboutWindow(IPlatformUrlOpener urlOpener) : base("About")
         {
-            this.SetIcon(IconName.About);
+            this.SetScaledIcon(IconName.About, UiElementFactory.DefaultSpriteScale);
 
             _urlOpener = urlOpener;
 

@@ -111,7 +111,11 @@ namespace TankRacerViewer.Core
             _renderer = new WorldRenderer(GraphicsDevice, _spriteBatch, Content);
             _renderer.ApplyRenderContext(_currentRenderContext);
 
-            _camera = new Camera(GraphicsDevice);
+            _camera = new Camera(GraphicsDevice)
+            {
+                NearPlane = 0.15f,
+                FarPlane = 1_000
+            };
             _camera.Position = _cameraDefaultPosition;
             _camera.ApplyRenderContext(_currentRenderContext);
 

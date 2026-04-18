@@ -72,5 +72,12 @@ namespace TankRacerViewer.Core
         public const string Tank = "Tank";
         public const string Data = "Data";
         public const string Unsupported = "Unsupported";
+
+        public const string MessageBig = "MessageBig";
+        public const string MessageSmall = "MessageSmall";
+        public const string WarningBig = "WarningBig";
+        public const string WarningSmall = "WarningSmall";
+        public const string ErrorBig = "ErrorBig";
+        public const string ErrorSmall = "ErrorSmall";
     }
 }

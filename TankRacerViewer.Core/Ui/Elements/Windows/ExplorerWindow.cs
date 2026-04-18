@@ -93,7 +93,7 @@ namespace TankRacerViewer.Core
 
         public ExplorerWindow() : base("Explorer")
         {
-            this.SetIcon(IconName.Explorer);
+            this.SetScaledIcon(IconName.Explorer, UiElementFactory.DefaultSpriteScale);
 
             _lazyListView = new LazyListViewElement<HierarchyNodeData, HierarchyNodeElement>(
                 itemFactory: CreateHierarchyNode

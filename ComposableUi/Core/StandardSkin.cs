@@ -6,13 +6,27 @@
 
         // Colors.
         WhitePixel,
+        GentleWhitePixel,
+        SoftLightPixel,
+        SoftDarkPixel,
         SolidDarkPixel,
-        SelectionWarmPixel,
+
+        HoverStrongDarkPixel,
+        HoverSoftDarkPixel,
+        HoverSoftLightPixel,
+
+        SelectionStrongDarkPixel,
+        SelectionSoftDarkPixel,
 
         // Elements.
         RectanglePanel,
 
         ContentPanel,
+
+        DarkRectangle,
+        HoverDarkRectangle,
+        SoftDarkRectangle,
+        HoverSoftDarkRectangle,
 
         ScrollButton,
         ScrollButtonHover,

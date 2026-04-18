@@ -6,19 +6,26 @@ namespace TankRacerViewer.Core
 {
     public static class UiElementFactory
     {
+        public const float DefaultSpriteScale = 2;
+
+        public static readonly Vector2 DefaultToggleIconSize = new(20);
+
         public static ContentButtonElement CreateToggleButton(string text = default)
         {
             var toggle = new ContentButtonElement(
-                iconSize: new Vector2(20),
                 text: text,
-                normalSkin: StandardSkin.RectanglePanel,
-                hoverSkin: StandardSkin.RectanglePanel,
-                pressedSkin: StandardSkin.RectanglePanel,
-                disabledSkin: StandardSkin.RectanglePanel,
-                hoverButtonColor: Color.LightCyan,
-                pressedButtonColor: Color.DarkGoldenrod
+                normalSkin: StandardSkin.DarkRectangle,
+                hoverSkin: StandardSkin.HoverDarkRectangle,
+                pressedSkin: StandardSkin.HoverDarkRectangle,
+                disabledSkin: StandardSkin.HoverDarkRectangle,
+                hoverButtonColor: Color.White,
+                pressedButtonColor: Color.White,
+                normalTextColor: Color.White,
+                hoverTextColor: Color.Azure,
+                pressedTextColor: Color.White
             );
-            toggle.Text.Color = Color.Black;
+            toggle.Icon.SizeToSource = false;
+            toggle.Icon.Size = DefaultToggleIconSize;
 
             return toggle;
         }

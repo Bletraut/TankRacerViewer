@@ -93,7 +93,7 @@ namespace TankRacerViewer.Core
             }
         }
 
-        private float _farPlane = 1_000;
+        private float _farPlane = 100;
         public float FarPlane
         {
             get => _farPlane;

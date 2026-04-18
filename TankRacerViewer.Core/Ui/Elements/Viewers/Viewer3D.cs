@@ -18,7 +18,7 @@ namespace TankRacerViewer.Core
 
         private const float DefaultSpacePlaceHolderSize = 6;
 
-        private const string InfoMessage = "Controls:\nW,A,S,D: Move\nLeft Mouse Button: Look around\nC: Speed up\nLeft Ctrl: Slow down\nHold Shift: Strafe";
+        private const string InfoMessage = "Controls:\nW,A,S,D: Move\nLeft Mouse Button: Look around\nR: Reset camera\nC: Speed up\nLeft Ctrl: Slow down\nHold Shift: Strafe";
 
         public RenderContextElement RenderContext { get; set; }
 

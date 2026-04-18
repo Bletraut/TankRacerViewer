@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using ComposableUi;
 
@@ -10,6 +11,10 @@ namespace TankRacerViewer.Core
     public sealed class ConsoleWindow : WindowElement
     {
         public const float DefaultToolPanelHeight = 30;
+        public const float DefaultToolPanelBottomPadding = 2;
+        public const float DefaultToolPanelHorizontalPadding = 2;
+
+        public const float DefaultToolButtonsSpacing = 2;
 
         // Static.
         private static MessageElement CreateMessageElement()
@@ -37,30 +42,28 @@ namespace TankRacerViewer.Core
 
         public ConsoleWindow() : base("Console")
         {
-            this.SetIcon(IconName.Console);
+            this.SetScaledIcon(IconName.Console, UiElementFactory.DefaultSpriteScale);
 
-            _clearButton = new ContentButtonElement(
-                text: "Clear",
-                normalSkin: StandardSkin.RectanglePanel,
-                hoverSkin: StandardSkin.RectanglePanel,
-                pressedSkin: StandardSkin.RectanglePanel,
-                disabledSkin: StandardSkin.RectanglePanel,
-                hoverButtonColor: Color.LightCyan,
-                pressedButtonColor: Color.DarkGoldenrod
-            );
+            _clearButton = UiElementFactory.CreateToggleButton("Clear");
             _clearButton.Icon.IsEnabled = false;
-            _clearButton.Text.Color = Color.Black;
             _clearButton.PointerClick += OnClearButtonClicked;
 
             _infoToggle = UiElementFactory.CreateToggleButton("0");
+            _infoToggle.Icon.SetScaledSprite(IconName.MessageSmall,
+                UiElementFactory.DefaultSpriteScale);
+            _infoToggle.SetToggle(_isInfoEnabled);
             _infoToggle.PointerClick += OnInfoToggleClicked;
 
             _warningToggle = UiElementFactory.CreateToggleButton("0");
-            _warningToggle.Icon.Color = Color.Yellow;
+            _warningToggle.Icon.SetScaledSprite(IconName.WarningSmall,
+                UiElementFactory.DefaultSpriteScale);
+            _warningToggle.SetToggle(_isWarningEnabled);
             _warningToggle.PointerClick += OnWarningToggleClicked;
 
             _errorToggle = UiElementFactory.CreateToggleButton("0");
-            _errorToggle.Icon.Color = Color.Red;
+            _errorToggle.Icon.SetScaledSprite(IconName.ErrorSmall,
+                UiElementFactory.DefaultSpriteScale);
+            _errorToggle.SetToggle(_isErrorEnabled);
             _errorToggle.PointerClick += OnErrorToggleClicked;
 
             _toolPanel = new ContainerElement(
@@ -68,6 +71,7 @@ namespace TankRacerViewer.Core
                 children: [
                     new ExpandedElement(
                         expandWidth: false,
+                        leftPadding: DefaultToolPanelHorizontalPadding,
                         innerElement: new AlignmentElement(
                             alignmentFactor: Alignment.MiddleLeft,
                             pivot: Alignment.MiddleLeft,
@@ -81,6 +85,8 @@ namespace TankRacerViewer.Core
                             pivot: Alignment.MiddleRight,
                             innerElement: new RowLayout(
                                 alignmentFactor: Alignment.MiddleLeft,
+                                spacing: DefaultToolButtonsSpacing,
+                                rightPadding: DefaultToolPanelHorizontalPadding,
                                 sizeMainAxisToContent: true,
                                 expandChildrenCrossAxis: true,
                                 children: [
@@ -112,7 +118,7 @@ namespace TankRacerViewer.Core
                 content: _lazyListView
             );
             ContentContainer.AddChild(new ExpandedElement(
-                topPadding: DefaultToolPanelHeight,
+                topPadding: DefaultToolPanelHeight + DefaultToolPanelBottomPadding,
                 innerElement: _scrollView
             ));
         }
@@ -187,6 +193,8 @@ namespace TankRacerViewer.Core
             PointerEvent pointerEvent)
         {
             _isInfoEnabled = !_isInfoEnabled;
+            _infoToggle.SetToggle(_isInfoEnabled);
+
             RefreshLazyListViewItems();
         }
 
@@ -194,6 +202,8 @@ namespace TankRacerViewer.Core
             PointerEvent pointerEvent)
         {
             _isWarningEnabled = !_isWarningEnabled;
+            _warningToggle.SetToggle(_isWarningEnabled);
+
             RefreshLazyListViewItems();
         }
 
@@ -201,6 +211,8 @@ namespace TankRacerViewer.Core
             PointerEvent pointerEvent)
         {
             _isErrorEnabled = !_isErrorEnabled;
+            _errorToggle.SetToggle(_isErrorEnabled);
+
             RefreshLazyListViewItems();
         }
     }

@@ -10,17 +10,17 @@ namespace TankRacerViewer.Core
     {
         private const int DefaultContentHorizontalPadding = 8;
 
-        public static readonly Color DefaultBackgroundNormalColor = Color.PeachPuff;
-        public static readonly Color DefaultBackgroundHoverColor = Color.Plum;
-        public static readonly Color DefaultBackgroundSelectedColor = Color.Blue;
+        public const StandardSkin DefaultBackgroundNormalSkin = StandardSkin.WhitePixel;
+        public const StandardSkin DefaultBackgroundHoverSkin = StandardSkin.HoverSoftLightPixel;
+        public const StandardSkin DefaultBackgroundSelectedSkin = StandardSkin.SelectionSoftDarkPixel;
 
         public static readonly Color DefaultTextNormalColor = Color.Black;
         public static readonly Color DefaultTextHoverColor = Color.Black;
         public static readonly Color DefaultTextSelectedColor = Color.White;
 
-        public Color BackgroundNormalColor { get; set; } = DefaultBackgroundNormalColor;
-        public Color BackgroundHoverColor { get; set; } = DefaultBackgroundHoverColor;
-        public Color BackgroundSelectedColor { get; set; } = DefaultBackgroundSelectedColor;
+        public StandardSkin BackgroundNormalColor { get; set; } = DefaultBackgroundNormalSkin;
+        public StandardSkin BackgroundHoverColor { get; set; } = DefaultBackgroundHoverSkin;
+        public StandardSkin BackgroundSelectedColor { get; set; } = DefaultBackgroundSelectedSkin;
 
         public Color TextNormalColor { get; set; } = DefaultTextNormalColor;
         public Color TextHoverColor { get; set; } = DefaultTextHoverColor;
@@ -71,7 +71,7 @@ namespace TankRacerViewer.Core
 
         public void SetState(State state)
         {
-            (Color BackgroundColor, Color TextColor) = state switch
+            (StandardSkin BackgroundSkin, Color TextColor) = state switch
             {
                 State.Normal => (BackgroundNormalColor, TextNormalColor),
                 State.Hover => (BackgroundHoverColor, TextHoverColor),
@@ -79,7 +79,7 @@ namespace TankRacerViewer.Core
                 _ => (BackgroundNormalColor, TextNormalColor)
             };
             
-            Background.Color = BackgroundColor;
+            Background.Skin = BackgroundSkin;
             Text.Color = TextColor;
         }
 
