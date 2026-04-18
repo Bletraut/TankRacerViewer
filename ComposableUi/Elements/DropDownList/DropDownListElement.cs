@@ -78,13 +78,13 @@ namespace ComposableUi
             OpenButton = new ContentButtonElement(
                 iconSize: DefaultButtonIconSize,
                 iconSkin: StandardSkin.DownArrowIcon,
-                normalSkin: StandardSkin.WhitePixel,
-                hoverSkin: StandardSkin.WhitePixel,
-                pressedSkin: StandardSkin.WhitePixel,
-                disabledSkin: StandardSkin.WhitePixel,
-                normalButtonColor: Color.Plum,
-                hoverButtonColor: Color.Coral,
-                pressedButtonColor: Color.LightSlateGray
+                normalSkin: StandardSkin.SoftDarkPixel,
+                hoverSkin: StandardSkin.SelectionSoftDarkPixel,
+                pressedSkin: StandardSkin.HoverSoftDarkPixel,
+                disabledSkin: StandardSkin.SelectionSoftDarkPixel,
+                normalButtonColor: Color.White,
+                hoverButtonColor: Color.White,
+                pressedButtonColor: Color.White
             );
             OpenButton.Text.IsEnabled = false;
             OpenButton.ContentLayout.LeftPadding = OpenButton.ContentLayout.RightPadding = 6;

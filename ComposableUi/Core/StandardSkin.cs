@@ -16,6 +16,7 @@
         HoverSoftLightPixel,
 
         SelectionStrongDarkPixel,
+        SelectionStrongLightPixel,
         SelectionSoftDarkPixel,
 
         // Elements.
