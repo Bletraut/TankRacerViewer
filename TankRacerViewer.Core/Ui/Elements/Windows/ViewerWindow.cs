@@ -7,10 +7,10 @@ namespace TankRacerViewer.Core
 {
     public sealed class ViewerWindow : WindowElement
     {
-        public bool IsInputAvailable 
+        public bool IsInputAvailable
             => IsSelected && !IsTabPressed && !IsDragHandlePressed
             && !IsResizingInternally && !IsResizing
-            && (_isPointerInInputArea || _isPointerPressedInInputArea);
+            && _inputArea.IsFocused;
 
         public RenderContextElement RenderContext
         {
@@ -30,9 +30,6 @@ namespace TankRacerViewer.Core
         private readonly Sprite _sprite;
         private readonly SpriteElement _textureView;
         private readonly AspectRatioFitterElement _textureViewer;
-
-        private bool _isPointerInInputArea;
-        private bool _isPointerPressedInInputArea;
 
         public ViewerWindow(GraphicsDevice graphicsDevice) : base("Viewer")
         {
@@ -80,11 +77,6 @@ namespace TankRacerViewer.Core
             _inputArea = new PointerInputHandlerElement(blockInput: false);
             ContentContainer.AddChild(new ExpandedElement(_inputArea));
 
-            _inputArea.PointerEnter += OnInputAreaPointerEnter;
-            _inputArea.PointerLeave += OnInputAreaPointerLeave;
-            _inputArea.PointerDown += OnInputAreaPointerDown;
-            _inputArea.PointerUp += OnInputAreaPointerUp;
-
             Show3DViewer();
         }
 
@@ -121,28 +113,6 @@ namespace TankRacerViewer.Core
             _viewer3dParent.IsEnabled = false;
             _textureViewer.IsEnabled = false;
             _textViewer.IsEnabled = false;
-        }
-
-        private void OnInputAreaPointerEnter(PointerInputHandlerElement sender,
-            PointerEvent pointerEvent)
-        {
-            _isPointerInInputArea = true;
-        }
-
-        private void OnInputAreaPointerLeave(PointerInputHandlerElement sender,
-            PointerEvent pointerEvent)
-        {
-            _isPointerInInputArea = false;
-        }
-
-        private void OnInputAreaPointerDown(PointerInputHandlerElement sender, PointerEvent arguments)
-        {
-            _isPointerPressedInInputArea = true;
-        }
-
-        private void OnInputAreaPointerUp(PointerInputHandlerElement sender, PointerEvent arguments)
-        {
-            _isPointerPressedInInputArea = false;
         }
     }
 }

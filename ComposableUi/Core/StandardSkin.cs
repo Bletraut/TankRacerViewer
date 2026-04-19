@@ -9,6 +9,7 @@
         GentleWhitePixel,
         SoftLightPixel,
         SoftDarkPixel,
+        DarkPixel,
         SolidDarkPixel,
 
         HoverStrongDarkPixel,

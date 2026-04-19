@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using ComposableUi;
 
@@ -90,6 +89,14 @@ namespace TankRacerViewer.Core
                                 sizeMainAxisToContent: true,
                                 expandChildrenCrossAxis: true,
                                 children: [
+                                    new LayoutElement(
+                                        ignoreLayout: true,
+                                        innerElement: new ExpandedElement(
+                                            innerElement: new SpriteElement(
+                                                skin: StandardSkin.DarkPixel
+                                            )
+                                        )
+                                    ),
                                     _infoToggle,
                                     _warningToggle,
                                     _errorToggle

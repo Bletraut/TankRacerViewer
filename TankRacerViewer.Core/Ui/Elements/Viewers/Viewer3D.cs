@@ -10,6 +10,11 @@ namespace TankRacerViewer.Core
     public sealed class Viewer3D : ContainerElement
     {
         public const float DefaultToolPanelHeight = 22;
+        public const float DefaultToolPanelBottomPadding = 2;
+        public const float DefaultToolPanelLeftPadding = 12;
+        public const float DefaultToolPanelRightPadding = 2;
+
+        public const float DefaultToolButtonsSpacing = 2;
 
         public const float DefaultResolutionListWidth = 110;
         public const float DefaultViewModeListWidth = 150;
@@ -27,7 +32,7 @@ namespace TankRacerViewer.Core
         private readonly ContainerElement _toolPanel;
         private readonly DropDownListElement _resolutionList;
         private readonly DropDownListElement _viewModeList;
-        private readonly ContentButtonElement _infoToggle;
+        private readonly ContentButtonElement _controlsInfoToggle;
         private readonly ContentButtonElement _statisticsToggle;
 
         private readonly RowLayout _infoLayout;
@@ -64,12 +69,16 @@ namespace TankRacerViewer.Core
             _viewModeList.SelectItem(0);
             _viewModeList.ItemSelected += OnViewModeSelected;
 
-            _infoToggle = UiElementFactory.CreateToggleButton();
-            _infoToggle.Text.IsEnabled = false;
-            _infoToggle.PointerClick += OnInfoToggleClicked;
+            _controlsInfoToggle = UiElementFactory.CreateToggleButton();
+            _controlsInfoToggle.Icon.SetScaledSprite(IconName.ControlsInfo, UiElementFactory.DefaultSpriteScale);
+            _controlsInfoToggle.Text.IsEnabled = false;
+            _controlsInfoToggle.SetToggle(true);
+            _controlsInfoToggle.PointerClick += OnControlsInfoToggleClicked;
 
             _statisticsToggle = UiElementFactory.CreateToggleButton();
+            _statisticsToggle.Icon.SetScaledSprite(IconName.Statistics, UiElementFactory.DefaultSpriteScale);
             _statisticsToggle.Text.IsEnabled = false;
+            _statisticsToggle.SetToggle(true);
             _statisticsToggle.PointerClick += OnStatisticsToggleClicked;
 
             _toolPanel = new ContainerElement(
@@ -81,6 +90,7 @@ namespace TankRacerViewer.Core
                             alignmentFactor: Alignment.MiddleLeft,
                             pivot: Alignment.MiddleLeft,
                             innerElement: new RowLayout(
+                                leftPadding: DefaultToolPanelLeftPadding,
                                 sizeMainAxisToContent: true,
                                 expandChildrenCrossAxis: true,
                                 children: [
@@ -111,10 +121,20 @@ namespace TankRacerViewer.Core
                             pivot: Alignment.MiddleRight,
                             innerElement: new RowLayout(
                                 alignmentFactor: Alignment.MiddleLeft,
+                                spacing: DefaultToolButtonsSpacing,
+                                rightPadding: DefaultToolPanelRightPadding,
                                 sizeMainAxisToContent: true,
                                 expandChildrenCrossAxis: true,
                                 children: [
-                                    _infoToggle,
+                                    new LayoutElement(
+                                        ignoreLayout: true,
+                                        innerElement: new ExpandedElement(
+                                            innerElement: new SpriteElement(
+                                                skin: StandardSkin.DarkPixel
+                                            )
+                                        )
+                                    ),
+                                    _controlsInfoToggle,
                                     _statisticsToggle
                                 ]
                             )
@@ -166,7 +186,7 @@ namespace TankRacerViewer.Core
                 innerElement: RenderContext
             );
             AddChild(new ExpandedElement(
-                topPadding: DefaultToolPanelHeight,
+                topPadding: DefaultToolPanelHeight + DefaultToolPanelBottomPadding,
                 innerElement: new ContainerElement(
                     children: [
                         new ExpandedElement(new ClipMaskElement(_aspectRatioFitter)),
@@ -185,16 +205,18 @@ namespace TankRacerViewer.Core
             ));
         }
 
-        private void OnInfoToggleClicked(PointerInputHandlerElement sender,
+        private void OnControlsInfoToggleClicked(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
             _infoLayout.IsEnabled = !_infoLayout.IsEnabled;
+            _controlsInfoToggle.SetToggle(_infoLayout.IsEnabled);
         }
 
         private void OnStatisticsToggleClicked(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
             RenderInfo.IsEnabled = !RenderInfo.IsEnabled;
+            _statisticsToggle.SetToggle(RenderInfo.IsEnabled);
         }
 
         private void OnResolutionSelected(DropDownListTextItemElement sender, int index)
