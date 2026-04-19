@@ -11,23 +11,19 @@ namespace TankRacerViewer.Core
         ILazyListItem<LevelObject>
     {
         public const int DefaultHeight = 30;
-        public const int DefaultButtonPaddings = 2;
+        public const int DefaultButtonPaddings = 6;
 
         public const int DefaultContentSpacing = 4;
         public const int DefaultContentPaddings = 4;
 
+        public const StandardSkin DefaultNormalBackgroundSkin = StandardSkin.LightRectangle;
+        public const StandardSkin DefaultHoverBackgroundSkin = StandardSkin.HoverLightRectangle;
+
         // Static.
         public static readonly Vector2 DefaultIconSize = new(18);
 
-        public static readonly Color DefaultNormalButtonColor = Color.Plum;
-        public static readonly Color DefaultHoverButtonColor = Color.Coral;
-        public static readonly Color DefaultPressedButtonColor = Color.LightSlateGray;
-
         public static readonly Color EnabledBoundingBoxColor = Color.Fuchsia;
         public static readonly Color SelectedBoundingBoxColor = Color.GreenYellow;
-
-        public static readonly Color DefaultNormalBackgroundColor = Color.DarkSlateBlue;
-        public static readonly Color DefaultHoverBackgroundColor = Color.DeepSkyBlue;
 
         private static readonly StringBuilder _stringBuilder = new();
 
@@ -36,14 +32,15 @@ namespace TankRacerViewer.Core
             var button = new ContentButtonElement(
                 iconSize: DefaultIconSize,
                 iconSkin: iconSkin,
-                normalSkin: StandardSkin.WhitePixel,
-                hoverSkin: StandardSkin.WhitePixel,
-                pressedSkin: StandardSkin.WhitePixel,
-                disabledSkin: StandardSkin.WhitePixel,
-                normalButtonColor: DefaultNormalButtonColor,
-                hoverButtonColor: DefaultHoverButtonColor,
-                pressedButtonColor: DefaultPressedButtonColor
+                normalSkin: StandardSkin.LightRectangleButton,
+                hoverSkin: StandardSkin.HoverLightRectangleButton,
+                pressedSkin: StandardSkin.PressedLightRectangleButton,
+                disabledSkin: StandardSkin.DisabledLightRectangleButton,
+                normalButtonColor: Color.White,
+                hoverButtonColor: Color.White,
+                pressedButtonColor: Color.White
             );
+            button.Icon.SizeToSource = false;
             button.Text.IsEnabled = false;
             button.ContentLayout.LeftPadding = DefaultButtonPaddings;
             button.ContentLayout.RightPadding = DefaultButtonPaddings;
@@ -72,8 +69,7 @@ namespace TankRacerViewer.Core
         public LevelObjectElement()
         {
             _background = new SpriteElement(
-                skin: StandardSkin.WhitePixel,
-                color: DefaultNormalBackgroundColor
+                skin: DefaultNormalBackgroundSkin
             );
 
             _visibilityButton = CreateButton();
@@ -83,6 +79,7 @@ namespace TankRacerViewer.Core
             _boundingBoxButton.PointerClick += OnBoundingBoxButtonPointerClick;
 
             _lookAtButton = CreateButton(iconSkin: StandardSkin.ScrollButton);
+            _lookAtButton.Icon.Sprite = IconCollection.Get(IconName.LookAt);
             _lookAtButton.PointerClick += OnLookAtButtonPointerClick;
 
             _name = new TextElement(
@@ -135,9 +132,9 @@ namespace TankRacerViewer.Core
 
         private void RefreshBackgroundColor()
         {
-            _background.Color = _hoverInputHandler.IsHover
-                ? DefaultHoverBackgroundColor
-                : DefaultNormalBackgroundColor;
+            _background.Skin = _hoverInputHandler.IsHover
+                ? DefaultHoverBackgroundSkin
+                : DefaultNormalBackgroundSkin;
         }
 
         private void RefreshBoundingBoxColor()
@@ -155,9 +152,9 @@ namespace TankRacerViewer.Core
             if (_data is null)
                 return;
 
-            _visibilityButton.Icon.Skin = _data.IsEnabled
-                ? StandardSkin.PressedRectangleButton
-                : StandardSkin.DisabledRectangleButton;
+            _visibilityButton.Icon.Sprite = _data.IsEnabled
+                ? IconCollection.Get(IconName.ShowAll)
+                : IconCollection.Get(IconName.HideAll);
         }
 
         private void RefreshBoundingBoxButtonVisualState()
@@ -165,9 +162,9 @@ namespace TankRacerViewer.Core
             if (_data is null)
                 return;
 
-            _boundingBoxButton.Icon.Skin = _isBoundingBoxEnabled
-                ? StandardSkin.PressedRoundedButton
-                : StandardSkin.DisabledRoundedButton;
+            _boundingBoxButton.Icon.Sprite = _isBoundingBoxEnabled
+                ? IconCollection.Get(IconName.BoundingBoxOn)
+                : IconCollection.Get(IconName.BoundingBoxOff);
         }
 
         void ILazyListItem<LevelObject>.SetData(LevelObject data)

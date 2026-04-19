@@ -44,6 +44,7 @@ namespace TankRacerViewer.Core
             {
                 IsEnabled = false
             };
+            AboutWindow.IsInteractable = false;
             AboutWindow.Tab.BlockInput = false;
             AboutWindow.Tab.IsInteractable = false;
             AboutWindow.MaximizeButton.IsEnabled = false;

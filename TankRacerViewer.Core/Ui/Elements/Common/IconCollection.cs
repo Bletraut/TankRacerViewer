@@ -76,11 +76,21 @@ namespace TankRacerViewer.Core
         public const string ControlsInfo = "ControlsInfo";
         public const string Statistics = "Statistics";
 
+        public const string ShowAll = "ShowAll";
+        public const string ShowGameTypesOnly = "ShowGameTypesOnly";
+        public const string ShowEditorTypesOnly = "ShowEditorTypesOnly";
+        public const string HideAll = "HideAll";
+        public const string BoundingBoxOn = "BoundingBoxOn";
+        public const string BoundingBoxOff = "BoundingBoxOff";
+        public const string LookAt = "LookAt";
+
         public const string MessageBig = "MessageBig";
         public const string MessageSmall = "MessageSmall";
         public const string WarningBig = "WarningBig";
         public const string WarningSmall = "WarningSmall";
         public const string ErrorBig = "ErrorBig";
         public const string ErrorSmall = "ErrorSmall";
+
+        public const string Logo = "Logo";
     }
 }

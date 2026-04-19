@@ -106,8 +106,7 @@ namespace TankRacerViewer.Core
                         ignoreLayout: true,
                         innerElement: new ExpandedElement(
                             innerElement: new SpriteElement(
-                                skin: StandardSkin.WhitePixel,
-                                color: LevelObjectElement.DefaultNormalBackgroundColor
+                                skin: LevelObjectElement.DefaultNormalBackgroundSkin
                             )
                         )
                     ),
@@ -135,7 +134,7 @@ namespace TankRacerViewer.Core
                         sizeToTextWidth: true,
                         sizeToTextHeight: true
                     ),
-                    _modeButtonLayout,
+                    new ClipMaskElement(_modeButtonLayout),
                     _lazyListView
                 ]
             );
@@ -210,25 +209,25 @@ namespace TankRacerViewer.Core
 
         private void RefreshVisibilityModeButtonVisualState()
         {
-            _visibilityModeButton.Icon.Skin = _currentVisibilityMode switch
+            _visibilityModeButton.Icon.Sprite = _currentVisibilityMode switch
             {
-                VisibilityMode.ResetAll => StandardSkin.PressedRoundedButton,
-                VisibilityMode.ShowAll => StandardSkin.PressedRoundedButton,
-                VisibilityMode.ShowGameTypesOnly => StandardSkin.HoverRectangleButton,
-                VisibilityMode.ShowEditorTypesOnly => StandardSkin.PressedRectangleButton,
-                VisibilityMode.HideAll => StandardSkin.DisabledRoundedButton,
-                _ => StandardSkin.PressedRoundedButton,
+                VisibilityMode.ResetAll => IconCollection.Get(IconName.ShowAll),
+                VisibilityMode.ShowAll => IconCollection.Get(IconName.ShowAll),
+                VisibilityMode.ShowGameTypesOnly => IconCollection.Get(IconName.ShowGameTypesOnly),
+                VisibilityMode.ShowEditorTypesOnly => IconCollection.Get(IconName.ShowEditorTypesOnly),
+                VisibilityMode.HideAll => IconCollection.Get(IconName.HideAll),
+                _ => IconCollection.Get(IconName.ShowAll),
             };
         }
 
         private void RefreshBoundingBoxModeButtonVisualState()
         {
-            _boundingBoxModeButton.Icon.Skin = _currentBoundingBoxMode switch
+            _boundingBoxModeButton.Icon.Sprite = _currentBoundingBoxMode switch
             {
-                BoundingBoxMode.ResetAll => StandardSkin.PressedRoundedButton,
-                BoundingBoxMode.ShowAll => StandardSkin.PressedRoundedButton,
-                BoundingBoxMode.HideAll => StandardSkin.DisabledRoundedButton,
-                _ => StandardSkin.PressedRoundedButton
+                BoundingBoxMode.ResetAll => IconCollection.Get(IconName.BoundingBoxOn),
+                BoundingBoxMode.ShowAll => IconCollection.Get(IconName.BoundingBoxOn),
+                BoundingBoxMode.HideAll => IconCollection.Get(IconName.BoundingBoxOff),
+                _ => IconCollection.Get(IconName.BoundingBoxOn)
             };
         }
 

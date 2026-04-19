@@ -25,6 +25,8 @@
 
         ContentPanel,
 
+        LightRectangle,
+        HoverLightRectangle,
         DarkRectangle,
         HoverDarkRectangle,
         SoftDarkRectangle,
@@ -44,6 +46,11 @@
         HoverRectangleButton,
         PressedRectangleButton,
         DisabledRectangleButton,
+
+        LightRectangleButton,
+        HoverLightRectangleButton,
+        PressedLightRectangleButton,
+        DisabledLightRectangleButton,
 
         InactiveTab,
         ActiveTab,

@@ -9,6 +9,9 @@ namespace TankRacerViewer.Core
 {
     public sealed class AboutWindow : WindowElement
     {
+        public const float DefaultContentTopPadding = 8;
+        public const float DefaultContentHorizontalPaddings = 8;
+
         private readonly IPlatformUrlOpener _urlOpener;
 
         private readonly string _repositoryUrl;
@@ -36,7 +39,7 @@ namespace TankRacerViewer.Core
                 normalSkin: StandardSkin.None,
                 hoverSkin: StandardSkin.None,
                 pressedSkin: StandardSkin.None,
-                normalTextColor: Color.Blue,
+                normalTextColor: Color.DeepSkyBlue,
                 hoverTextColor: Color.Coral,
                 pressedTextColor: Color.DarkBlue
             );
@@ -49,12 +52,12 @@ namespace TankRacerViewer.Core
 
             _closeButton = new ContentButtonElement(
                 text: "Close",
-                normalSkin: StandardSkin.ContentPanel,
-                hoverSkin: StandardSkin.ContentPanel,
-                pressedSkin: StandardSkin.ContentPanel,
-                normalTextColor: Color.White,
-                hoverTextColor: Color.LightYellow,
-                pressedTextColor: Color.WhiteSmoke
+                normalSkin: StandardSkin.RoundedButton,
+                hoverSkin: StandardSkin.HoverRoundedButton,
+                pressedSkin: StandardSkin.PressedRoundedButton,
+                normalTextColor: Color.Black,
+                hoverTextColor: Color.Black,
+                pressedTextColor: Color.Black
             );
             _closeButton.ContentLayout.BottomPadding = 8;
             _closeButton.Icon.IsEnabled = false;
@@ -62,7 +65,11 @@ namespace TankRacerViewer.Core
 
             ContentContainer.AddChild(new ExpandedElement(
                 innerElement: new ColumnLayout(
+                    alignmentFactor: Alignment.TopLeft,
                     spacing: 4,
+                    leftPadding: DefaultContentHorizontalPaddings,
+                    rightPadding: DefaultContentHorizontalPaddings,
+                    topPadding: DefaultContentTopPadding,
                     sizeCrossAxisToContent: true,
                     expandChildrenCrossAxis: true,
                     children: [
@@ -72,8 +79,8 @@ namespace TankRacerViewer.Core
                             children: [
                                 new SpriteElement(
                                     size: new Vector2(100),
-                                    skin: StandardSkin.WhitePixel,
-                                    sizeToSource: true,
+                                    sprite: IconCollection.Get(IconName.Logo),
+                                    sizeToSource: false,
                                     drawMode: DrawMode.Simple
                                 )
                             ]
@@ -82,13 +89,13 @@ namespace TankRacerViewer.Core
                             sizeToTextWidth: true,
                             sizeToTextHeight: true,
                             text: $"{product} v{version}",
-                            color: Color.Black
+                            color: Color.White
                         ),
                         new TextElement(
                             sizeToTextWidth: true,
                             sizeToTextHeight: true,
                             text: description,
-                            color: Color.Black
+                            color: Color.White
                         ),
                         new Element()
                         {
@@ -98,7 +105,7 @@ namespace TankRacerViewer.Core
                             sizeToTextWidth: true,
                             sizeToTextHeight: true,
                             text: copyright,
-                            color: Color.Black
+                            color: Color.White
                         ),
                         new HolderElement(
                             size: new Vector2(16),

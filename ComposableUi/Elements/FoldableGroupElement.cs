@@ -8,14 +8,14 @@ namespace ComposableUi
         public const float DefaultContentSpacing = 4;
         public const float DefaultContentVerticalPadding = 4;
 
+        public const StandardSkin DefaultTitleBackgroundSkin = StandardSkin.SelectionSoftDarkPixel;
+        public const StandardSkin DefaultContentBackgroundSkin = StandardSkin.HoverSoftDarkPixel;
+
         public readonly float DefaultTitleHorizontalPadding = 4;
         public readonly float DefaultContentIndent = 12;
 
         public readonly Vector2 DefaultFoldButtonSize = new(12);
         public readonly Vector2 DefaultIconSize = new(12);
-
-        public readonly Color DefaultTitleBackgroundColor = Color.DarkSlateBlue;
-        public readonly Color DefaultContentBackgroundColor = Color.MediumSlateBlue;
 
         private bool _isFolded;
         public bool IsFolded
@@ -51,19 +51,17 @@ namespace ComposableUi
             Color? contentBackgroundColor = default)
         {
             TitleBackground = new SpriteElement(
-                skin: StandardSkin.WhitePixel,
-                color: titleBackgroundColor ?? DefaultTitleBackgroundColor
+                skin: DefaultTitleBackgroundSkin
             );
             ContentBackground = new SpriteElement(
-                skin: StandardSkin.WhitePixel,
-                color: contentBackgroundColor ?? DefaultContentBackgroundColor
+                skin: DefaultContentBackgroundSkin
             );
 
             FoldButton = new ButtonElement(
                 size: DefaultFoldButtonSize,
-                normalColor: Color.Black,
+                normalColor: Color.FloralWhite,
                 hoverColor: Color.BlanchedAlmond,
-                pressedColor: Color.DarkCyan
+                pressedColor: Color.LightSteelBlue
             );
 
             FoldButton.PointerClick += OnFoldButtonPointerClick;
