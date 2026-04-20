@@ -45,7 +45,7 @@ namespace ComposableUi
 
         private readonly HashSet<WindowElement> _windows = [];
 
-        private Element _tempTabPlaceHolder;
+        private Element _lastShownTabPreview;
 
         private bool _isTabPreviewShown;
         private bool _isSplitPreviewShown;
@@ -222,10 +222,10 @@ namespace ComposableUi
 
         private void RefreshFloatPreviewTabPosition()
         {
-            if (_tempTabPlaceHolder is null)
+            if (_lastShownTabPreview is null)
                 return;
 
-            _floatPreviewTab.Position = _tempTabPlaceHolder.Position with { X = _floatPreviewTab.Position.X };
+            _floatPreviewTab.Position = _lastShownTabPreview.Position with { X = _floatPreviewTab.Position.X };
         }
 
         private void ShowEmbedPreviewAreaIfPossible()
@@ -287,10 +287,10 @@ namespace ComposableUi
             ShowEmbedPreviewAreaIfPossible();
         }
 
-        private void OnTabPreviewShown(WindowElement sender, Element placeHolder)
+        private void OnTabPreviewShown(WindowElement window)
         {
             _isTabPreviewShown = true;
-            _tempTabPlaceHolder = placeHolder;
+            _lastShownTabPreview = window.Tab;
 
             HideFloatPreviewWindow();
             HideEmbeddedPreviewWindow();
@@ -299,10 +299,13 @@ namespace ComposableUi
             ShowFloatPreviewTab();
         }
 
-        private void OnTabPreviewHidden(WindowElement sender)
+        private void OnTabPreviewHidden(WindowElement window)
         {
+            if (_lastShownTabPreview != window.Tab)
+                return;
+
             _isTabPreviewShown = false;
-            _tempTabPlaceHolder = null;
+            _lastShownTabPreview = null;
 
             HideFloatPreviewTab();
 

@@ -55,7 +55,7 @@ namespace ComposableUi
         public event ElementEventHandler<WindowElement, PointerEvent> TabPointerDown;
         public event ElementEventHandler<WindowElement, PointerEvent> TabPointerUp;
         public event ElementEventHandler<WindowElement, PointerDragEvent> TabPointerDrag;
-        public event ElementEventHandler<WindowElement, Element> TabPreviewShown;
+        public event ElementEventHandler<WindowElement> TabPreviewShown;
         public event ElementEventHandler<WindowElement> TabPreviewHidden;
         public event ElementEventHandler<WindowElement> SplitPreviewShown;
         public event ElementEventHandler<WindowElement> SplitPreviewHidden;
@@ -580,7 +580,7 @@ namespace ComposableUi
             if (shouldUseSourceTabAsPlaceHolder)
                 Container.MoveItem(insertIndex, source);
 
-            TabPreviewShown?.Invoke(this, Tab);
+            TabPreviewShown?.Invoke(this);
         }
 
         private void HideTabPreviewIfPossible()
