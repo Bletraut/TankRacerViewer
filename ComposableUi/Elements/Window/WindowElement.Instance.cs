@@ -638,16 +638,19 @@ namespace ComposableUi
             if (edgeNormal == Vector2.Zero)
                 return false;
 
-            splitTarget = this;
+            var isTabbed = Container is not null
+                && Container.DockingMode is DockingMode.Tab;
+            splitTarget = isTabbed ? Container : this;
 
-            if (Container is not null)
+            if (splitTarget.Container is not null)
             {
-                var thicknessFactor = Container.DockingMode switch
+                var thicknessFactor = splitTarget.Container.DockingMode switch
                 {
                     DockingMode.HorizontalSplit => Vector2.UnitY,
                     DockingMode.VerticalSplit => Vector2.UnitX,
                     _ => Vector2.Zero
                 };
+
                 var parentThickness = (_splitPreviewInputArea.Size * SplitPreviewAreaParentThicknessFactor * thicknessFactor).ToPoint();
                 var parentEdgeNormal = interactionRectangle.GetEdgeNormal(parentThickness, position,
                     RectangleUtilities.EdgeNormalResolveMode.PreferX);
@@ -655,13 +658,11 @@ namespace ComposableUi
                 if (parentEdgeNormal != Vector2.Zero)
                 {
                     edgeNormal = parentEdgeNormal;
-                    splitTarget = Container;
+                    splitTarget = splitTarget.Container;
                 }
             }
 
-            var isValidSplitTarget = source != this
-                || splitTarget == Container;
-
+            var isValidSplitTarget = source != splitTarget;
             return isValidSplitTarget;
         }
 
