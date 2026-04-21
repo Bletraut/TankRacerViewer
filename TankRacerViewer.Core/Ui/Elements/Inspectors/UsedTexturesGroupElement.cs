@@ -25,15 +25,15 @@ namespace TankRacerViewer.Core
             string name = default,
             Element content = default,
             bool isFolded = default,
-            Color? titleBackgroundColor = default,
-            Color? contentBackgroundColor = default)
+            StandardSkin titleBackgroundSkin = DefaultTitleBackgroundSkin,
+            StandardSkin contentBackgroundSkin = DefaultContentBackgroundSkin)
             : base(iconSprite,
                   iconSkin,
                   name,
                   content,
                   isFolded,
-                  titleBackgroundColor,
-                  contentBackgroundColor)
+                  titleBackgroundSkin,
+                  contentBackgroundSkin)
         {
             Icon.IsEnabled = false;
             ContentBackground.Color = Color.Black;
