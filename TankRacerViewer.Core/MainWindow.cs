@@ -438,12 +438,11 @@ namespace TankRacerViewer.Core
                 };
 
                 _spriteBatch.Begin();
+
                 _spriteBatch.Draw(WorldRenderer.WhitePixelTexture, infoPosition - infoSize / 2, null,
                     new Color(Color.Black, 0.85f), 0, Vector2.Zero, infoSize * 2, SpriteEffects.None, 0);
-                _spriteBatch.End();
-
-                _spriteBatch.Begin();
                 _spriteBatch.DrawString(_mainFont, AdvancedModeHitMessage, infoPosition, Color.White);
+
                 _spriteBatch.End();
             }
         }

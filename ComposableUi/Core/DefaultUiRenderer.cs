@@ -32,6 +32,9 @@ namespace ComposableUi
 
         private readonly Texture2D _standardSkinAtlasTexture;
 
+        private bool _isBeginCalled;
+        private Rectangle? _lastClipMask;
+
         public DefaultUiRenderer(ContentManager contentManager, SpriteBatch spriteBatch)
         {
             _contentManager = contentManager;
@@ -206,6 +209,38 @@ namespace ComposableUi
                 sliceSourceRectangle, color);
         }
 
+        private void ApplyDrawState(Rectangle? clipMask)
+        {
+            var isStateNotChanged = _isBeginCalled
+                && _lastClipMask == clipMask;
+            if (isStateNotChanged)
+                return;
+
+            _lastClipMask = clipMask;
+
+            EndDrawState();
+
+            RasterizerState rasterizerState = null;
+            if (clipMask.HasValue)
+            {
+                rasterizerState = _scissorRasterizerState;
+                _spriteBatch.GraphicsDevice.ScissorRectangle = clipMask.Value;
+            }
+
+            _isBeginCalled = true;
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp,
+                rasterizerState: rasterizerState);
+        }
+
+        private void EndDrawState()
+        {
+            if (!_isBeginCalled)
+                return;
+
+            _isBeginCalled = false;
+            _spriteBatch.End();
+        }
+
         // Implicit interfaces.
         // IUiRenderer.
         public void Begin()
@@ -215,21 +250,14 @@ namespace ComposableUi
 
         public void End()
         {
-
+            _lastClipMask = null;
+            EndDrawState();
         }
 
         public void DrawSprite(Sprite sprite, DrawMode drawMode,
             Rectangle destinationRectangle, Rectangle? clipMask, Color color)
         {
-            RasterizerState rasterizerState = null;
-            if (clipMask.HasValue)
-            {
-                rasterizerState = _scissorRasterizerState;
-                _spriteBatch.GraphicsDevice.ScissorRectangle = clipMask.Value;
-            }
-
-            _spriteBatch.Begin(samplerState: SamplerState.PointClamp,
-                rasterizerState: rasterizerState);
+            ApplyDrawState(clipMask);
 
             switch (drawMode)
             {
@@ -243,8 +271,6 @@ namespace ComposableUi
                     DrawSimpleSprite(sprite, destinationRectangle, color);
                     break;
             }
-
-            _spriteBatch.End();
         }
 
         public void DrawSkinnedRectangle(StandardSkin skin, DrawMode drawMode,
@@ -268,19 +294,9 @@ namespace ComposableUi
         public void DrawString(SpriteFont spriteFont, string text,
             Vector2 position, Rectangle? clipMask, Color color)
         {
-            RasterizerState rasterizerState = null;
-            if (clipMask.HasValue)
-            {
-                rasterizerState = _scissorRasterizerState;
-                _spriteBatch.GraphicsDevice.ScissorRectangle = clipMask.Value;
-            }
-
-            _spriteBatch.Begin(samplerState: SamplerState.PointClamp,
-                rasterizerState: rasterizerState);
+            ApplyDrawState(clipMask);
 
             _spriteBatch.DrawString(spriteFont, text, position, color);
-
-            _spriteBatch.End();
         }
     }
 }
