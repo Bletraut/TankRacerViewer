@@ -11,7 +11,7 @@ namespace TankRacerViewer.Core
 
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = [];
 
-        public PersistentDataService(IPlatformStorage platformStorage) 
+        public PersistentDataService(IPlatformStorage platformStorage)
         {
             _platformStorage = platformStorage;
         }
@@ -56,8 +56,8 @@ namespace TankRacerViewer.Core
                 return data;
             }
             finally
-            { 
-                semaphoreSlim.Release(); 
+            {
+                semaphoreSlim.Release();
             }
         }
 

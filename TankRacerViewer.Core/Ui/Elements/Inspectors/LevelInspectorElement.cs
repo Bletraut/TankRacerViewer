@@ -26,7 +26,7 @@ namespace TankRacerViewer.Core
         private readonly Stack<DropDownListTextItemElement> _pool = [];
         private readonly List<BackgroundAssetView> _backgrounds = [];
 
-        public LevelInspectorElement() 
+        public LevelInspectorElement()
         {
             InfoGroup.Name.Text = "Level Info";
 

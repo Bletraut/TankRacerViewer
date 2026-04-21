@@ -13,7 +13,8 @@ namespace TankRacerViewer.Core
         public TextureAssetView(GraphicsDevice graphicsDevice, TextureAsset textureAsset)
             : this(graphicsDevice, textureAsset.FullName,
                   textureAsset.Width, textureAsset.Height,
-                  textureAsset.Colors, textureAsset.BlendMode) { }
+                  textureAsset.Colors, textureAsset.BlendMode)
+        { }
 
         public TextureAssetView(GraphicsDevice graphicsDevice, string fullName,
             int width, int height, System.Drawing.Color[] colors, BlendMode blendMode)

@@ -1,6 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
 
-using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
@@ -290,7 +290,7 @@ namespace ComposableUi
                     var mainAxisSize = MainAxis * (ExpandChildrenMainAxis
                         ? (mainAxisPreferredChildrenSize - totalSpacing - paddings) * (expandingFactor / totalExpandingFactor)
                         : childSize);
-                    var crossAxisSize = CrossAxis * (ExpandChildrenCrossAxis 
+                    var crossAxisSize = CrossAxis * (ExpandChildrenCrossAxis
                         ? Size - paddings
                         : childSize);
 

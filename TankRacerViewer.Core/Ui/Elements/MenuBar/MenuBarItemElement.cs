@@ -37,7 +37,7 @@ namespace TankRacerViewer.Core
         public event ElementEventHandler<MenuBarItemElement> Clicked;
 
         public MenuBarItemElement(string text,
-            Action selectAction, Action unselectAction) 
+            Action selectAction, Action unselectAction)
         {
             SelectAction = selectAction;
             UnselectAction = unselectAction;
@@ -78,7 +78,7 @@ namespace TankRacerViewer.Core
                 State.Selected => (BackgroundSelectedColor, TextSelectedColor),
                 _ => (BackgroundNormalColor, TextNormalColor)
             };
-            
+
             Background.Skin = BackgroundSkin;
             Text.Color = TextColor;
         }

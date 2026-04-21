@@ -132,7 +132,7 @@ namespace TankRacerViewer.Core
 
         public void LogMessage(MessageType type, string message)
         {
-            switch(type)
+            switch (type)
             {
                 case MessageType.Info:
                     _infoCount++;

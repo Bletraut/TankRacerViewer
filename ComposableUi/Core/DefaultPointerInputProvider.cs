@@ -11,9 +11,9 @@ namespace ComposableUi
 
         Point IPointerInputProvider.PointerPosition => _currentMouseState.Position;
 
-        int IPointerInputProvider.ScrollWheelValueDelta 
+        int IPointerInputProvider.ScrollWheelValueDelta
             => _currentMouseState.ScrollWheelValue - _lastMouseState.ScrollWheelValue;
-        int IPointerInputProvider.HorizontalScrollWheelValueDelta 
+        int IPointerInputProvider.HorizontalScrollWheelValueDelta
             => _currentMouseState.HorizontalScrollWheelValue - _lastMouseState.HorizontalScrollWheelValue;
 
         bool IPointerInputProvider.IsPrimaryButtonDown
@@ -33,8 +33,8 @@ namespace ComposableUi
         private MouseState _currentMouseState;
         private MouseState _lastMouseState;
 
-        void IUpdateable.Update(GameTime gameTime) 
-        { 
+        void IUpdateable.Update(GameTime gameTime)
+        {
             _lastMouseState = _currentMouseState;
             _currentMouseState = Mouse.GetState();
         }

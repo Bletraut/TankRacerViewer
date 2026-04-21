@@ -4,7 +4,7 @@ namespace TankRacerViewer.Core
 {
     public sealed class TextureInspectorElement : InspectorElement<TextureAssetView>
     {
-        public TextureInspectorElement() 
+        public TextureInspectorElement()
         {
             InfoGroup.Name.Text = "Texture Info";
         }

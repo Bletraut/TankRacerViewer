@@ -29,7 +29,7 @@ namespace ComposableUi
         }
 
         // Class.
-        public WindowPlaceHolderElement() 
+        public WindowPlaceHolderElement()
         {
             ViewHolder.InnerElement = new SpriteElement(
                 skin: StandardSkin.SolidDarkPixel

@@ -66,8 +66,8 @@ namespace ComposableUi
 
         public Action<ContextMenuItemElement> ClickAction { get; set; }
 
-        public override bool IsEnabled 
-        { 
+        public override bool IsEnabled
+        {
             get => base.IsEnabled;
             set
             {

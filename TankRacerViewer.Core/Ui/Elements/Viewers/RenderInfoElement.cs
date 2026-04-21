@@ -28,7 +28,7 @@ namespace TankRacerViewer.Core
             SpriteFont spriteFont = default,
             Color? backgroundColor = default,
             Color? textColor = default,
-            Vector2? textOffset = default) 
+            Vector2? textOffset = default)
         {
             Size = size ?? DefaultSize;
             SpriteFont = spriteFont ?? TextElement.DefaultSpriteFont;

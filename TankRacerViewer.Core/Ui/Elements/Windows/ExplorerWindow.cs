@@ -6,8 +6,6 @@ using System.Runtime.InteropServices;
 
 using ComposableUi;
 
-using FastFileUnpacker;
-
 using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core

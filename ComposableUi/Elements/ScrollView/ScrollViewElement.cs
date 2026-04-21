@@ -42,7 +42,7 @@ namespace ComposableUi
         private readonly ExpandedElement _horizontalScrollBarParent;
         private readonly ExpandedElement _verticalScrollBarParent;
 
-        private readonly Element _bottomRightPlug;
+        private readonly ExpandedElement _bottomRightPlug;
 
         private readonly PointerInputHandlerElement _scrollInputHandler;
 

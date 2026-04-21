@@ -264,7 +264,7 @@ namespace ComposableUi
 
             var size = submenu.Menu.CalculatePreferredSize();
             var position = topRightPosition + size * submenu.Menu.Pivot;
-            var fallbackPosition = topLeftPosition + size * submenu.Menu.Pivot with { X = submenu.Menu.Pivot.X - 1};
+            var fallbackPosition = topLeftPosition + size * submenu.Menu.Pivot with { X = submenu.Menu.Pivot.X - 1 };
 
             Root.ShowInOverlay(submenu.Menu, position, fallbackPosition,
                 ClampToRootWidth, ClampToRootHeight);

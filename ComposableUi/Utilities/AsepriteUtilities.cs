@@ -1,7 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.Json;
+
+using Microsoft.Xna.Framework;
 
 namespace ComposableUi.Utilities
 {

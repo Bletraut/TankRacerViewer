@@ -221,10 +221,10 @@ namespace ComposableUi
             EndDrawState();
 
             RasterizerState rasterizerState = null;
-            if (clipMask.HasValue)
+            if (_lastClipMask.HasValue)
             {
                 rasterizerState = _scissorRasterizerState;
-                _spriteBatch.GraphicsDevice.ScissorRectangle = clipMask.Value;
+                _spriteBatch.GraphicsDevice.ScissorRectangle = _lastClipMask.Value;
             }
 
             _isBeginCalled = true;

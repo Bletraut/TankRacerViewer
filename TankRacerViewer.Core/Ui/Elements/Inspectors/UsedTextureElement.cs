@@ -28,7 +28,7 @@ namespace TankRacerViewer.Core
 
         private readonly Sprite _sprite;
 
-        public UsedTextureElement() 
+        public UsedTextureElement()
         {
             _background = new SpriteElement(
                 skin: StandardSkin.WhitePixel

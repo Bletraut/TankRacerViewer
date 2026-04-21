@@ -97,7 +97,7 @@ namespace ComposableUi
             Element content = default,
             Vector2? size = default,
             Vector2? minSize = default,
-            bool constrainToParent = true) 
+            bool constrainToParent = true)
             : base(size ?? DefaultSize,
                   minSize ?? DefaultMinSize,
                   constrainToParent)

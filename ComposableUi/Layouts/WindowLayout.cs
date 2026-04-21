@@ -111,7 +111,7 @@ namespace ComposableUi
             _embedPreviewInputArea.PointerLeave += OnEmbedPreviewInputAreaPointerLeave;
         }
 
-        public void AddFloatWindow(WindowElement window) 
+        public void AddFloatWindow(WindowElement window)
             => AddWindow(window, _floatLayout);
 
         public void EmbedWindow(WindowElement window)

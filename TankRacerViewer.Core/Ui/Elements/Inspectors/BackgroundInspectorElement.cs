@@ -4,7 +4,7 @@
     {
         private readonly UsedTexturesGroupElement _usedTexturesGroup;
 
-        public BackgroundInspectorElement() 
+        public BackgroundInspectorElement()
         {
             InfoGroup.Name.Text = "Background Info";
 

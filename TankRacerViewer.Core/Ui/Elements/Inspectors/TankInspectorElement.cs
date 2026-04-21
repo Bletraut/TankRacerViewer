@@ -15,7 +15,7 @@ namespace TankRacerViewer.Core
         private readonly FoldableGroupElement _nodesGroup;
         private readonly LevelObjectContainerExplorerElement _containerExplorer;
 
-        public TankInspectorElement() 
+        public TankInspectorElement()
         {
             InfoGroup.Name.Text = "Tank Info";
 

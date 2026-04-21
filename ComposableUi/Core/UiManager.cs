@@ -19,8 +19,8 @@ namespace ComposableUi
 
         private readonly GraphicsDevice _graphicsDevice;
 
-        private Stack<(uint Layer, Element Element)> _stack = new();
-        private Stack<(uint Layer, Element Element)> _nextStack = new();
+        private readonly Stack<(uint Layer, Element Element)> _stack = new();
+        private readonly Stack<(uint Layer, Element Element)> _nextStack = new();
 
         private readonly List<(Rectangle InputArea, IPointerInputHandler handler)> _pointerInputHandlers = [];
         private readonly List<IDrawableElement> _renderQueue = [];
@@ -45,7 +45,7 @@ namespace ComposableUi
             : this(graphicsDevice,
                   contentManager,
                   new DefaultPointerInputProvider(),
-                  new DefaultUiRenderer(contentManager, spriteBatch)) 
+                  new DefaultUiRenderer(contentManager, spriteBatch))
         {
             _updateableList.Add((IUpdateable)PointerInputProvider);
         }
@@ -124,7 +124,7 @@ namespace ComposableUi
             var isPrimaryButtonPressed = PointerInputProvider.IsPrimaryButtonPressed;
             var isSecondaryButtonPressed = PointerInputProvider.IsSecondaryButtonPressed;
 
-            var isAnyButtonDown = PointerInputProvider.IsPrimaryButtonDown 
+            var isAnyButtonDown = PointerInputProvider.IsPrimaryButtonDown
                 || PointerInputProvider.IsSecondaryButtonDown;
             if (isAnyButtonDown)
             {
@@ -187,7 +187,7 @@ namespace ComposableUi
                     {
                         if (_currentFocusedHandlers.Add(handler))
                         {
-                            if(!_lastFocusedHandlers.Contains(handler))
+                            if (!_lastFocusedHandlers.Contains(handler))
                                 handler.OnFocusChanged(pointerFocusedEvent);
                         }
 
@@ -252,7 +252,7 @@ namespace ComposableUi
 
             if (PointerInputProvider.IsSecondaryButtonUp)
             {
-                foreach(var handler in _secondaryButtonPressedHandlers)
+                foreach (var handler in _secondaryButtonPressedHandlers)
                     handler.OnPointerSecondaryUp(pointerEvent);
 
                 _secondaryButtonPressedHandlers.Clear();
@@ -358,7 +358,7 @@ namespace ComposableUi
 
                 while (_nextStack.Count > 0)
                     _stack.Push(_nextStack.Pop());
-            } 
+            }
             while (_stack.Count > 0);
         }
 

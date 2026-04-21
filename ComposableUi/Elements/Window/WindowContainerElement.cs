@@ -239,7 +239,7 @@ namespace ComposableUi
         internal Item GetLastItem()
             => _items[^1];
 
-        internal Item GetItemAt(int index) 
+        internal Item GetItemAt(int index)
             => _items[index];
 
         internal void ClearItems()

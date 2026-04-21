@@ -165,7 +165,7 @@ namespace ComposableUi
 
             if (items is not null)
             {
-                foreach ( var item in items )
+                foreach (var item in items)
                     AddItem(item);
             }
         }
@@ -252,7 +252,7 @@ namespace ComposableUi
 
             var contentSize = _itemLayout.CalculatePreferredSize();
             var contentWidth = contentSize.X + _itemScrollViewParent.TotalHorizontalPaddings;
-            var extraHeight =  contentWidth > visibleRectangle.Size.X
+            var extraHeight = contentWidth > visibleRectangle.Size.X
                 ? _itemScrollView.HorizontalScrollBar.CrossAxisSize
                 : 0;
             var size = new Vector2()

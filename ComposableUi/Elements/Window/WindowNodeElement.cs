@@ -56,10 +56,10 @@ namespace ComposableUi
         public WindowNodeElement(Vector2? size = default,
             Vector2? minSize = default,
             bool constrainToParent = true,
-            int leftConstraintInset = DefaultLeftConstraintInset, 
+            int leftConstraintInset = DefaultLeftConstraintInset,
             int rightConstraintInset = DefaultRightConstraintInset,
             int topConstraintInset = DefaultTopConstraintInset,
-            int bottomConstraintInset = DefaultBottomConstraintInset) 
+            int bottomConstraintInset = DefaultBottomConstraintInset)
         {
             MinSize = minSize ?? Vector2.Zero;
             ConstrainToParent = constrainToParent;

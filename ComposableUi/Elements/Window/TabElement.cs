@@ -29,9 +29,9 @@ namespace ComposableUi
             Sprite inactiveSprite = default,
             Sprite activeSprite = default,
             Sprite focusedSprite = default,
-            StandardSkin inactiveSkin = StandardSkin.InactiveTab, 
-            StandardSkin activeSkin = StandardSkin.ActiveTab, 
-            StandardSkin focusedSkin = StandardSkin.SelectedTab) 
+            StandardSkin inactiveSkin = StandardSkin.InactiveTab,
+            StandardSkin activeSkin = StandardSkin.ActiveTab,
+            StandardSkin focusedSkin = StandardSkin.SelectedTab)
         {
             InactiveSprite = inactiveSprite;
             NormalSprite = activeSprite;

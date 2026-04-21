@@ -46,7 +46,7 @@ namespace TankRacerViewer.Core
             AspectRatioMode.EnvelopeParent
         ];
 
-        public Viewer3D(GraphicsDevice graphicsDevice) 
+        public Viewer3D(GraphicsDevice graphicsDevice)
         {
             _resolutionList = new DropDownListElement(
                 size: new Vector2(DefaultResolutionListWidth)

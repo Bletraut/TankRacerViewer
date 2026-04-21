@@ -20,7 +20,7 @@ namespace TankRacerViewer.Core
         private const string TurretNodeName = "turret_node";
 
         // Static.
-        public static bool IsTankData(DataAssetView dataAssetView) 
+        public static bool IsTankData(DataAssetView dataAssetView)
             => dataAssetView.FullName.StartsWith(TankDataFilePrefix);
 
         private static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> _emptyProperties
@@ -31,13 +31,13 @@ namespace TankRacerViewer.Core
 
         public TankView(string fullName, DataAssetView tankDataAssetView,
             AssetViewContainer commonAssetViewContainer,
-            AssetViewContainer tankAssetViewContainer) 
+            AssetViewContainer tankAssetViewContainer)
             : base(fullName)
         {
             var tankNodes = new List<LevelObject>();
             foreach (var line in tankDataAssetView.Text.AsSpan().EnumerateLines())
             {
-                if (line.IsEmpty) 
+                if (line.IsEmpty)
                     continue;
 
                 var values = line.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries);

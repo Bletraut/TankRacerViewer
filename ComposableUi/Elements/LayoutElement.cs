@@ -18,7 +18,7 @@
 
         public LayoutElement(Element innerElement = default,
             bool ignoreLayout = default,
-            float flexFactor = 1) 
+            float flexFactor = 1)
             : base(innerElement)
         {
             IgnoreLayout = ignoreLayout;

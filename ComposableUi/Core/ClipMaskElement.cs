@@ -28,8 +28,8 @@ namespace ComposableUi
 
         public ClipMaskElement(Element innerElement = default,
             bool enableMask = true)
-            : base(innerElement) 
-        { 
+            : base(innerElement)
+        {
             _isMaskEnabled = enableMask;
         }
 

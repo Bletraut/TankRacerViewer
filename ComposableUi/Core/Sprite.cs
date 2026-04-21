@@ -13,7 +13,7 @@ namespace ComposableUi
         public int BottomBorder { get; set; }
         public bool IsSliced => LeftBorder != 0
             || TopBorder != 0
-            || RightBorder != SourceRectangle.Width 
+            || RightBorder != SourceRectangle.Width
             || BottomBorder != SourceRectangle.Height;
     }
 }

@@ -5,7 +5,7 @@ namespace ComposableUi
     public class SizedToContentHolderElement : HolderElement
     {
         public SizedToContentHolderElement(Element innerElement = default)
-            : base(innerElement) 
+            : base(innerElement)
         {
             if (HasEnabledInnerElement)
                 Size = InnerElement.Size;

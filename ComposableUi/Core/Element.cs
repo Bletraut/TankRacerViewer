@@ -80,7 +80,7 @@ namespace ComposableUi
             get => _localPosition;
             set
             {
-                if (_localPosition == value) 
+                if (_localPosition == value)
                     return;
 
                 _localPosition = value;
@@ -93,7 +93,7 @@ namespace ComposableUi
         {
             get => _pivot;
             set
-            { 
+            {
                 if (SetAndChangeState(ref _pivot, value))
                     OnTransformChanged();
             }
@@ -205,7 +205,7 @@ namespace ComposableUi
 
         private void RecalculateLocalTransformationMatrixIfDirty()
         {
-            if (!_isLocalTransformationMatrixDirty) 
+            if (!_isLocalTransformationMatrixDirty)
                 return;
 
             _isLocalTransformationMatrixDirty = false;

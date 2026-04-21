@@ -47,14 +47,14 @@ namespace ComposableUi
             string name = default,
             Element content = default,
             bool isFolded = default,
-            Color? titleBackgroundColor = default,
-            Color? contentBackgroundColor = default)
+            StandardSkin titleBackgroundSkin = DefaultTitleBackgroundSkin,
+            StandardSkin contentBackgroundSkin = DefaultContentBackgroundSkin)
         {
             TitleBackground = new SpriteElement(
-                skin: DefaultTitleBackgroundSkin
+                skin: titleBackgroundSkin
             );
             ContentBackground = new SpriteElement(
-                skin: DefaultContentBackgroundSkin
+                skin: contentBackgroundSkin
             );
 
             FoldButton = new ButtonElement(
@@ -134,8 +134,8 @@ namespace ComposableUi
 
         private void RefreshFoldButtonSkin()
         {
-            var skin = IsFolded 
-                ? StandardSkin.RightArrowIcon 
+            var skin = IsFolded
+                ? StandardSkin.RightArrowIcon
                 : StandardSkin.DownArrowIcon;
 
             FoldButton.NormalSkin = skin;

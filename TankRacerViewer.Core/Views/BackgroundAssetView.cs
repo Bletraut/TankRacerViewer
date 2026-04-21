@@ -13,7 +13,7 @@ namespace TankRacerViewer.Core
 
         public BackgroundAssetView(GraphicsDevice graphicsDevice, string fullName,
             IReadOnlyList<IReadOnlyList<Polygon>> sides,
-            IReadOnlyDictionary<string, TextureAssetView> textureAssetViewCache) 
+            IReadOnlyDictionary<string, TextureAssetView> textureAssetViewCache)
             : base(fullName)
         {
             ModelAssetViews = _modelAssetViews.AsReadOnly();

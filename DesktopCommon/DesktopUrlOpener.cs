@@ -11,9 +11,9 @@ namespace DesktopCommon
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Process.Start(new ProcessStartInfo(url) 
+                Process.Start(new ProcessStartInfo(url)
                 {
-                    UseShellExecute = true 
+                    UseShellExecute = true
                 });
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
