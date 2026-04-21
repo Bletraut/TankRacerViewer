@@ -4,7 +4,7 @@
 
 | Language  | Link |
 |---|---|
-| 🇷🇺 Russian  | [Readme.md](docs/Readme.md) |
+| 🇷🇺 Russian  | [Readme.md](docs/ru/Readme.md) |
 | 🇬🇧 English | [Readme.md](Readme.md) |
 
 ---
