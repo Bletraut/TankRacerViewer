@@ -263,9 +263,8 @@ namespace ComposableUi
             {
                 var edge = EdgeNormalToEdge(_currentSplitPreviewEdgeNormal);
 
-                var shouldRemoveTargetAfterDetach = source.Container == Container
-                    && _currentSplitPreviewTarget == Container
-                    && Container.ItemCount <= 2;
+                var shouldRemoveTargetAfterDetach = source.Container == _currentSplitPreviewTarget
+                    && source.Container.ItemCount <= 2;
                 if (shouldRemoveTargetAfterDetach)
                 {
                     for (var i = 0; i < Container.ItemCount; i++)

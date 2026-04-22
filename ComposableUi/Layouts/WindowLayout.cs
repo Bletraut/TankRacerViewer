@@ -46,6 +46,7 @@ namespace ComposableUi
         private readonly HashSet<WindowElement> _windows = [];
 
         private Element _lastShownTabPreview;
+        private Element _lastShownSplitPreviewWindow;
 
         private bool _isTabPreviewShown;
         private bool _isSplitPreviewShown;
@@ -318,6 +319,7 @@ namespace ComposableUi
         private void OnSplitPreviewShown(WindowElement window)
         {
             _isSplitPreviewShown = true;
+            _lastShownSplitPreviewWindow = window;
 
             HideFloatPreviewWindow();
             HideEmbeddedPreviewWindow();
@@ -326,7 +328,11 @@ namespace ComposableUi
 
         private void OnSplitPreviewHidden(WindowElement window)
         {
+            if (_lastShownSplitPreviewWindow != window)
+                return;
+
             _isSplitPreviewShown = false;
+            _lastShownSplitPreviewWindow = null;
 
             var canShowFloatPreviewWindow = !_isTabPreviewShown
                 && !_isEmbeddedPreviewShown;
