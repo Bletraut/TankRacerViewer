@@ -122,7 +122,8 @@ namespace TankRacerViewer.Core
             _cameraController = new CameraController(_camera);
             _cameraController.EulerAngles = _cameraDefaultRotation;
 
-            var data = Task.Run(() => _persistentDataService.LoadAsync<List<string>>(RecentPathsDataKey)).Result;
+            var data = _persistentDataService.LoadAsync<List<string>>(RecentPathsDataKey)
+                .GetAwaiter().GetResult();
             _recentPaths = data ?? _recentPaths;
 
             _uiComponent.RecentPaths = _recentPaths;
