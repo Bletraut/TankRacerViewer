@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,9 +18,10 @@ namespace TankRacerViewer.Core
         }
 
         public async Task SaveAsync<T>(string key, T data,
+            JsonSerializerOptions jsonSerializerOptions,
             CancellationToken cancellationToken = default)
         {
-            var serializedBytes = JsonSerializer.SerializeToUtf8Bytes(data);
+            var serializedBytes = JsonSerializer.SerializeToUtf8Bytes(data, jsonSerializerOptions);
 
             var semaphoreSlim = GetSemaphoreSlim(key);
             await semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -36,6 +38,7 @@ namespace TankRacerViewer.Core
         }
 
         public async Task<T> LoadAsync<T>(string key,
+            JsonSerializerOptions jsonSerializerOptions,
             CancellationToken cancellationToken = default)
         {
             var semaphoreSlim = GetSemaphoreSlim(key);
@@ -49,11 +52,16 @@ namespace TankRacerViewer.Core
                 var result = await _platformStorage.ReadAsync(key, cancellationToken)
                     .ConfigureAwait(false);
 
-                var data = JsonSerializer.Deserialize<T>(result);
+                var data = JsonSerializer.Deserialize<T>(result, jsonSerializerOptions);
                 if (data is null)
                     return default;
 
                 return data;
+            }
+            catch (JsonException exception)
+            {
+                Debug.WriteLine(exception.Message);
+                return default;
             }
             finally
             {

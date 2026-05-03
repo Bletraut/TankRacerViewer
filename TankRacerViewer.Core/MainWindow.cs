@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using FastFileUnpacker;
@@ -15,7 +18,7 @@ namespace TankRacerViewer.Core
 {
     public class MainWindow : Game
     {
-        private const string RecentPathsDataKey = "save";
+        private const string ApplicationDataKey = "save";
         private const int MaxRecentPathCount = 5;
 
         private const float ViewDistance = 1500;
@@ -52,13 +55,14 @@ namespace TankRacerViewer.Core
         private AssetViewContainer _dataAssetViewContainer;
         private AssetViewContainer _commonAssetViewContainer;
 
+        private readonly JsonSerializerOptions _jsonSerializerOptions;
         private readonly Action<LevelObject> _levelObjectSelectedAction;
 
         private readonly StringBuilder _info = new();
 
         private float _advancedModeHintCountdown;
 
-        private List<string> _recentPaths = [];
+        private ApplicationData _applicationData;
 
         public MainWindow(IPlatformStorage platformStorage,
             IPlatformUrlOpener urlOpener,
@@ -79,6 +83,11 @@ namespace TankRacerViewer.Core
             IsMouseVisible = true;
 
             Window.AllowUserResizing = true;
+
+            _jsonSerializerOptions = new JsonSerializerOptions()
+            {
+                TypeInfoResolver = ApplicationDataSerializationContext.Default
+            };
 
             _levelObjectSelectedAction = OnLevelObjectSelected;
         }
@@ -122,11 +131,11 @@ namespace TankRacerViewer.Core
             _cameraController = new CameraController(_camera);
             _cameraController.EulerAngles = _cameraDefaultRotation;
 
-            var data = _persistentDataService.LoadAsync<List<string>>(RecentPathsDataKey)
+            var applicationData = _persistentDataService.LoadAsync<ApplicationData>(ApplicationDataKey, _jsonSerializerOptions)
                 .GetAwaiter().GetResult();
-            _recentPaths = data ?? _recentPaths;
+            _applicationData = applicationData ?? ApplicationData.CreateEmpty();
 
-            _uiComponent.RecentPaths = _recentPaths;
+            _uiComponent.RecentPaths = _applicationData.RecentPaths;
             _uiComponent.RefreshRecentPaths();
         }
 
@@ -167,7 +176,7 @@ namespace TankRacerViewer.Core
 
         public void ClearRecentPaths()
         {
-            _recentPaths.Clear();
+            _applicationData.RecentPaths.Clear();
             _uiComponent.RefreshRecentPaths();
 
             SaveRecentPaths();
@@ -202,11 +211,11 @@ namespace TankRacerViewer.Core
 
         private void AddPathToRecentAndRefresh(string path)
         {
-            while (_recentPaths.Count > MaxRecentPathCount)
-                _recentPaths.RemoveAt(_recentPaths.Count - 1);
+            while (_applicationData.RecentPaths.Count > MaxRecentPathCount)
+                _applicationData.RecentPaths.RemoveAt(_applicationData.RecentPaths.Count - 1);
 
-            _recentPaths.Remove(path);
-            _recentPaths.Insert(0, path);
+            _applicationData.RecentPaths.Remove(path);
+            _applicationData.RecentPaths.Insert(0, path);
 
             _uiComponent.RefreshRecentPaths();
 
@@ -219,7 +228,7 @@ namespace TankRacerViewer.Core
             {
                 try
                 {
-                    await _persistentDataService.SaveAsync(RecentPathsDataKey, _recentPaths);
+                    await _persistentDataService.SaveAsync(ApplicationDataKey, _applicationData, _jsonSerializerOptions);
                 }
                 catch (Exception exception)
                 {
@@ -541,5 +550,10 @@ namespace TankRacerViewer.Core
             _cameraController.Position = worldViewPosition;
             _cameraController.LookAt(worldObjectPosition);
         }
+    }
+
+    [JsonSerializable(typeof(ApplicationData))]
+    internal partial class ApplicationDataSerializationContext : JsonSerializerContext
+    {
     }
 }
