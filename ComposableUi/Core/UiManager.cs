@@ -13,6 +13,23 @@ namespace ComposableUi
 
         public IPointerInputProvider PointerInputProvider { get; set; }
         public IUiRenderer UiRenderer { get; set; }
+        public IClipboardProvider ClipboardProvider { get; set; }
+
+        private IKeyboardInputProvider _keyboardInputProvider;
+        public IKeyboardInputProvider KeyboardInputProvider
+        {
+            get => _keyboardInputProvider;
+            set
+            {
+                if (_keyboardInputProvider is IUpdateable oldUpdateable)
+                    _updateableList.Remove(oldUpdateable);
+
+                _keyboardInputProvider = value;
+
+                if (_keyboardInputProvider is IUpdateable newUpdateable)
+                    _updateableList.Add(newUpdateable);
+            }
+        }
 
         public bool HasAnyActiveInputHandlers => _currentActiveHandlers.Count > 0;
         public bool IsAnyElementPressed => _primaryButtonPressedHandlers.Count > 0 || _secondaryButtonPressedHandlers.Count > 0;
@@ -48,6 +65,15 @@ namespace ComposableUi
                   new DefaultUiRenderer(contentManager, spriteBatch))
         {
             _updateableList.Add((IUpdateable)PointerInputProvider);
+        }
+
+        public UiManager(GraphicsDevice graphicsDevice,
+            ContentManager contentManager,
+            SpriteBatch spriteBatch,
+            GameWindow window)
+            : this(graphicsDevice, contentManager, spriteBatch)
+        {
+            KeyboardInputProvider = new DefaultKeyboardInputProvider(window);
         }
 
         public UiManager(GraphicsDevice graphicsDevice,
@@ -91,6 +117,7 @@ namespace ComposableUi
                 updateable.Update(gameTime);
 
             HandlePointerInput();
+            HandleKeyboardInput();
             RebuildIfDirty();
 
             foreach (var elementSolver in _elementSolvers)
@@ -375,6 +402,37 @@ namespace ComposableUi
 
             if (element is IDrawableElement drawableElement)
                 _renderQueue.Add(drawableElement);
+        }
+
+        private void HandleKeyboardInput()
+        {
+            if (_keyboardInputProvider is null || _currentFocusedHandlers.Count == 0)
+                return;
+
+            var e = new KeyboardInputEvent(
+                _keyboardInputProvider.TypedCharacters,
+                _keyboardInputProvider.IsShiftPressed,
+                _keyboardInputProvider.IsCtrlPressed,
+                _keyboardInputProvider.IsBackspaceDown,
+                _keyboardInputProvider.IsDeleteDown,
+                _keyboardInputProvider.IsLeftArrowDown,
+                _keyboardInputProvider.IsRightArrowDown,
+                _keyboardInputProvider.IsUpArrowDown,
+                _keyboardInputProvider.IsDownArrowDown,
+                _keyboardInputProvider.IsHomeDown,
+                _keyboardInputProvider.IsEndDown,
+                _keyboardInputProvider.IsReturnDown,
+                _keyboardInputProvider.IsSelectAllDown,
+                _keyboardInputProvider.IsCopyDown,
+                _keyboardInputProvider.IsPasteDown,
+                _keyboardInputProvider.IsCutDown,
+                ClipboardProvider);
+
+            foreach (var handler in _currentFocusedHandlers)
+            {
+                if (handler is IKeyboardInputHandler keyboardHandler)
+                    keyboardHandler.OnKeyboardInput(e);
+            }
         }
     }
 }

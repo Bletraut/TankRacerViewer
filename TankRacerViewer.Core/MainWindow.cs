@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+
+using ComposableUi;
 
 using FastFileUnpacker;
 
@@ -28,6 +29,7 @@ namespace TankRacerViewer.Core
 
         public IFileDialogProvider FileDialogProvider { get; }
         public IPlatformUrlOpener UrlOpener { get; }
+        public IClipboardProvider ClipboardProvider { get; }
 
         private bool IsRenderingToGameWindow => _renderer.RenderContext == _gameWindowRenderContext;
 
@@ -66,12 +68,14 @@ namespace TankRacerViewer.Core
 
         public MainWindow(IPlatformStorage platformStorage,
             IPlatformUrlOpener urlOpener,
-            IFileDialogProvider fileDialogProvider)
+            IFileDialogProvider fileDialogProvider,
+            IClipboardProvider clipboardProvider = null)
         {
             _persistentDataService = new PersistentDataService(platformStorage);
 
             UrlOpener = urlOpener;
             FileDialogProvider = fileDialogProvider;
+            ClipboardProvider = clipboardProvider;
 
             _graphics = new GraphicsDeviceManager(this)
             {
@@ -366,7 +370,9 @@ namespace TankRacerViewer.Core
             _advancedModeHintCountdown -= (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             var canSelectNode = !IsRenderingToGameWindow
-                && _uiComponent.ExplorerWindow.IsSelected;
+                && _uiComponent.ExplorerWindow.IsSelected
+                && _uiComponent.ExplorerWindow.HasSelectedNode
+                && !_uiComponent.ExplorerWindow.IsSearchFieldFocused;
             if (canSelectNode)
             {
                 var isUpPressed = Input.IsKeyDown(Keys.Up)

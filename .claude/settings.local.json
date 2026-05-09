@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"F:\\\\Projects\\\\Monogame\\\\TankRacerViewer\" -Recurse -Filter \"*.csproj\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(dotnet build *)",
+      "PowerShell(Get-ChildItem *)",
+      "Bash(dotnet script *)",
+      "Read(//c/Users/Volga/.nuget/packages/monogame.framework.desktopgl/3.8.4.1/**)",
+      "Bash(Get-ChildItem \"F:\\\\Projects\\\\Monogame\\\\TankRacerViewer\")",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)"
+    ]
+  }
+}

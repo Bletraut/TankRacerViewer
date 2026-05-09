@@ -22,7 +22,8 @@ namespace TankRacerViewer.Core
             _mainWindow = mainWindow;
             _mainWindow.Window.ClientSizeChanged += OnClientSizeChanged;
 
-            UiManager = new UiManager(mainWindow.GraphicsDevice, mainWindow.Content, spriteBatch);
+            UiManager = new UiManager(mainWindow.GraphicsDevice, mainWindow.Content, spriteBatch, mainWindow.Window);
+            UiManager.ClipboardProvider = mainWindow.ClipboardProvider;
             RefreshUiRootSize();
 
             _mainLayer = new ContainerElement();
@@ -51,6 +52,8 @@ namespace TankRacerViewer.Core
         public override void Update(GameTime gameTime)
         {
             UiManager.Update(gameTime);
+
+            ExplorerWindow.ApplyPendingScrollIfNeeded();
 
             var isControlPressed = Input.IsKeyPressed(Keys.LeftControl)
                 || Input.IsKeyPressed(Keys.RightControl);

@@ -17,7 +17,8 @@ namespace TankRacerViewer.Core
         public Sprite Sprite { get; set; }
         public StandardSkin Skin { get; set; }
 
-        public float Indent => Parent is not null && !Parent.IsHidden ? Parent.Indent + DefaultIndent : 0;
+        public float? IndentOverride { get; set; }
+        public float Indent => IndentOverride ?? (Parent is not null && !Parent.IsHidden ? Parent.Indent + DefaultIndent : 0);
 
         public bool IsFolded { get; set; }
         public bool IsSelected { get; set; }

@@ -13,6 +13,7 @@ namespace TankRacerViewer.Core
     public sealed class ExplorerWindow : WindowElement
     {
         private const string ExtraGroupName = "Extra";
+        private const float SearchBarHeight = 28f;
 
         // Static.
         private static readonly Stack<HierarchyNodeData> _stack = [];
@@ -81,6 +82,8 @@ namespace TankRacerViewer.Core
         private readonly List<HierarchyNodeData> _fastFileNodes = [];
         private readonly Dictionary<string, HierarchyNodeData> _folderNodeCache = [];
 
+        private readonly TextInputFieldElement _searchField;
+
         private readonly ContextMenuElement _contextMenu;
         private readonly PointerInputHandlerElement _inputArea;
 
@@ -89,9 +92,32 @@ namespace TankRacerViewer.Core
 
         private HierarchyNodeData _selectedNodeData;
 
+        private bool _isSearchMode;
+        private readonly List<HierarchyNodeData> _searchResultNodes = [];
+        private bool _pendingScrollToSelected;
+
+        public bool HasSelectedNode => _selectedNodeData is not null;
+        public bool IsSearchFieldFocused => _searchField.IsFocused;
+
         public ExplorerWindow() : base("Explorer")
         {
             this.SetScaledIcon(IconName.Explorer, UiElementFactory.DefaultSpriteScale);
+
+            _searchField = new TextInputFieldElement(
+                size: new Vector2(200, SearchBarHeight),
+                placeholderText: "Search...",
+                isMultiLine: false,
+                hasClearButton: true
+            );
+            _searchField.TextChanged += OnSearchFieldTextChanged;
+            ContentContainer.AddChild(new ExpandedElement(
+                expandHeight: false,
+                innerElement: new AlignmentElement(
+                    alignmentFactor: Alignment.TopLeft,
+                    pivot: Alignment.TopLeft,
+                    innerElement: _searchField
+                )
+            ));
 
             _lazyListView = new LazyListViewElement<HierarchyNodeData, HierarchyNodeElement>(
                 itemFactory: CreateHierarchyNode
@@ -102,7 +128,7 @@ namespace TankRacerViewer.Core
                 expandingContentWidthMode: ScrollViewElement.ExpandingMode.ExpandToFit,
                 content: _lazyListView
             );
-            ContentContainer.AddChild(new ExpandedElement(_scrollView));
+            ContentContainer.AddChild(new ExpandedElement(_scrollView, topPadding: SearchBarHeight));
 
             _contextMenu = new ContextMenuElement(
                 items: [
@@ -139,7 +165,10 @@ namespace TankRacerViewer.Core
             foreach (var (path, file) in files)
                 AddFastFileNode(path, file);
 
-            RefreshLazyListViewItems();
+            if (_isSearchMode)
+                ApplySearch(_searchField.Text);
+            else
+                RefreshLazyListViewItems();
         }
 
         public void AddFastFile(string path, AssetViewContainer file)
@@ -189,7 +218,10 @@ namespace TankRacerViewer.Core
                 AddAssetViewGroup(ExtraGroupName, fileNode, assetViewContainer.ExtraAssetViews.Values);
             }
 
-            RefreshLazyListViewItems();
+            if (_isSearchMode)
+                ApplySearch(_searchField.Text);
+            else
+                RefreshLazyListViewItems();
         }
 
         private void AddFastFileNode(string filePath, AssetViewContainer file)
@@ -250,6 +282,7 @@ namespace TankRacerViewer.Core
         private void RefreshLazyListViewItems()
         {
             _lazyListView.ClearData();
+            _stack.Clear();
 
             for (var i = _rootNodes.Count - 1; i >= 0; i--)
                 _stack.Push(_rootNodes[i]);
@@ -425,6 +458,94 @@ namespace TankRacerViewer.Core
             PointerEvent pointerEvent)
         {
             HideContextMenu();
+        }
+
+        private void OnSearchFieldTextChanged(TextInputFieldElement sender, string text)
+        {
+            ApplySearch(text);
+        }
+
+        private void ApplySearch(string query)
+        {
+            if (string.IsNullOrEmpty(query))
+            {
+                if (!_isSearchMode) return;
+                ExitSearchMode();
+                return;
+            }
+
+            _isSearchMode = true;
+
+            foreach (var node in _searchResultNodes)
+                node.IndentOverride = null;
+            _searchResultNodes.Clear();
+
+            _lazyListView.ClearData();
+            _stack.Clear();
+
+            var lowerQuery = query.ToLowerInvariant();
+
+            for (var i = _rootNodes.Count - 1; i >= 0; i--)
+                _stack.Push(_rootNodes[i]);
+
+            while (_stack.Count > 0)
+            {
+                var node = _stack.Pop();
+
+                if (node.File is AssetView && node.Name != null && node.Name.ToLowerInvariant().Contains(lowerQuery))
+                {
+                    node.IndentOverride = 0f;
+                    _searchResultNodes.Add(node);
+                    _lazyListView.AddData(node);
+                }
+
+                for (var i = node.Children.Count - 1; i >= 0; i--)
+                    _stack.Push(node.Children[i]);
+            }
+        }
+
+        private void ExitSearchMode()
+        {
+            _isSearchMode = false;
+
+            foreach (var node in _searchResultNodes)
+                node.IndentOverride = null;
+            _searchResultNodes.Clear();
+
+            NavigateToSelectedNode();
+        }
+
+        public void ApplyPendingScrollIfNeeded()
+        {
+            if (!_pendingScrollToSelected) return;
+            _pendingScrollToSelected = false;
+
+            if (_selectedNodeData is null) return;
+
+            var index = _lazyListView.IndexOf(_selectedNodeData);
+            if (index < 0) return;
+
+            var itemBounds = _lazyListView.CalculateItemBoundingRectangle(index);
+            _scrollView.ScrollVerticalToFitBounds(itemBounds);
+        }
+
+        private void NavigateToSelectedNode()
+        {
+            if (_selectedNodeData is null)
+            {
+                RefreshLazyListViewItems();
+                return;
+            }
+
+            var ancestor = _selectedNodeData.Parent;
+            while (ancestor is not null)
+            {
+                ancestor.IsFolded = false;
+                ancestor = ancestor.Parent;
+            }
+
+            RefreshLazyListViewItems();
+            _pendingScrollToSelected = true;
         }
     }
 }
