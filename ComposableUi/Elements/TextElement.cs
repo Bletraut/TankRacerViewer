@@ -84,7 +84,7 @@ namespace ComposableUi
             Color? color = default)
         {
             Text = text ?? string.Empty;
-            SpriteFont = spriteFont ?? DefaultSpriteFont;
+            SpriteFont = spriteFont;
             Size = size ?? DefaultSize;
             TextAlignmentFactor = textAlignmentFactor ?? Alignment.TopLeft;
             Pivot = pivot ?? Alignment.Center;

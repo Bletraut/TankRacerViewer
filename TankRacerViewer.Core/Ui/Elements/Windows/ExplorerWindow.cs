@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -11,8 +10,10 @@ using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
-    public sealed class ExplorerWindow : WindowElement, ITextInputHandler
+    public sealed class ExplorerWindow : WindowElement
     {
+        public const int DefaultSearchFieldHeight = 28;
+
         private const string ExtraGroupName = "Extra";
 
         // Static.
@@ -94,6 +95,21 @@ namespace TankRacerViewer.Core
         {
             this.SetScaledIcon(IconName.Explorer, UiElementFactory.DefaultSpriteScale);
 
+            var searchField = new RichTextElement(
+                text: "Search Field",
+                size: new Vector2(DefaultSearchFieldHeight)
+            );
+            ContentContainer.AddChild(new ExpandedElement(
+                leftPadding: 2,
+                rightPadding: 2,
+                expandHeight: false,
+                innerElement: new AlignmentElement(
+                    alignmentFactor: Alignment.TopCenter,
+                    pivot: Alignment.TopCenter,
+                    innerElement: searchField
+                )
+            ));
+
             _lazyListView = new LazyListViewElement<HierarchyNodeData, HierarchyNodeElement>(
                 itemFactory: CreateHierarchyNode
             );
@@ -103,7 +119,10 @@ namespace TankRacerViewer.Core
                 expandingContentWidthMode: ScrollViewElement.ExpandingMode.ExpandToFit,
                 content: _lazyListView
             );
-            ContentContainer.AddChild(new ExpandedElement(_scrollView));
+            ContentContainer.AddChild(new ExpandedElement(
+                topPadding: DefaultSearchFieldHeight,
+                innerElement: _scrollView
+            ));
 
             _contextMenu = new ContextMenuElement(
                 items: [
@@ -426,14 +445,6 @@ namespace TankRacerViewer.Core
             PointerEvent pointerEvent)
         {
             HideContextMenu();
-        }
-
-        void ITextInputHandler.OnTextInput(string text)
-        {
-            if (!IsFocused)
-                return;
-
-            Debug.WriteLine(text);
         }
     }
 }
