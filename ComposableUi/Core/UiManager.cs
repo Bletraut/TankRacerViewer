@@ -11,8 +11,40 @@ namespace ComposableUi
     {
         public RootElement Root { get; }
 
-        public IPointerInputProvider PointerInputProvider { get; set; }
-        public IUiRenderer UiRenderer { get; set; }
+        private IPointerInputProvider _pointerInputProvider;
+        public IPointerInputProvider PointerInputProvider
+        {
+            get => _pointerInputProvider;
+            set => SetProvider(ref _pointerInputProvider, value);
+        }
+
+        private IKeyboardInputProvider _keyboardInputProvider;
+        public IKeyboardInputProvider KeyboardInputProvider
+        {
+            get => _keyboardInputProvider;
+            set => SetProvider(ref _keyboardInputProvider, value);
+        }
+
+        private ITextInputProvider _textInputProvider;
+        public ITextInputProvider TextInputProvider
+        {
+            get => _textInputProvider;
+            set => SetProvider(ref _textInputProvider, value);
+        }
+
+        private IClipboardProvider _clipboardProvider;
+        public IClipboardProvider ClipboardProvider
+        {
+            get => _clipboardProvider;
+            set => SetProvider(ref _clipboardProvider, value);
+        }
+
+        private IUiRenderer _uiRenderer;
+        public IUiRenderer UiRenderer
+        {
+            get => _uiRenderer;
+            set => SetProvider(ref _uiRenderer, value);
+        }
 
         public bool HasAnyActiveInputHandlers => _currentActiveHandlers.Count > 0;
         public bool IsAnyElementPressed => _primaryButtonPressedHandlers.Count > 0 || _secondaryButtonPressedHandlers.Count > 0;
@@ -23,6 +55,9 @@ namespace ComposableUi
         private readonly Stack<(uint Layer, Element Element)> _nextStack = new();
 
         private readonly List<(Rectangle InputArea, IPointerInputHandler handler)> _pointerInputHandlers = [];
+        private readonly List<IKeyboardInputHandler> _keyboardInputHandlers = [];
+        private readonly List<ITextInputHandler> _textInputHandlers = [];
+        private readonly List<IClipboardHandler> _clipboardHandlers = [];
         private readonly List<IDrawableElement> _renderQueue = [];
 
         private HashSet<IPointerInputHandler> _lastActiveHandlers = [];
@@ -41,23 +76,32 @@ namespace ComposableUi
 
         public UiManager(GraphicsDevice graphicsDevice,
             ContentManager contentManager,
+            GameWindow gameWindow,
             SpriteBatch spriteBatch)
             : this(graphicsDevice,
                   contentManager,
                   new DefaultPointerInputProvider(),
+                  new DefaultKeyboardInputProvider(),
+                  new DefaultTextInputProvider(gameWindow),
+                  new DefaultClipboardProvider(),
                   new DefaultUiRenderer(contentManager, spriteBatch))
         {
-            _updateableList.Add((IUpdateable)PointerInputProvider);
         }
 
         public UiManager(GraphicsDevice graphicsDevice,
             ContentManager contentManager,
             IPointerInputProvider pointerInputProvider,
+            IKeyboardInputProvider keyboardInputProvider,
+            ITextInputProvider textInputProvider,
+            IClipboardProvider clipboardProvider,
             IUiRenderer uiRenderer)
         {
             _graphicsDevice = graphicsDevice;
 
             PointerInputProvider = pointerInputProvider;
+            KeyboardInputProvider = keyboardInputProvider;
+            TextInputProvider = textInputProvider;
+            ClipboardProvider = clipboardProvider;
             UiRenderer = uiRenderer;
 
             Root = new RootElement
@@ -91,6 +135,10 @@ namespace ComposableUi
                 updateable.Update(gameTime);
 
             HandlePointerInput();
+            HandleKeyboardInput();
+            HandleTextInput();
+            HandleClipboard();
+
             RebuildIfDirty();
 
             foreach (var elementSolver in _elementSolvers)
@@ -274,6 +322,37 @@ namespace ComposableUi
             }
         }
 
+        private void HandleKeyboardInput()
+        {
+            if (KeyboardInputProvider is null)
+                return;
+
+            foreach (var handler in _keyboardInputHandlers)
+                handler.Handle(KeyboardInputProvider);
+        }
+
+        private void HandleTextInput()
+        {
+            if (TextInputProvider is null)
+                return;
+
+            if (!TextInputProvider.HasText)
+                return;
+
+            var text = TextInputProvider.Text;
+            foreach (var handler in _textInputHandlers)
+                handler.OnTextInput(text);
+        }
+
+        private void HandleClipboard()
+        {
+            if (ClipboardProvider is null)
+                return;
+
+            foreach (var handler in _clipboardHandlers)
+                handler.Handle(ClipboardProvider);
+        }
+
         private void RebuildIfDirty()
         {
             if (!Root.IsDirty)
@@ -288,6 +367,9 @@ namespace ComposableUi
         private void RefreshVisibleElementLists()
         {
             _pointerInputHandlers.Clear();
+            _keyboardInputHandlers.Clear();
+            _textInputHandlers.Clear();
+            _clipboardHandlers.Clear();
             _renderQueue.Clear();
 
             _stack.Clear();
@@ -373,8 +455,38 @@ namespace ComposableUi
                 _pointerInputHandlers.Add((inputArea, pointerInputHandler));
             }
 
+            if (element is IKeyboardInputHandler keyboardInputHandler)
+                _keyboardInputHandlers.Add(keyboardInputHandler);
+
+            if (element is ITextInputHandler textInputHandler)
+                _textInputHandlers.Add(textInputHandler);
+
+            if (element is IClipboardHandler clipboardHandler)
+                _clipboardHandlers.Add(clipboardHandler);
+
             if (element is IDrawableElement drawableElement)
                 _renderQueue.Add(drawableElement);
+        }
+
+        private bool SetProvider<T>(ref T provider, T value)
+        {
+            if (EqualityComparer<T>.Default.Equals(provider, value))
+                return false;
+
+            if (provider is IUpdateable oldUpdateable)
+                _updateableList.Remove(oldUpdateable);
+
+            if (provider is IProviderLifecycle oldProviderLifecycle)
+                oldProviderLifecycle.OnRemoved();
+
+            provider = value;
+            if (provider is IUpdateable newUpdateable)
+                _updateableList.Add(newUpdateable);
+
+            if (provider is IProviderLifecycle newProviderLifecycle)
+                newProviderLifecycle.OnAdded();
+
+            return true;
         }
     }
 }

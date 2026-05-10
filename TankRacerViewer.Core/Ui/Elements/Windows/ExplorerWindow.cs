@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -10,7 +11,7 @@ using Microsoft.Xna.Framework;
 
 namespace TankRacerViewer.Core
 {
-    public sealed class ExplorerWindow : WindowElement
+    public sealed class ExplorerWindow : WindowElement, ITextInputHandler
     {
         private const string ExtraGroupName = "Extra";
 
@@ -425,6 +426,14 @@ namespace TankRacerViewer.Core
             PointerEvent pointerEvent)
         {
             HideContextMenu();
+        }
+
+        void ITextInputHandler.OnTextInput(string text)
+        {
+            if (!IsFocused)
+                return;
+
+            Debug.WriteLine(text);
         }
     }
 }

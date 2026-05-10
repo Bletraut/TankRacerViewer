@@ -22,7 +22,8 @@ namespace TankRacerViewer.Core
             _mainWindow = mainWindow;
             _mainWindow.Window.ClientSizeChanged += OnClientSizeChanged;
 
-            UiManager = new UiManager(mainWindow.GraphicsDevice, mainWindow.Content, spriteBatch);
+            UiManager = new UiManager(mainWindow.GraphicsDevice, mainWindow.Content,
+                mainWindow.Window, spriteBatch);
             RefreshUiRootSize();
 
             _mainLayer = new ContainerElement();
