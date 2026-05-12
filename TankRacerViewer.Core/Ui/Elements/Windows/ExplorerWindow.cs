@@ -96,7 +96,7 @@ namespace TankRacerViewer.Core
             this.SetScaledIcon(IconName.Explorer, UiElementFactory.DefaultSpriteScale);
 
             var searchField = new RichTextElement(
-                text: "Search Field",
+                text: "This is a Search Field",
                 size: new Vector2(DefaultSearchFieldHeight)
             );
             ContentContainer.AddChild(new ExpandedElement(

@@ -6,6 +6,10 @@ namespace ComposableUi
     public sealed class RichTextElement : Element,
         IDrawableElement
     {
+        // Static.
+        private static readonly char[] _wordBreakChars = [' ', '!', '?', '-', '/'];
+
+        // Class.
         private string _text;
         public string Text
         {
@@ -28,10 +32,20 @@ namespace ComposableUi
             }
         }
 
+        private bool _isMultiline;
+        public bool IsMultiline
+        {
+            get => _isMultiline;
+            set
+            {
+                if (SetAndChangeState(ref _isMultiline, value))
+                    OnTextChanged();
+            }
+        }
+
         public Color Color { get; set; }
 
-        // Events.
-        public event ElementEventHandler<RichTextElement> TextChanged;
+        private bool _isTextDirty;
 
         public RichTextElement(string text = default,
             SpriteFont spriteFont = default,
@@ -54,9 +68,17 @@ namespace ComposableUi
                 BoundingRectangle, ClipMask, Color);
         }
 
+        private void RebuildTextIfDirty()
+        {
+            if (!_isTextDirty)
+                return;
+
+            _isTextDirty = false;
+        }
+
         private void OnTextChanged()
         {
-            TextChanged?.Invoke(this);
+            _isTextDirty = true;
         }
     }
 }
