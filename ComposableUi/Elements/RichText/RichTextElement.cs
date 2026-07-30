@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 
 using Microsoft.Xna.Framework;
@@ -13,7 +12,15 @@ namespace ComposableUi
     {
         // Static.
         private static readonly Dictionary<SpriteFont, Dictionary<char, SpriteFont.Glyph>> _glyphCache = [];
-        private static readonly char[] _wordBreakChars = [' ', '!', '?', '-', '/'];
+        private static readonly WordBreakRule[] _wordBreakRules =
+        [
+            new(['!', '?', '-', '}', '/', '|'],
+                [')', ']', '.', ',', '"', '\'', ';', ':'],
+                true),
+            new ([')', ']', '.', ',', ';', ':', '$', '%', '\\', '+', '№'],
+                ['(', '[', '{', '$', '%', '\\', '+', '№'],
+                false)
+        ];
 
         public static Dictionary<char, SpriteFont.Glyph> GetCachedGlyphs(SpriteFont spriteFont)
         {
@@ -104,6 +111,17 @@ namespace ComposableUi
             }
         }
 
+        private List<RichTextToken> _tokens = new();
+        private IReadOnlyList<RichTextToken> _readOnlyTokens;
+        public IReadOnlyList<RichTextToken> Tokens
+        {
+            get
+            {
+                TokenizeIfDirty();
+                return _readOnlyTokens;
+            }
+        }
+
         private readonly StringBuilder _currentWordBuilder = new();
         private readonly List<RichTextWord> _words = [];
         private readonly List<RichTextLine> _lines = [];
@@ -122,6 +140,8 @@ namespace ComposableUi
             JustificationMode justificationMode = default,
             WrappingMode wrappingMode = default)
         {
+            _readOnlyTokens = _tokens.AsReadOnly();
+
             Text = text ?? string.Empty;
             SpriteFont = spriteFont;
             Size = size ?? TextElement.DefaultSize;
@@ -132,81 +152,81 @@ namespace ComposableUi
             WrappingMode = wrappingMode;
         }
 
-        private void RebuildTextIfDirty()
+        private void TokenizeIfDirty()
         {
             if (!_isTextDirty)
                 return;
 
-            _isTextDirty = true;
+            _isTextDirty = false;
 
-            _words.Clear();
-            _lines.Clear();
-            _currentWordBuilder.Clear();
+            _tokens.Clear();
 
-            _currentLineWidth = 0;
-            AddNewLine();
-
-            var glyphs = GetCachedGlyphs(SpriteFont);
-
-            var lastCharacterWidth = 0f;
-            var wasWordBreakChar = false;
-            var wasWordWrap = false;
-
-            for (int i = 0; i < Text.Length; i++)
+            for (var i = 0; i < Text.Length; i++)
             {
-                char character = Text[i];
+                var currentIndex = i;
+                var length = 1;
 
-                var isNewLineChar = character == '\n';
-                var isWordBreakChar = Array.IndexOf(_wordBreakChars, character) >= 0;
+                var currentCharacter = Text[i];
+                char? nextCharacter = currentIndex < Text.Length - 1
+                    ? Text[currentIndex + 1]
+                    : null;
 
-                var characterWidth = MeasureCharWidth(glyphs, character);
-                var hasLineOverflow = WrappingMode is WrappingMode.Wrap
-                    && _currentWordBuilder.Length > 0
-                    && _currentLineWidth + characterWidth > Size.X;
-
-                var shouldAddCurrentWord = isNewLineChar
-                    || isWordBreakChar
-                    || wasWordBreakChar;
-                if (shouldAddCurrentWord)
+                var isCaretReturn = currentCharacter == '\r';
+                if (isCaretReturn)
                 {
-                    AddCurrentWord(i, false, wasWordWrap);
-
-                    wasWordBreakChar = isWordBreakChar;
-                    wasWordWrap = false;
-                }
-                else if (hasLineOverflow)
-                {
-                    shouldAddCurrentWord = wasWordWrap
-                        || _lines[^1].WordCount == 0;
-                    if (shouldAddCurrentWord)
+                    var hasNextNewLine = nextCharacter.HasValue
+                        && nextCharacter.Value == '\n';
+                    if (hasNextNewLine)
                     {
-                        AddCurrentWord(i, true, wasWordWrap);
-
-                        wasWordWrap = true;
+                        i++;
+                        length++;
                     }
-                    // Word overflow.
-                    else if (lastCharacterWidth + characterWidth > Size.X)
-                    {
-                        AddNewLine();
-                        AddCurrentWord(i, true, wasWordWrap);
 
-                        wasWordWrap = true;
-                    }
+                    _tokens.Add(new RichTextToken(TokenType.NewLine, currentIndex, length));
+                    continue;
                 }
 
-                var shouldAddNewLine = isNewLineChar
-                    || hasLineOverflow;
-                if (shouldAddNewLine)
-                    AddNewLine();
+                var isNewLine = currentCharacter == '\n';
+                if (isNewLine)
+                {
+                    _tokens.Add(new RichTextToken(TokenType.NewLine, currentIndex, length));
+                    continue;
+                }
 
-                if (char.IsControl(character))
+                if (char.IsWhiteSpace(currentCharacter))
+                {
+                    _tokens.Add(new RichTextToken(TokenType.Space, currentIndex, length));
+                    _tokens.Add(new RichTextToken(TokenType.WordBreak, currentIndex, 0));
+                    continue;
+                }
+
+                if (char.IsControl(currentCharacter))
                     continue;
 
-                lastCharacterWidth = characterWidth;
-                _currentLineWidth += lastCharacterWidth;
-                _currentWordBuilder.Append(character);
+                if (char.IsLetterOrDigit(currentCharacter))
+                {
+                    _tokens.Add(new RichTextToken(TokenType.LetterOrDigit, currentIndex, length));
+                    continue;
+                }
+
+                _tokens.Add(new RichTextToken(TokenType.Symbol, currentIndex, length));
+
+                if (!nextCharacter.HasValue)
+                    break;
+
+                foreach (var wordBreakRule in _wordBreakRules)
+                {
+                    if (Array.IndexOf(wordBreakRule.TriggerCharacters, currentCharacter) < 0)
+                        continue;
+                    
+                    var nextCharacterMatchesCondition = Array.IndexOf(wordBreakRule.ConditionalCharacters, nextCharacter.Value) >= 0;
+                    if (nextCharacterMatchesCondition == !wordBreakRule.NegateCondition)
+                    {
+                        _tokens.Add(new RichTextToken(TokenType.WordBreak, currentIndex, 0));
+                        break;
+                    }
+                }
             }
-            AddCurrentWord(Text.Length - 1, false, wasWordWrap);
         }
 
         private void RebuildTextLayoutIfDirty()
@@ -215,6 +235,75 @@ namespace ComposableUi
                 return;
 
             _isTextLayoutDirty = true;
+
+            //_words.Clear();
+            //_lines.Clear();
+            //_currentWordBuilder.Clear();
+
+            //_currentLineWidth = 0;
+            //AddNewLine();
+
+            //var glyphs = GetCachedGlyphs(SpriteFont);
+
+            //var lastCharacterWidth = 0f;
+            //var wasWordBreakChar = false;
+            //var wasWordWrap = false;
+
+            //for (int i = 0; i < Text.Length; i++)
+            //{
+            //    char character = Text[i];
+
+            //    var isNewLineChar = character == '\n';
+            //    var isWordBreakChar = Array.IndexOf(_wordBreakChars, character) >= 0;
+
+            //    var characterWidth = MeasureCharWidth(glyphs, character);
+            //    var hasLineOverflow = WrappingMode is WrappingMode.Wrap
+            //        && _currentWordBuilder.Length > 0
+            //        && _currentLineWidth + characterWidth > Size.X;
+
+            //    var shouldAddCurrentWord = isNewLineChar
+            //        || isWordBreakChar
+            //        || wasWordBreakChar;
+            //    if (shouldAddCurrentWord)
+            //    {
+            //        AddCurrentWord(i, false, wasWordWrap);
+
+            //        wasWordBreakChar = isWordBreakChar;
+            //        wasWordWrap = false;
+            //    }
+            //    else if (hasLineOverflow)
+            //    {
+            //        shouldAddCurrentWord = wasWordWrap
+            //            || _lines[^1].WordCount == 0;
+            //        if (shouldAddCurrentWord)
+            //        {
+            //            AddCurrentWord(i, true, wasWordWrap);
+
+            //            wasWordWrap = true;
+            //        }
+            //        // Word overflow.
+            //        else if (lastCharacterWidth + characterWidth > Size.X)
+            //        {
+            //            AddNewLine();
+            //            AddCurrentWord(i, true, wasWordWrap);
+
+            //            wasWordWrap = true;
+            //        }
+            //    }
+
+            //    var shouldAddNewLine = isNewLineChar
+            //        || hasLineOverflow;
+            //    if (shouldAddNewLine)
+            //        AddNewLine();
+
+            //    if (char.IsControl(character))
+            //        continue;
+
+            //    lastCharacterWidth = characterWidth;
+            //    _currentLineWidth += lastCharacterWidth;
+            //    _currentWordBuilder.Append(character);
+            //}
+            //AddCurrentWord(Text.Length - 1, false, wasWordWrap);
         }
 
         private void AddCurrentWord(int index,
@@ -252,7 +341,7 @@ namespace ComposableUi
             _currentWordBuilder.Clear();
         }
 
-        private void AddNewLine() 
+        private void AddNewLine()
         {
             _currentLineWidth = SpriteFont.MeasureString(_currentWordBuilder).X;
             _lines.Add(new RichTextLine(_words.Count, 0));
@@ -262,8 +351,6 @@ namespace ComposableUi
         {
             Size = size;
 
-            _isTextDirty = true;
-            RebuildTextIfDirty();
             RebuildTextLayoutIfDirty();
         }
 
