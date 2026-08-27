@@ -21,6 +21,8 @@ namespace ComposableUi
 
         public int NineSlicedScale = DefaultNineSlicedScale;
 
+        public RenderTarget2D RenderTarget { get; set; }
+
         private readonly ContentManager _contentManager;
         private readonly SpriteBatch _spriteBatch;
 
@@ -245,7 +247,7 @@ namespace ComposableUi
         // IUiRenderer.
         public void Begin()
         {
-            _spriteBatch.GraphicsDevice.SetRenderTarget(null);
+            _spriteBatch.GraphicsDevice.SetRenderTarget(RenderTarget);
         }
 
         public void End()
