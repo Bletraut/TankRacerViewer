@@ -8,9 +8,10 @@
 #endif
 
 #define Bias 0.001
-#define Thickness 3.85
+#define Thickness 0.00685
 
 float4 Color;
+float ScreenSizeY;
 matrix ModelViewProjectionMatrix;
 
 struct VertexShaderInput
@@ -50,7 +51,7 @@ FragmentShaderOuput MainPS(VertexShaderOutput input)
     float2 uv = 1 - abs(input.Uv * 2 - 1);
     
     float2 delta = fwidth(uv);
-    float2 lineThickness = 1 - step(delta * Thickness, uv);
+    float2 lineThickness = 1 - step(delta * ScreenSizeY * Thickness, uv);
     float maxLineThickness = max(lineThickness.x, lineThickness.y);
     
     if (maxLineThickness <= 0)

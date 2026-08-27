@@ -355,6 +355,7 @@ namespace TankRacerViewer.Core
             foreach (var (matrix, color) in _boundingBoxes)
             {
                 _boundingBoxEffect.Parameters["Color"]?.SetValue(color.ToVector4());
+                _boundingBoxEffect.Parameters["ScreenSizeY"]?.SetValue(RenderContext.Resolution.Y);
                 _boundingBoxEffect.Parameters["ModelViewProjectionMatrix"].SetValue(matrix);
                 _boundingBoxEffect.CurrentTechnique.Passes[0].Apply();
 
