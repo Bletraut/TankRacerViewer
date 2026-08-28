@@ -241,10 +241,11 @@ namespace TankRacerViewer.Core
 
             if (_loadedAssetViewContainers.Count > 0)
             {
+                var assetCount = _loadedAssetViewContainers.Sum(data => data.AssetViewContainer.FastFile.Assets.Length);
                 var elapsedTime = Stopwatch.GetElapsedTime(startTimestamp);
 
                 _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
-                    $"FastFiles loaded: {_loadedAssetViewContainers.Count}. Elapsed time={elapsedTime}.");
+                    $"FastFiles loaded: {_loadedAssetViewContainers.Count}, Asset count: {assetCount}. Elapsed time: {elapsedTime}.");
 
                 ProcessLoadedAssetViewContainers();
             }
@@ -318,7 +319,7 @@ namespace TankRacerViewer.Core
                 var elapsedTime = Stopwatch.GetElapsedTime(startTimestamp);
 
                 _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
-                    $"Additional assets created: TankViews={tankViewCount}, LevelViews={levelViewCount}. Elapsed time={elapsedTime}.");
+                    $"Additional assets created. TankViews: {tankViewCount}, LevelViews: {levelViewCount}. Elapsed time: {elapsedTime}.");
 
                 return true;
             }
