@@ -35,7 +35,7 @@ namespace ComposableUi
         private readonly Texture2D _standardSkinAtlasTexture;
 
         private bool _isBeginCalled;
-        private Rectangle? _lastClipMask;
+        private Rectangle? _currentClipMask;
 
         public DefaultUiRenderer(ContentManager contentManager, SpriteBatch spriteBatch)
         {
@@ -214,19 +214,19 @@ namespace ComposableUi
         private void ApplyDrawState(Rectangle? clipMask)
         {
             var isStateNotChanged = _isBeginCalled
-                && _lastClipMask == clipMask;
+                && _currentClipMask == clipMask;
             if (isStateNotChanged)
                 return;
 
-            _lastClipMask = clipMask;
+            _currentClipMask = clipMask;
 
             EndDrawState();
 
             RasterizerState rasterizerState = null;
-            if (_lastClipMask.HasValue)
+            if (_currentClipMask.HasValue)
             {
                 rasterizerState = _scissorRasterizerState;
-                _spriteBatch.GraphicsDevice.ScissorRectangle = _lastClipMask.Value;
+                _spriteBatch.GraphicsDevice.ScissorRectangle = _currentClipMask.Value;
             }
 
             _isBeginCalled = true;
@@ -252,7 +252,7 @@ namespace ComposableUi
 
         public void End()
         {
-            _lastClipMask = null;
+            _currentClipMask = null;
             EndDrawState();
         }
 

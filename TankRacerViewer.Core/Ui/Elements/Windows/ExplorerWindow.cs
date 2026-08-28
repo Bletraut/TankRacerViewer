@@ -288,7 +288,7 @@ namespace TankRacerViewer.Core
                     continue;
 
                 var extraGroupNode = fileNode.Children
-                    .FirstOrDefault(fileNode => fileNode.Name == ExtraGroupName);
+                    .Find(fileNode => fileNode.Name == ExtraGroupName);
                 if (extraGroupNode is not null)
                     continue;
 

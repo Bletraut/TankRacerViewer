@@ -149,13 +149,9 @@ namespace TankRacerViewer.Core
             }
 
             var filePaths = Directory.GetFiles(folderPath, "*.dat", SearchOption.AllDirectories);
-
-            _loadedAssetViewContainers.Clear();
-            foreach (var filePath in filePaths)
-                LoadFile(filePath);
+            LoadAndProcessFiles(filePaths);
 
             AddPathToRecentAndRefresh(folderPath);
-            ProcessLoadedAssetViewContainers();
         }
 
         public void OpenFile(string filePath)
@@ -167,11 +163,9 @@ namespace TankRacerViewer.Core
                 return;
             }
 
-            _loadedAssetViewContainers.Clear();
-            LoadFile(filePath);
+            LoadAndProcessFiles([filePath]);
 
             AddPathToRecentAndRefresh(filePath);
-            ProcessLoadedAssetViewContainers();
         }
 
         public void ClearRecentPaths()
@@ -237,14 +231,27 @@ namespace TankRacerViewer.Core
             });
         }
 
+        private void LoadAndProcessFiles(string[] filePaths)
+        {
+            var startTimestamp = Stopwatch.GetTimestamp();
+
+            _loadedAssetViewContainers.Clear();
+            foreach (var filePath in filePaths)
+                LoadFile(filePath);
+
+            if (_loadedAssetViewContainers.Count > 0)
+            {
+                var elapsedTime = Stopwatch.GetElapsedTime(startTimestamp);
+
+                _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
+                    $"FastFiles loaded: {_loadedAssetViewContainers.Count}. Elapsed time={elapsedTime}.");
+
+                ProcessLoadedAssetViewContainers();
+            }
+        }
+
         private void ProcessLoadedAssetViewContainers()
         {
-            _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
-                $"FastFiles loaded: {_loadedAssetViewContainers.Count}.");
-
-            if (_loadedAssetViewContainers.Count <= 0)
-                return;
-
             TryCreateExtraAssetViewsIfPossible(_loadedAssetViewContainers.Select(data => data.AssetViewContainer));
             _uiComponent.ExplorerWindow.AddFastFiles(_loadedAssetViewContainers);
         }
@@ -269,9 +276,11 @@ namespace TankRacerViewer.Core
             var levelViewCount = 0;
             var tankViewCount = 0;
 
+            var startTimestamp = Stopwatch.GetTimestamp();
+
             foreach (var assetViewContainer in assetViewContainers)
             {
-                var mapAsset = assetViewContainer.FastFile.Assets.FirstOrDefault(asset => asset is MapAsset);
+                var mapAsset = assetViewContainer.FastFile.FindFirstAssetOfType<MapAsset>();
                 var canCreateMapAsset = mapAsset is not null
                     && !assetViewContainer.ExtraAssetViews.ContainsKey(mapAsset.FullName);
                 if (canCreateMapAsset)
@@ -306,8 +315,10 @@ namespace TankRacerViewer.Core
             var createdExtraAssetCount = levelViewCount + tankViewCount;
             if (createdExtraAssetCount > 0)
             {
+                var elapsedTime = Stopwatch.GetElapsedTime(startTimestamp);
+
                 _uiComponent.ConsoleWindow.LogMessage(MessageType.Info,
-                    $"Additional assets created: TankViews={tankViewCount}, LevelViews={levelViewCount}.");
+                    $"Additional assets created: TankViews={tankViewCount}, LevelViews={levelViewCount}. Elapsed time={elapsedTime}.");
 
                 return true;
             }

@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Drawing;
 
 namespace FastFileUnpacker
 {
@@ -20,7 +19,7 @@ namespace FastFileUnpacker
         private const int DataOffset = 284;
 
         // Static.
-        private static readonly Color[] _palette = new Color[PaletteSize];
+        private static readonly Rgba8888[] _palette = new Rgba8888[PaletteSize];
 
         private static void Decode(byte[] data, int startIndex, bool useRle,
             Action<int, byte> outputCallback)
@@ -51,7 +50,7 @@ namespace FastFileUnpacker
         // Class.
         public int Width { get; }
         public int Height { get; }
-        public Color[] Colors { get; }
+        public Rgba8888[] Colors { get; }
         public BlendMode BlendMode { get; }
 
         public TextureAsset(string fullName, byte[] data) : base(fullName, data)
@@ -59,7 +58,7 @@ namespace FastFileUnpacker
             Width = BitConverter.ToInt16(data.AsSpan(WidthOffset, WidthSize));
             Height = BitConverter.ToInt16(data.AsSpan(HeightOffset, HeightSize));
 
-            Colors = new Color[Width * Height];
+            Colors = new Rgba8888[Width * Height];
 
             BlendMode = data[BlendModeOffset] switch
             {
@@ -79,11 +78,11 @@ namespace FastFileUnpacker
                     var red = data[DataOffset + i];
                     var green = data[DataOffset + PaletteSize + i];
                     var blue = data[DataOffset + PaletteSize * 2 + i];
-                    _palette[i] = Color.FromArgb(byte.MaxValue, red, green, blue);
+                    _palette[i] = new Rgba8888(red, green, blue, byte.MaxValue);
                 }
 
                 if (BlendMode != BlendMode.Opaque)
-                    _palette[0] = Color.FromArgb(0, _palette[0]);
+                    _palette[0] = _palette[0] with { A = 0 };
 
                 Decode(data, DataOffset + PaletteSize * 3, isRleEncoded, (index, value) =>
                 {
@@ -106,7 +105,7 @@ namespace FastFileUnpacker
                     var green = colorBytes[i + Colors.Length];
                     var red = colorBytes[i + Colors.Length * 2];
                     var alpha = colorBytes[i + Colors.Length * 3];
-                    Colors[i] = Color.FromArgb(alpha, red, green, blue);
+                    Colors[i] = new Rgba8888(red, green, blue, alpha);
                 }
 
                 ArrayPool<byte>.Shared.Return(colorBytes);

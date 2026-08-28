@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Text;
 
 namespace FastFileUnpacker
@@ -25,17 +24,17 @@ namespace FastFileUnpacker
             return new Vector2(u, v) / byte.MaxValue;
         }
 
-        private static Color ExtractColor(string[] values, int offset)
+        private static Rgba8888 ExtractColor(string[] values, int offset)
         {
             var r = int.Parse(values[offset]);
             var g = int.Parse(values[offset + 1]);
             var b = int.Parse(values[offset + 2]);
 
-            return Color.FromArgb(byte.MaxValue, r, g, b);
+            return new Rgba8888((byte)r, (byte)g, (byte)b, byte.MaxValue);
         }
 
         private static void AddBackgroundQuad(List<Polygon> polygons,
-            Color color1, Color color2, Color color3, Color color4)
+            Rgba8888 color1, Rgba8888 color2, Rgba8888 color3, Rgba8888 color4)
         {
             var v1 = _topLeft;
             var v2 = _topRight;
@@ -75,7 +74,7 @@ namespace FastFileUnpacker
             Vector2 leftBottomUv, Vector2 rightTopUv,
             string textureName)
         {
-            var color = Color.White;
+            var color = new Rgba8888(byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue);
 
             var uv1 = leftBottomUv;
             var uv2 = rightTopUv;

@@ -20,11 +20,10 @@ namespace FastFileUnpacker
         {
             fastFile = default;
 
-            using var binaryReader = new BinaryReader(stream);
-
             if (stream.Length < HeaderSize)
                 return false;
 
+            using var binaryReader = new BinaryReader(stream);
             var header = binaryReader.ReadBytes(HeaderSize);
             var version = Encoding.Latin1.GetString(header.AsSpan(0, VersionSize));
             var assetCount = BitConverter.ToInt32(header.AsSpan(HeaderSize - AssetCountSize, AssetCountSize));
@@ -72,12 +71,24 @@ namespace FastFileUnpacker
         // Class.
         public string Version { get; }
 
-        public IReadOnlyList<Asset> Assets { get; }
+        private readonly Asset[] _assets;
+        public ReadOnlySpan<Asset> Assets => _assets;
 
         private FastFile(string version, Asset[] assets)
         {
             Version = version;
-            Assets = assets.AsReadOnly();
+            _assets = assets;
+        }
+
+        public T? FindFirstAssetOfType<T>() where T : Asset
+        {
+            foreach (var asset in _assets)
+            {
+                if (asset is T typedAsset)
+                    return typedAsset;
+            }
+
+            return default;
         }
     }
 }

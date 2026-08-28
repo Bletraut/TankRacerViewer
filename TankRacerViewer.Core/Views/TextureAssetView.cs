@@ -1,6 +1,5 @@
 ﻿using FastFileUnpacker;
 
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace TankRacerViewer.Core
@@ -17,20 +16,13 @@ namespace TankRacerViewer.Core
         { }
 
         public TextureAssetView(GraphicsDevice graphicsDevice, string fullName,
-            int width, int height, System.Drawing.Color[] colors, BlendMode blendMode)
+            int width, int height, Rgba8888[] colors, BlendMode blendMode)
             : base(fullName)
         {
             BlendMode = blendMode;
 
-            var convertedColors = new Color[colors.Length];
-            for (var i = 0; i < colors.Length; i++)
-            {
-                var color = colors[i];
-                convertedColors[i] = new Color(color.R, color.G, color.B, color.A);
-            }
-
             Texture = new Texture2D(graphicsDevice, width, height);
-            Texture.SetData(convertedColors);
+            Texture.SetData(colors);
         }
     }
 }
