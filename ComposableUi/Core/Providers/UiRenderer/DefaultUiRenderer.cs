@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -31,11 +32,17 @@ namespace ComposableUi
             ScissorTestEnable = true,
         };
         private readonly Dictionary<StandardSkin, Sprite> _standardSkinSprites = [];
-
         private readonly Texture2D _standardSkinAtlasTexture;
+
+        private readonly UiBatcher _uiBatcher = new();
+        private readonly List<RenderSpriteData> _renderSpriteDataList = [];
+        private readonly List<RenderTextData> _renderTextDataList = [];
 
         private bool _isBeginCalled;
         private Rectangle? _currentClipMask;
+
+        private long _drawCount;
+        private long _startTimestamp;
 
         public DefaultUiRenderer(ContentManager contentManager, SpriteBatch spriteBatch)
         {
@@ -63,27 +70,63 @@ namespace ComposableUi
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            try
+            var atlasResourceName = assembly.GetManifestResourceNames()
+                .First(resource => resource.EndsWith("UiElementsAtlas.json"));
+
+            using var stream = assembly.GetManifestResourceStream(atlasResourceName);
+            using var reader = new StreamReader(stream);
+            var atlasJson = reader.ReadToEnd();
+
+            if (AsepriteUtilities.TryGetSlices(atlasJson, out var slices))
             {
-                var atlasResourceName = assembly.GetManifestResourceNames()
-                    .First(resource => resource.EndsWith("UiElementsAtlas.json"));
-
-                using var stream = assembly.GetManifestResourceStream(atlasResourceName);
-                using var reader = new StreamReader(stream);
-                var atlasJson = reader.ReadToEnd();
-
-                if (AsepriteUtilities.TryGetSlices(atlasJson, out var slices))
+                foreach (var slice in slices)
                 {
-                    foreach (var slice in slices)
-                    {
-                        if (Enum.TryParse<StandardSkin>(slice.Name, out var standardSkin))
-                            _standardSkinSprites[standardSkin] = slice.ToSprite();
-                    }
+                    if (Enum.TryParse<StandardSkin>(slice.Name, out var standardSkin))
+                        _standardSkinSprites[standardSkin] = slice.ToSprite();
                 }
             }
-            catch
+        }
+
+        private void AddDrawSpriteCommand(Sprite sprite, DrawMode drawMode,
+            Rectangle destinationRectangle, Rectangle? clipMask, Color color)
+        {
+            var data = new RenderSpriteData(sprite, drawMode, destinationRectangle, color);
+            _renderSpriteDataList.Add(data);
+
+            var isFullyWithinClipMask = !clipMask.HasValue
+                || Rectangle.Union(destinationRectangle, clipMask.Value) == clipMask.Value;
+            if (isFullyWithinClipMask)
+                clipMask = null;
+
+            _uiBatcher.AddRenderCommand(_renderSpriteDataList.Count - 1, (int)RenderCommandType.Sprite,
+                destinationRectangle, clipMask, sprite.Texture);
+        }
+
+        private void RunDrawSpriteCommand(in RenderCommand command)
+        {
+            ApplyDrawState(command.ClipMask);
+
+            var data = _renderSpriteDataList[command.Id];
+            switch (data.DrawMode)
             {
+                case DrawMode.Simple:
+                    DrawSimpleSprite(data.Sprite, data.DestinationRectangle, data.Color);
+                    break;
+                case DrawMode.Sliced:
+                    DrawSlicedSprite(data.Sprite, data.DestinationRectangle, data.Color);
+                    break;
+                default:
+                    DrawSimpleSprite(data.Sprite, data.DestinationRectangle, data.Color);
+                    break;
             }
+        }
+
+        private void RunDrawTextCommand(in RenderCommand command)
+        {
+            ApplyDrawState(command.ClipMask);
+
+            var data = _renderTextDataList[command.Id];
+            _spriteBatch.DrawString(data.SpriteFont, data.Text, data.Position, data.Color);
         }
 
         private void DrawSimpleSprite(Sprite sprite,
@@ -218,9 +261,9 @@ namespace ComposableUi
             if (isStateNotChanged)
                 return;
 
-            _currentClipMask = clipMask;
-
             EndDrawState();
+
+            _currentClipMask = clipMask;
 
             RasterizerState rasterizerState = null;
             if (_currentClipMask.HasValue)
@@ -236,6 +279,8 @@ namespace ComposableUi
 
         private void EndDrawState()
         {
+            _currentClipMask = null;
+
             if (!_isBeginCalled)
                 return;
 
@@ -243,39 +288,58 @@ namespace ComposableUi
             _spriteBatch.End();
         }
 
-        // Implicit interfaces.
-        // IUiRenderer.
-        public void Begin()
+        // Explicit interfaces.
+        void IUiRenderer.Begin()
         {
+            _renderSpriteDataList.Clear();
+            _renderTextDataList.Clear();
+
             _spriteBatch.GraphicsDevice.SetRenderTarget(RenderTarget);
+
+            _drawCount = _spriteBatch.GraphicsDevice.Metrics.DrawCount;
+            _startTimestamp = Stopwatch.GetTimestamp();
         }
 
-        public void End()
+        void IUiRenderer.End()
         {
-            _currentClipMask = null;
+            _uiBatcher.Batch();
+            for (var i = 0; i < _uiBatcher.BatchedCommands.Count; i++)
+            {
+                var renderCommand = _uiBatcher.BatchedCommands[i];
+
+                var renderCommandType = (RenderCommandType)renderCommand.Type;
+                switch(renderCommandType)
+                {
+                    case RenderCommandType.Sprite:
+                        RunDrawSpriteCommand(renderCommand);
+                        break;
+                    case RenderCommandType.Text:
+                        RunDrawTextCommand(renderCommand);
+                        break;
+                }
+            }
+
             EndDrawState();
+
+            _drawCount = _spriteBatch.GraphicsDevice.Metrics.DrawCount - _drawCount;
+            var elapsedTime = Stopwatch.GetElapsedTime(_startTimestamp);
+
+            var info = $"{_drawCount}, {elapsedTime}, {1f / 75}";
+            var infoSize = TextElement.DefaultSpriteFont.MeasureString(info);
+
+            _spriteBatch.Begin();
+            _spriteBatch.Draw(FallbackTexture, new Rectangle(Point.Zero, infoSize.ToPoint()),  null, Color.Black);
+            _spriteBatch.DrawString(TextElement.DefaultSpriteFont, info, Vector2.Zero, Color.White);
+            _spriteBatch.End();
         }
 
-        public void DrawSprite(Sprite sprite, DrawMode drawMode,
+        void IUiRenderer.DrawSprite(Sprite sprite, DrawMode drawMode,
             Rectangle destinationRectangle, Rectangle? clipMask, Color color)
         {
-            ApplyDrawState(clipMask);
-
-            switch (drawMode)
-            {
-                case DrawMode.Simple:
-                    DrawSimpleSprite(sprite, destinationRectangle, color);
-                    break;
-                case DrawMode.Sliced:
-                    DrawSlicedSprite(sprite, destinationRectangle, color);
-                    break;
-                default:
-                    DrawSimpleSprite(sprite, destinationRectangle, color);
-                    break;
-            }
+            AddDrawSpriteCommand(sprite, drawMode, destinationRectangle, clipMask, color);
         }
 
-        public void DrawSkinnedRectangle(StandardSkin skin, DrawMode drawMode,
+        void IUiRenderer.DrawSkinnedRectangle(StandardSkin skin, DrawMode drawMode,
             Rectangle destinationRectangle, Rectangle? clipMask, Color color)
         {
             if (skin is StandardSkin.None)
@@ -290,15 +354,37 @@ namespace ComposableUi
                 sprite = FallbackSprite;
             }
 
-            DrawSprite(sprite, drawMode, destinationRectangle, clipMask, color);
+            AddDrawSpriteCommand(sprite, drawMode, destinationRectangle, clipMask, color);
         }
 
-        public void DrawString(SpriteFont spriteFont, string text,
+        void IUiRenderer.DrawString(SpriteFont spriteFont, string text,
             Vector2 position, Rectangle? clipMask, Color color)
         {
-            ApplyDrawState(clipMask);
+            var data = new RenderTextData(spriteFont, text, position, color);
+            _renderTextDataList.Add(data);
 
-            _spriteBatch.DrawString(spriteFont, text, position, color);
+            var size = spriteFont.MeasureString(text);
+            var destinationRectangle = new Rectangle(position.ToPoint(), size.ToPoint());
+
+            var isFullyWithinClipMask = !clipMask.HasValue
+                || Rectangle.Union(destinationRectangle, clipMask.Value) == clipMask.Value;
+            if (isFullyWithinClipMask)
+                clipMask = null;
+
+            _uiBatcher.AddRenderCommand(_renderTextDataList.Count - 1, (int)RenderCommandType.Text,
+                destinationRectangle, clipMask, spriteFont.Texture);
         }
+
+        private enum RenderCommandType
+        {
+            Sprite,
+            Text
+        }
+
+        private readonly record struct RenderSpriteData(Sprite Sprite,
+            DrawMode DrawMode, Rectangle DestinationRectangle, Color Color);
+
+        private readonly record struct RenderTextData(SpriteFont SpriteFont,
+            string Text, Vector2 Position, Color Color);
     }
 }

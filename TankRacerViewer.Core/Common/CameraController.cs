@@ -28,9 +28,9 @@ namespace TankRacerViewer.Core
             }
         }
 
-        public float MoveSpeed { get; set; } = 0.35f;
-        public float SlowMoveSpeed { get; set; } = 0.1f;
-        public float FastMoveSpeed { get; set; } = 2f;
+        public float MoveSpeed { get; set; } = 35f;
+        public float SlowMoveSpeed { get; set; } = 10f;
+        public float FastMoveSpeed { get; set; } = 200f;
         public float RotationSpeed { get; set; } = MathF.PI / 360f;
 
         public CameraController(Camera camera)
@@ -67,6 +67,7 @@ namespace TankRacerViewer.Core
             {
                 moveSpeed = FastMoveSpeed;
             }
+            moveSpeed *= (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             var isShiftPressed = Input.IsKeyPressed(Keys.LeftShift);
             if (Input.IsKeyPressed(Keys.W))
