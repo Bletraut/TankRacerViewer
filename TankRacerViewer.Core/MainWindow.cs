@@ -390,7 +390,7 @@ namespace TankRacerViewer.Core
 
                 if (isUpPressed)
                 {
-                    _uiComponent.ExplorerWindow.SelectPreventNode();
+                    _uiComponent.ExplorerWindow.SelectPreviousNode();
                 }
                 else if (isDownPressed)
                 {

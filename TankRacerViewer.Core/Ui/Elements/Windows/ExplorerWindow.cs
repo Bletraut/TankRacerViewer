@@ -255,7 +255,7 @@ namespace TankRacerViewer.Core
         }
 
         public void SelectNextNode() => SelectNode(1);
-        public void SelectPreventNode() => SelectNode(-1);
+        public void SelectPreviousNode() => SelectNode(-1);
         public void SelectNode(int indexOffset)
         {
             if (_selectedNodeData is null)
