@@ -8,14 +8,14 @@ namespace ComposableUi
     public sealed class UiBatcher
     {
         // Static.
-        private static bool CanBatch(RenderCommand commandA, RenderCommand commandB)
+        private static bool CanBatch(in RenderCommand commandA, in RenderCommand commandB)
         {
             return commandA.Type == commandB.Type
                 && commandA.ClipMask == commandB.ClipMask
                 && commandA.Texture == commandB.Texture;
         }
 
-        private static bool IsBoundingBoxIntersects(RenderCommand command, List<RenderCommand> commands)
+        private static bool IsBoundingBoxIntersects(in RenderCommand command, List<RenderCommand> commands)
         {
             for (var i = 0; i < commands.Count; i++)
             {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -17,12 +16,25 @@ namespace ComposableUi
     {
         public const int DefaultNineSlicedScale = 2;
 
+        // Static.
+        private static void SkipClipMaskIfContains(ref Rectangle? clipMask, Rectangle destinationRectangle)
+        {
+            if (!clipMask.HasValue)
+                return;
+
+            if (clipMask.Value.Contains(destinationRectangle))
+                clipMask = null;
+        }
+
+        // Class.
         public static Texture2D FallbackTexture { get; private set; }
         public static Sprite FallbackSprite { get; private set; }
 
         public int NineSlicedScale = DefaultNineSlicedScale;
 
         public RenderTarget2D RenderTarget { get; set; }
+
+        public long DrawCount { get; private set; }
 
         private readonly ContentManager _contentManager;
         private readonly SpriteBatch _spriteBatch;
@@ -40,9 +52,6 @@ namespace ComposableUi
 
         private bool _isBeginCalled;
         private Rectangle? _currentClipMask;
-
-        private long _drawCount;
-        private long _startTimestamp;
 
         public DefaultUiRenderer(ContentManager contentManager, SpriteBatch spriteBatch)
         {
@@ -93,10 +102,7 @@ namespace ComposableUi
             var data = new RenderSpriteData(sprite, drawMode, destinationRectangle, color);
             _renderSpriteDataList.Add(data);
 
-            var isFullyWithinClipMask = !clipMask.HasValue
-                || Rectangle.Union(destinationRectangle, clipMask.Value) == clipMask.Value;
-            if (isFullyWithinClipMask)
-                clipMask = null;
+            SkipClipMaskIfContains(ref clipMask, destinationRectangle);
 
             _uiBatcher.AddRenderCommand(_renderSpriteDataList.Count - 1, (int)RenderCommandType.Sprite,
                 destinationRectangle, clipMask, sprite.Texture);
@@ -291,13 +297,12 @@ namespace ComposableUi
         // Explicit interfaces.
         void IUiRenderer.Begin()
         {
+            DrawCount = _spriteBatch.GraphicsDevice.Metrics.DrawCount;
+
             _renderSpriteDataList.Clear();
             _renderTextDataList.Clear();
 
             _spriteBatch.GraphicsDevice.SetRenderTarget(RenderTarget);
-
-            _drawCount = _spriteBatch.GraphicsDevice.Metrics.DrawCount;
-            _startTimestamp = Stopwatch.GetTimestamp();
         }
 
         void IUiRenderer.End()
@@ -321,16 +326,7 @@ namespace ComposableUi
 
             EndDrawState();
 
-            _drawCount = _spriteBatch.GraphicsDevice.Metrics.DrawCount - _drawCount;
-            var elapsedTime = Stopwatch.GetElapsedTime(_startTimestamp);
-
-            var info = $"{_drawCount}, {elapsedTime}, {1f / 75}";
-            var infoSize = TextElement.DefaultSpriteFont.MeasureString(info);
-
-            _spriteBatch.Begin();
-            _spriteBatch.Draw(FallbackTexture, new Rectangle(Point.Zero, infoSize.ToPoint()),  null, Color.Black);
-            _spriteBatch.DrawString(TextElement.DefaultSpriteFont, info, Vector2.Zero, Color.White);
-            _spriteBatch.End();
+            DrawCount = _spriteBatch.GraphicsDevice.Metrics.DrawCount - DrawCount;
         }
 
         void IUiRenderer.DrawSprite(Sprite sprite, DrawMode drawMode,
@@ -366,10 +362,7 @@ namespace ComposableUi
             var size = spriteFont.MeasureString(text);
             var destinationRectangle = new Rectangle(position.ToPoint(), size.ToPoint());
 
-            var isFullyWithinClipMask = !clipMask.HasValue
-                || Rectangle.Union(destinationRectangle, clipMask.Value) == clipMask.Value;
-            if (isFullyWithinClipMask)
-                clipMask = null;
+            SkipClipMaskIfContains(ref clipMask, destinationRectangle);
 
             _uiBatcher.AddRenderCommand(_renderTextDataList.Count - 1, (int)RenderCommandType.Text,
                 destinationRectangle, clipMask, spriteFont.Texture);
