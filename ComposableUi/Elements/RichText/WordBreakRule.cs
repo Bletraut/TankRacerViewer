@@ -1,6 +1,11 @@
 ﻿namespace ComposableUi
 {
-    public record WordBreakRule(char[] TriggerCharacters,
-        char[] ConditionalCharacters,
-        bool NegateCondition);
+    public class WordBreakRule(char[] triggerCharacters,
+        char[] conditionalCharacters,
+        bool negateCondition)
+    {
+        public char[] TriggerCharacters { get; } = triggerCharacters;
+        public char[] ConditionalCharacters { get; } = conditionalCharacters;
+        public bool NegateCondition { get; } = negateCondition;
+    }
 }

@@ -366,8 +366,8 @@ namespace TankRacerViewer.Core
 
                 node.IsHidden = node.File is null
                     && (node.Parent is null || node.Parent.IsHidden)
-                    && node.Children.Count <= 1
-                    && node.Children[0]?.File is null;
+                    && node.Children.Count == 1
+                    && node.Children[0].File is null;
                 if (!node.IsHidden)
                 {
                     _lazyListView.AddData(node);
