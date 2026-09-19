@@ -55,7 +55,6 @@ namespace TankRacerViewer.Core
         private AssetViewContainer _dataAssetViewContainer;
         private AssetViewContainer _commonAssetViewContainer;
 
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
         private readonly Action<LevelObject> _levelObjectSelectedAction;
 
         private readonly StringBuilder _info = new();
@@ -83,11 +82,6 @@ namespace TankRacerViewer.Core
             IsMouseVisible = true;
 
             Window.AllowUserResizing = true;
-
-            _jsonSerializerOptions = new JsonSerializerOptions()
-            {
-                TypeInfoResolver = ApplicationDataSerializationContext.Default
-            };
 
             _levelObjectSelectedAction = OnLevelObjectSelected;
         }
@@ -131,12 +125,31 @@ namespace TankRacerViewer.Core
             _cameraController = new CameraController(_camera);
             _cameraController.EulerAngles = _cameraDefaultRotation;
 
-            var applicationData = _persistentDataService.LoadAsync<ApplicationData>(ApplicationDataKey, _jsonSerializerOptions)
+            var applicationData = _persistentDataService.LoadAsync(ApplicationDataKey,
+                ApplicationDataSerializationContext.Default.ApplicationData)
                 .GetAwaiter().GetResult();
             _applicationData = applicationData ?? ApplicationData.CreateEmpty();
 
             _uiComponent.RecentPaths = _applicationData.RecentPaths;
             _uiComponent.RefreshRecentPaths();
+
+            // For debug only.
+            //if (_applicationData.RecentPaths.Count > 0)
+            //{
+            //    OpenGameFolder(_applicationData.RecentPaths[0]);
+            //    foreach (var assetViewContainer in _loadedAssetViewContainers)
+            //    {
+            //        foreach (var (key, value) in assetViewContainer.AssetViewContainer.ExtraAssetViews)
+            //        {
+            //            if (key.Equals("england.bsm", StringComparison.OrdinalIgnoreCase))
+            //            {
+            //                OnAssetViewSelected(value);
+            //                return;
+            //            }
+            //        }
+            //    }
+            //}
+            // End.
         }
 
         public void OpenGameFolder(string folderPath)
@@ -222,7 +235,8 @@ namespace TankRacerViewer.Core
             {
                 try
                 {
-                    await _persistentDataService.SaveAsync(ApplicationDataKey, _applicationData, _jsonSerializerOptions);
+                    await _persistentDataService.SaveAsync(ApplicationDataKey, _applicationData,
+                        ApplicationDataSerializationContext.Default.ApplicationData);
                 }
                 catch (Exception exception)
                 {
