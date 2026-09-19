@@ -18,9 +18,6 @@
 	<PublishDebugSymbols>false</PublishDebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-	<TrimmerRootAssembly Include="MonoGame.Framework" />
-  </ItemGroup>
-  <ItemGroup>
     <None Remove="Icon.ico" />
     <None Remove="Icon.bmp" />
   </ItemGroup>
