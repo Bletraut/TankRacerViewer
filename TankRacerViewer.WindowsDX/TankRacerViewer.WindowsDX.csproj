@@ -17,8 +17,8 @@
 	<PublishDebugSymbols>false</PublishDebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4.1" />
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5.1" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.5.1" />
   </ItemGroup>
 	<ItemGroup>
 		<MonoGameContentReference Include="..\TankRacerViewer.Core\Content\Content.mgcb">
