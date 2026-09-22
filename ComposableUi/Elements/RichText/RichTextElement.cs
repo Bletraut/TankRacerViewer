@@ -111,8 +111,8 @@ namespace ComposableUi
             }
         }
 
-        private List<RichTextToken> _tokens = new();
-        private IReadOnlyList<RichTextToken> _readOnlyTokens;
+        private readonly List<RichTextToken> _tokens = [];
+        private readonly IReadOnlyList<RichTextToken> _readOnlyTokens;
         public IReadOnlyList<RichTextToken> Tokens
         {
             get

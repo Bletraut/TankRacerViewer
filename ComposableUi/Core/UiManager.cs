@@ -139,10 +139,10 @@ namespace ComposableUi
             HandleTextInput();
             HandleClipboard();
 
-            RebuildIfDirty();
-
             foreach (var elementSolver in _elementSolvers)
                 elementSolver.Resolve();
+
+            RebuildIfDirty();
         }
 
         public void Draw(GameTime gameTime)
