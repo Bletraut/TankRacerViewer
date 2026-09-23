@@ -48,7 +48,15 @@ namespace ComposableUi
                 if (parent != child)
                     continue;
 
-                parent.Parent?.AddChild(this);
+                if (parent.Parent is not null)
+                {
+                    parent.Parent.AddChild(this);
+                }
+                else 
+                {
+                    Parent.RemoveChild(this);
+                }    
+
                 break;
             }
 
