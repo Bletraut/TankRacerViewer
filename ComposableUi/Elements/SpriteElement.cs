@@ -4,11 +4,11 @@ namespace ComposableUi
 {
     public sealed class SpriteElement : Element, IDrawableElement
     {
-        private Sprite _sprite;
-        public Sprite Sprite
+        private ISpriteSource _spriteSource;
+        public ISpriteSource SpriteSource
         {
-            get => _sprite;
-            set => SetAndChangeState(ref _sprite, value);
+            get => _spriteSource;
+            set => SetAndChangeState(ref _spriteSource, value);
         }
 
         private StandardSkin _skin;
@@ -34,8 +34,10 @@ namespace ComposableUi
             set => SetAndChangeState(ref _drawMode, value);
         }
 
+        private Sprite _currentSprite;
+
         public SpriteElement(Vector2? size = default,
-            Sprite sprite = default,
+            ISpriteSource spriteSource = default,
             StandardSkin skin = StandardSkin.None,
             Color? color = default,
             bool sizeToSource = false,
@@ -43,7 +45,7 @@ namespace ComposableUi
         {
             Size = size ?? Vector2.Zero;
 
-            Sprite = sprite;
+            SpriteSource = spriteSource;
             Skin = skin;
             Color = color ?? Color.White;
             SizeToSource = sizeToSource;
@@ -52,20 +54,22 @@ namespace ComposableUi
 
         public override Vector2 CalculatePreferredSize()
         {
-            var useSelfSize = Sprite is null
+            SetAndChangeState(ref _currentSprite, SpriteSource?.Resolve(Context));
+
+            var useSelfSize = _currentSprite is null
                 || DrawMode is DrawMode.Sliced
                 || !SizeToSource;
             if (useSelfSize)
                 return base.CalculatePreferredSize();
 
-            return Sprite.SourceRectangle.Size.ToVector2();
+            return _currentSprite.SourceRectangle.Size.ToVector2();
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)
         {
-            if (Sprite is not null)
+            if (_currentSprite is not null)
             {
-                renderer.DrawSprite(Sprite, DrawMode,
+                renderer.DrawSprite(_currentSprite, DrawMode,
                     BoundingRectangle, ClipMask, Color);
             }
             else if (Skin is not StandardSkin.None)

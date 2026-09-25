@@ -43,7 +43,7 @@ namespace TankRacerViewer.Core
 
             _sprite = new Sprite();
             _image = new SpriteElement(
-                sprite: _sprite,
+                spriteSource: _sprite,
                 sizeToSource: true,
                 drawMode: DrawMode.Simple
             );

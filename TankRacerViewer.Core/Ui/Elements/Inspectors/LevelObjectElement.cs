@@ -79,7 +79,7 @@ namespace TankRacerViewer.Core
             _boundingBoxButton.PointerClick += OnBoundingBoxButtonPointerClick;
 
             _lookAtButton = CreateButton(iconSkin: StandardSkin.ScrollButton);
-            _lookAtButton.Icon.Sprite = IconCollection.Get(IconName.LookAt);
+            _lookAtButton.Icon.SpriteSource = IconCollection.Get(IconName.LookAt);
             _lookAtButton.PointerClick += OnLookAtButtonPointerClick;
 
             _name = new TextElement(
@@ -152,7 +152,7 @@ namespace TankRacerViewer.Core
             if (_data is null)
                 return;
 
-            _visibilityButton.Icon.Sprite = _data.IsEnabled
+            _visibilityButton.Icon.SpriteSource = _data.IsEnabled
                 ? IconCollection.Get(IconName.ShowAll)
                 : IconCollection.Get(IconName.HideAll);
         }
@@ -162,7 +162,7 @@ namespace TankRacerViewer.Core
             if (_data is null)
                 return;
 
-            _boundingBoxButton.Icon.Sprite = _isBoundingBoxEnabled
+            _boundingBoxButton.Icon.SpriteSource = _isBoundingBoxEnabled
                 ? IconCollection.Get(IconName.BoundingBoxOn)
                 : IconCollection.Get(IconName.BoundingBoxOff);
         }

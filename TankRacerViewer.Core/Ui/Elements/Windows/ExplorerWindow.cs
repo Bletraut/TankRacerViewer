@@ -522,7 +522,10 @@ namespace TankRacerViewer.Core
         private void OnInputAreaClicked(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
-            Root.ShowInOverlay(_overlayInputInterceptorParent,
+            if (Context is null)
+                return;
+
+            Context.Root.ShowInOverlay(_overlayInputInterceptorParent,
                 Vector2.Zero, Vector2.Zero, false, false);
             _contextMenu.Show(pointerEvent.Position.ToVector2());
         }

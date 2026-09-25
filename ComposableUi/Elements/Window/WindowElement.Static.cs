@@ -257,7 +257,7 @@ namespace ComposableUi
                         topPadding: 4,
                         bottomPadding: 8,
                         innerElement: new SpriteElement(
-                            sprite: sprite,
+                            spriteSource: sprite,
                             skin: skin,
                             color: Color.Black
                         )

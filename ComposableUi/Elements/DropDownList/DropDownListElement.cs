@@ -245,8 +245,13 @@ namespace ComposableUi
 
         private void ShowItemList()
         {
+            if (Context is null)
+                return;
+
             if (_items.Count <= 0)
                 return;
+
+            _itemLayout.ApplyContext(Context);
 
             var visibleRectangle = ClipMask ?? BoundingRectangle;
 
@@ -272,9 +277,9 @@ namespace ComposableUi
 
             Layer = BuiltInLayer.Overlay;
 
-            Root.ShowInOverlay(_overlayInputInterceptorParent,
+            Context.Root.ShowInOverlay(_overlayInputInterceptorParent,
                 Vector2.Zero, Vector2.Zero, false, false);
-            Root.ShowInOverlay(_itemContainer, position, fallbackPosition);
+            Context.Root.ShowInOverlay(_itemContainer, position, fallbackPosition);
         }
 
         private void HideItemList()

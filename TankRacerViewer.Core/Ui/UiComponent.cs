@@ -10,7 +10,7 @@ namespace TankRacerViewer.Core
 {
     public sealed partial class UiComponent : DrawableGameComponent
     {
-        public UiManager UiManager { get; }
+        public UiInstance UiInstance { get; }
 
         private readonly MainWindow _mainWindow;
 
@@ -22,15 +22,15 @@ namespace TankRacerViewer.Core
             _mainWindow = mainWindow;
             _mainWindow.Window.ClientSizeChanged += OnClientSizeChanged;
 
-            UiManager = new UiManager(mainWindow.GraphicsDevice, mainWindow.Content,
+            UiInstance = new UiInstance(mainWindow.GraphicsDevice, mainWindow.Content,
                 mainWindow.Window, spriteBatch);
             RefreshUiRootSize();
 
             _mainLayer = new ContainerElement();
-            UiManager.Root.AddChild(new ExpandedElement(_mainLayer));
+            UiInstance.Root.AddChild(new ExpandedElement(_mainLayer));
 
             _overlayLayer = new ContainerElement();
-            UiManager.Root.AddChild(new ExpandedElement(_overlayLayer));
+            UiInstance.Root.AddChild(new ExpandedElement(_overlayLayer));
 
             CreateWindows();
             CreateMenuBar();
@@ -38,7 +38,7 @@ namespace TankRacerViewer.Core
 
         private void RefreshUiRootSize()
         {
-            UiManager.Root.Size = _mainWindow.Window.ClientBounds.Size.ToVector2();
+            UiInstance.Root.Size = _mainWindow.Window.ClientBounds.Size.ToVector2();
         }
 
         protected override void Dispose(bool disposing)
@@ -51,7 +51,7 @@ namespace TankRacerViewer.Core
 
         public override void Update(GameTime gameTime)
         {
-            UiManager.Update(gameTime);
+            UiInstance.Update(gameTime);
 
             var isControlPressed = Input.IsKeyPressed(Keys.LeftControl)
                 || Input.IsKeyPressed(Keys.RightControl);
@@ -61,7 +61,7 @@ namespace TankRacerViewer.Core
 
         public override void Draw(GameTime gameTime)
         {
-            UiManager.Draw(gameTime);
+            UiInstance.Draw(gameTime);
         }
 
         private void OnClientSizeChanged(object sender, EventArgs arguments)

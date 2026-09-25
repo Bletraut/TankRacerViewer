@@ -1,12 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Diagnostics;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace ComposableUi
 {
     public sealed class TextElement : Element, IDrawableElement
     {
-        public static SpriteFont DefaultSpriteFont { get; internal set; }
-
         public static readonly Vector2 DefaultSize = new(200, 50);
 
         private string _text;
@@ -26,7 +26,7 @@ namespace ComposableUi
             get => _spriteFont;
             set
             {
-                if (SetAndChangeState(ref _spriteFont, value ?? DefaultSpriteFont))
+                if (SetAndChangeState(ref _spriteFont, value))
                     OnTextChanged();
             }
         }
@@ -71,6 +71,8 @@ namespace ComposableUi
             }
         }
 
+        private SpriteFont _currentSpriteFont;
+
         private bool _isTextSizeDirty = true;
 
         public TextElement(string text = default,
@@ -100,7 +102,7 @@ namespace ComposableUi
                 return;
 
             _isTextSizeDirty = false;
-            _textSize = SpriteFont?.MeasureString(Text) ?? Vector2.Zero;
+            _textSize = _currentSpriteFont?.MeasureString(Text) ?? Vector2.Zero;
         }
 
         protected internal override Rectangle? CalculateClipMask()
@@ -118,6 +120,9 @@ namespace ComposableUi
 
         public override Vector2 CalculatePreferredSize()
         {
+            if (SetAndChangeState(ref _currentSpriteFont, SpriteFont ?? Context?.Theme.DefaultSpriteFont))
+                OnTextChanged();
+
             var textSize = TextSize;
 
             return new Vector2()
@@ -134,7 +139,7 @@ namespace ComposableUi
 
         void IDrawableElement.Draw(IUiRenderer renderer)
         {
-            if (SpriteFont is null)
+            if (_currentSpriteFont is null)
                 return;
 
             if (string.IsNullOrEmpty(Text))
@@ -143,7 +148,7 @@ namespace ComposableUi
             var localPosition = Size * TextAlignmentFactor - PivotOffset
                 - TextSize * TextAlignmentFactor;
 
-            renderer.DrawString(SpriteFont, Text, localPosition + Position, ClipMask, Color);
+            renderer.DrawString(_currentSpriteFont, Text, localPosition + Position, ClipMask, Color);
         }
 
         private void OnTextChanged()

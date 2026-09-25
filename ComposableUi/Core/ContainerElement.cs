@@ -87,12 +87,12 @@ namespace ComposableUi
             AddChild(child);
         }
 
-        protected internal override void ApplyRoot(RootElement root)
+        protected internal override void ApplyContext(Context context)
         {
-            base.ApplyRoot(root);
+            base.ApplyContext(context);
 
             foreach (var child in _children)
-                child.ApplyRoot(root);
+                child.ApplyContext(context);
         }
 
         public override Element GetChildAt(int index)

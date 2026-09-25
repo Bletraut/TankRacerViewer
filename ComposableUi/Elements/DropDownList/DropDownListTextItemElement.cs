@@ -232,7 +232,7 @@ namespace ComposableUi
                 _ => (NormalBackgroundSprite, NormalBackgroundSkin, NormalBackgroundColor, NormalValueColor)
             };
 
-            Background.Sprite = backgroundSprite;
+            Background.SpriteSource = backgroundSprite;
             Background.Skin = backgroundSkin;
             Background.Color = backgroundColor;
             Value.Color = valueColor;

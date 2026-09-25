@@ -6,6 +6,8 @@ namespace ComposableUi
 {
     public class Element
     {
+        public Context Context { get; private set; }
+
         private ParentElement _parent;
         public ParentElement Parent
         {
@@ -16,13 +18,11 @@ namespace ComposableUi
                     return;
 
                 _parent = value;
-                ApplyRoot(_parent?.Root);
+                ApplyContext(_parent?.Context);
 
                 OnTransformChanged();
             }
         }
-
-        public RootElement Root { get; private set; }
 
         private uint _layer = BuiltInLayer.Main;
         public uint Layer
@@ -164,9 +164,9 @@ namespace ComposableUi
         protected internal virtual Rectangle? CalculateClipMask()
             => Parent?.ClipMask;
 
-        protected internal virtual void ApplyRoot(RootElement root)
+        protected internal virtual void ApplyContext(Context context)
         {
-            Root = root;
+            Context = context;
         }
 
         public IEnumerable<ParentElement> GetParentsRecursively()
@@ -264,7 +264,7 @@ namespace ComposableUi
 
         protected void OnStateChanged()
         {
-            Root?.MarkAsDirty();
+            Context?.Root.MarkAsDirty();
         }
     }
 

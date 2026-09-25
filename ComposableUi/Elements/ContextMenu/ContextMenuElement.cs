@@ -208,13 +208,13 @@ namespace ComposableUi
 
         public void Show(Vector2 position)
         {
-            if (Root is null)
+            if (Context is null)
                 return;
 
             ResetItemsHover();
             HideAllSubmenus();
 
-            Root.ShowInOverlay(this, position, position,
+            Context.Root.ShowInOverlay(this, position, position,
                 ClampToRootWidth, ClampToRootHeight);
         }
 
@@ -252,6 +252,9 @@ namespace ComposableUi
 
         private void ShowSubmenu(Submenu submenu)
         {
+            if (Context is null)
+                return;
+
             submenu.Menu.ResetItemsHover();
             submenu.Menu.HideAllSubmenus();
 
@@ -266,7 +269,7 @@ namespace ComposableUi
             var position = topRightPosition + size * submenu.Menu.Pivot;
             var fallbackPosition = topLeftPosition + size * submenu.Menu.Pivot with { X = submenu.Menu.Pivot.X - 1 };
 
-            Root.ShowInOverlay(submenu.Menu, position, fallbackPosition,
+            Context.Root.ShowInOverlay(submenu.Menu, position, fallbackPosition,
                 ClampToRootWidth, ClampToRootHeight);
         }
 

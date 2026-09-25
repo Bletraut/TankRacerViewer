@@ -79,7 +79,7 @@ namespace TankRacerViewer.Core
                             children: [
                                 new SpriteElement(
                                     size: new Vector2(100),
-                                    sprite: IconCollection.Get(IconName.Logo),
+                                    spriteSource: IconCollection.Get(IconName.Logo),
                                     sizeToSource: false,
                                     drawMode: DrawMode.Simple
                                 )

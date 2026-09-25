@@ -207,7 +207,7 @@ namespace TankRacerViewer.Core
         {
             Data = data;
 
-            Icon.Sprite = Data.Sprite;
+            Icon.SpriteSource = Data.Sprite;
             Icon.Skin = Data.Skin;
             Name.Text = Data.Name;
             Indent = Data.Indent;

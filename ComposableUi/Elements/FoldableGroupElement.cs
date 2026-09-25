@@ -68,7 +68,7 @@ namespace ComposableUi
 
             Icon = new SpriteElement(
                 size: DefaultIconSize,
-                sprite: iconSprite,
+                spriteSource: iconSprite,
                 skin: iconSkin
             );
 

@@ -148,7 +148,7 @@ namespace ComposableUi
 
             Icon = new SpriteElement(
                 size: iconSize ?? DefaultIconSize,
-                sprite: iconSprite,
+                spriteSource: iconSprite,
                 skin: iconSkin,
                 sizeToSource: true,
                 drawMode: DrawMode.Simple

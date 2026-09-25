@@ -209,7 +209,7 @@ namespace TankRacerViewer.Core
 
         private void RefreshVisibilityModeButtonVisualState()
         {
-            _visibilityModeButton.Icon.Sprite = _currentVisibilityMode switch
+            _visibilityModeButton.Icon.SpriteSource = _currentVisibilityMode switch
             {
                 VisibilityMode.ResetAll => IconCollection.Get(IconName.ShowAll),
                 VisibilityMode.ShowAll => IconCollection.Get(IconName.ShowAll),
@@ -222,7 +222,7 @@ namespace TankRacerViewer.Core
 
         private void RefreshBoundingBoxModeButtonVisualState()
         {
-            _boundingBoxModeButton.Icon.Sprite = _currentBoundingBoxMode switch
+            _boundingBoxModeButton.Icon.SpriteSource = _currentBoundingBoxMode switch
             {
                 BoundingBoxMode.ResetAll => IconCollection.Get(IconName.BoundingBoxOn),
                 BoundingBoxMode.ShowAll => IconCollection.Get(IconName.BoundingBoxOn),

@@ -50,7 +50,7 @@ namespace ComposableUi
 
             Icon = new SpriteElement(
                 size: new Vector2(DefaultIconSize),
-                sprite: iconSprite,
+                spriteSource: iconSprite,
                 skin: StandardSkin.RectangleButton
             );
 
@@ -86,14 +86,14 @@ namespace ComposableUi
                 TabState.Selected => (SelectedSprite, SelectedSkin),
                 _ => (InactiveSprite, InactiveSkin),
             };
-            Background.Sprite = Sprite;
+            Background.SpriteSource = Sprite;
             Background.Skin = Skin;
         }
 
         public void CopyHeaderFrom(TabElement tab)
         {
             Icon.Size = tab.Icon.Size;
-            Icon.Sprite = tab.Icon.Sprite;
+            Icon.SpriteSource = tab.Icon.SpriteSource;
             Title.Text = tab.Title.Text;
         }
     }

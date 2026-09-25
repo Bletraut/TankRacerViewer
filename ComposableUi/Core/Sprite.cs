@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ComposableUi
 {
-    public sealed class Sprite
+    public sealed class Sprite : ISpriteSource
     {
         public Texture2D Texture { get; set; }
         public Rectangle SourceRectangle { get; set; }
@@ -15,5 +15,7 @@ namespace ComposableUi
             || TopBorder != 0
             || RightBorder != SourceRectangle.Width
             || BottomBorder != SourceRectangle.Height;
+
+        Sprite ISpriteSource.Resolve(Context context) => this;
     }
 }

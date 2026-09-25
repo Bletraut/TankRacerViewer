@@ -43,11 +43,11 @@ namespace ComposableUi
             Pivot = pivot ?? Alignment.Center;
         }
 
-        protected internal override void ApplyRoot(RootElement root)
+        protected internal override void ApplyContext(Context context)
         {
-            base.ApplyRoot(root);
+            base.ApplyContext(context);
 
-            InnerElement?.ApplyRoot(root);
+            InnerElement?.ApplyContext(context);
         }
 
         public override void Rebuild(Vector2 size, bool excludeChildren)

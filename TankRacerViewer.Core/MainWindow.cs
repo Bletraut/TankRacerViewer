@@ -415,7 +415,7 @@ namespace TankRacerViewer.Core
 
             if (_renderer.RenderContext == _gameWindowRenderContext)
             {
-                if (!_uiComponent.UiManager.IsAnyElementPressed)
+                if (!_uiComponent.UiInstance.IsAnyElementPressed)
                     _cameraController.Update(gameTime);
             }
             else

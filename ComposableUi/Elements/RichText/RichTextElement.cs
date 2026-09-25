@@ -60,7 +60,7 @@ namespace ComposableUi
             get => _spriteFont;
             set
             {
-                if (SetAndChangeState(ref _spriteFont, value ?? TextElement.DefaultSpriteFont))
+                if (SetAndChangeState(ref _spriteFont, value))
                     OnTextChanged();
             }
         }

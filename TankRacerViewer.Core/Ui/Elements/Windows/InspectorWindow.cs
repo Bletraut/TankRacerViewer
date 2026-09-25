@@ -32,36 +32,36 @@ namespace TankRacerViewer.Core
 
         public void ShowTextureInspector(TextureAssetView textureAssetView)
         {
-            _textureInspector.SetTarget(textureAssetView);
             _scrollView.Content = _textureInspector;
+            _textureInspector.SetTarget(textureAssetView);
         }
 
         public void ShowModelInspector(ModelAssetView modelAssetView)
         {
-            _modelInspector.SetTarget(modelAssetView);
             _scrollView.Content = _modelInspector;
+            _modelInspector.SetTarget(modelAssetView);
         }
 
         public void ShowLevelInspector(LevelView levelView,
             Action<LevelObject> levelObjectSelectedAction)
         {
+            _scrollView.Content = _levelInspector;
             _levelInspector.SetTarget(levelView);
             _levelInspector.LevelObjectSelectedAction = levelObjectSelectedAction;
-            _scrollView.Content = _levelInspector;
         }
 
         public void ShowTankInspector(TankView tankView,
             Action<LevelObject> levelObjectSelectedAction)
         {
+            _scrollView.Content = _tankInspector;
             _tankInspector.SetTarget(tankView);
             _tankInspector.LevelObjectSelectedAction = levelObjectSelectedAction;
-            _scrollView.Content = _tankInspector;
         }
 
         public void ShowBackgroundInspector(BackgroundAssetView backgroundAssetView)
         {
-            _backgroundInspector.SetTarget(backgroundAssetView);
             _scrollView.Content = _backgroundInspector;
+            _backgroundInspector.SetTarget(backgroundAssetView);
         }
 
         public void HideInspector()

@@ -65,7 +65,7 @@ namespace TankRacerViewer.Core
                 ? DefaultEvenBackgroundSkin
                 : DefaultOddBackgroundSkin;
 
-            _icon.Sprite = data.Type switch
+            _icon.SpriteSource = data.Type switch
             {
                 MessageType.Info => IconCollection.Get(IconName.MessageBig),
                 MessageType.Warning => IconCollection.Get(IconName.ErrorBig),

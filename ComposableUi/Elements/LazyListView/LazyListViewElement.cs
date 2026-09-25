@@ -17,7 +17,19 @@ namespace ComposableUi
         public IReadOnlyList<TItem> Items { get; }
 
         private TItem _templateItem;
-        private TItem TemplateItem => _templateItem ??= _itemFactory();
+        private TItem TemplateItem
+        {
+            get
+            {
+                if (_templateItem is null)
+                {
+                    _templateItem = _itemFactory();
+                    _templateItem.ApplyContext(Context);
+                }
+
+                return _templateItem;
+            }
+        }
 
         private readonly Func<TItem> _itemFactory;
         private readonly Stack<TItem> _pool = [];
@@ -155,6 +167,12 @@ namespace ComposableUi
         {
             item.ClearData();
             _pool.Push(item);
+        }
+
+        protected internal override void ApplyContext(Context context)
+        {
+            base.ApplyContext(context);
+            TemplateItem.ApplyContext(context);
         }
 
         public override Vector2 CalculatePreferredSize()

@@ -7,9 +7,16 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ComposableUi
 {
-    public sealed class UiManager
+    public sealed class UiInstance
     {
-        public RootElement Root { get; }
+        public Context Context { get; }
+
+        public RootElement Root => Context.Root;
+        public Theme Theme
+        {
+            get => Context.Theme;
+            set => Context.Theme = value;
+        }
 
         private IPointerInputProvider _pointerInputProvider;
         public IPointerInputProvider PointerInputProvider
@@ -74,7 +81,7 @@ namespace ComposableUi
         private Point _currentPointerPosition;
         private Point _lastPointerPosition;
 
-        public UiManager(GraphicsDevice graphicsDevice,
+        public UiInstance(GraphicsDevice graphicsDevice,
             ContentManager contentManager,
             GameWindow gameWindow,
             SpriteBatch spriteBatch)
@@ -88,7 +95,7 @@ namespace ComposableUi
         {
         }
 
-        public UiManager(GraphicsDevice graphicsDevice,
+        public UiInstance(GraphicsDevice graphicsDevice,
             ContentManager contentManager,
             IPointerInputProvider pointerInputProvider,
             IKeyboardInputProvider keyboardInputProvider,
@@ -104,13 +111,11 @@ namespace ComposableUi
             ClipboardProvider = clipboardProvider;
             UiRenderer = uiRenderer;
 
-            Root = new RootElement
+            var theme = new Theme()
             {
-                Pivot = Alignment.TopLeft
+                DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont")
             };
-            Root.ApplyRoot(Root);
-
-            TextElement.DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont");
+            Context = new Context(theme);
 
             AddElementSolver(new HierarchyWheelScrollSolver());
             AddElementSolver(new ComposableWindowsSolver());
@@ -355,11 +360,11 @@ namespace ComposableUi
 
         private void RebuildIfDirty()
         {
-            if (!Root.IsDirty)
+            if (!Context.Root.IsDirty)
                 return;
 
-            var size = Root.CalculatePreferredSize();
-            Root.Rebuild(size);
+            var size = Context.Root.CalculatePreferredSize();
+            Context.Root.Rebuild(size);
 
             RefreshVisibleElementLists();
         }
@@ -374,7 +379,7 @@ namespace ComposableUi
 
             _stack.Clear();
             _nextStack.Clear();
-            _stack.Push((0, Root));
+            _stack.Push((0, Context.Root));
 
             uint currentLayer = 0;
             uint nextMinLayer = uint.MaxValue;

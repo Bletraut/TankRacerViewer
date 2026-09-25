@@ -9,8 +9,9 @@ namespace TankRacerViewer.Core
 
         public static void SetScaledSprite(this SpriteElement spriteElement, string iconName, float scale)
         {
-            spriteElement.Sprite = IconCollection.Get(iconName);
-            spriteElement.Size = spriteElement.Sprite.SourceRectangle.Size.ToVector2() * scale;
+            var sprite = IconCollection.Get(iconName);
+            spriteElement.SpriteSource = sprite;
+            spriteElement.Size = sprite.SourceRectangle.Size.ToVector2() * scale;
         }
 
         public static void SetToggle(this ContentButtonElement toggle,

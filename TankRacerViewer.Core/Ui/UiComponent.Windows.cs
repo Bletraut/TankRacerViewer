@@ -76,9 +76,9 @@ namespace TankRacerViewer.Core
 
         private void ShowAboutWindow()
         {
-            UiManager.Root.ShowInOverlay(_overlayInputInterceptorParent,
+            UiInstance.Root.ShowInOverlay(_overlayInputInterceptorParent,
                 Vector2.Zero, Vector2.Zero);
-            UiManager.Root.ShowInOverlay(AboutWindow,
+            UiInstance.Root.ShowInOverlay(AboutWindow,
                 _windowLayout.Position, Vector2.Zero);
 
             AboutWindow.InnerElement.Size = new Vector2(400, 320);
