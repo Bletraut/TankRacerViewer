@@ -9,6 +9,24 @@ namespace ComposableUi
 {
     public sealed class UiInstance
     {
+        // Static.
+        private static Theme _defaultTheme;
+
+        public static Theme GetOrCreateDefaultTheme(ContentManager contentManager)
+        {
+            if (_defaultTheme is null)
+            {
+                _defaultTheme = new Theme()
+                {
+                    DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont")
+                };
+                BuiltInSprite.Load(contentManager, _defaultTheme.SpriteResolver, "ComposableUi\\UiElementsAtlas");
+            }
+
+            return _defaultTheme;
+        }
+
+        // Class.
         public Context Context { get; }
 
         public RootElement Root => Context.Root;
@@ -86,7 +104,7 @@ namespace ComposableUi
             GameWindow gameWindow,
             SpriteBatch spriteBatch)
             : this(graphicsDevice,
-                  contentManager,
+                  GetOrCreateDefaultTheme(contentManager),
                   new DefaultPointerInputProvider(),
                   new DefaultKeyboardInputProvider(),
                   new DefaultTextInputProvider(gameWindow),
@@ -96,7 +114,7 @@ namespace ComposableUi
         }
 
         public UiInstance(GraphicsDevice graphicsDevice,
-            ContentManager contentManager,
+            Theme theme,
             IPointerInputProvider pointerInputProvider,
             IKeyboardInputProvider keyboardInputProvider,
             ITextInputProvider textInputProvider,
@@ -111,11 +129,6 @@ namespace ComposableUi
             ClipboardProvider = clipboardProvider;
             UiRenderer = uiRenderer;
 
-            var theme = new Theme()
-            {
-                DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont")
-            };
-            BuiltInSprite.Load(contentManager, theme.SpriteResolver, "ComposableUi\\UiElementsAtlas");
             Context = new Context(theme);
 
             AddElementSolver(new HierarchyWheelScrollSolver());
