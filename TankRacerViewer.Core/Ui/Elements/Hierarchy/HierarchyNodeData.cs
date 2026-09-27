@@ -14,8 +14,7 @@ namespace TankRacerViewer.Core
         public object File { get; set; }
 
         public string Name { get; set; }
-        public Sprite Sprite { get; set; }
-        public StandardSkin Skin { get; set; }
+        public ISpriteSource Sprite { get; set; }
 
         public float Indent => Parent is not null && !Parent.IsHidden ? Parent.Indent + DefaultIndent : 0;
 

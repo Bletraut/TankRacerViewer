@@ -36,9 +36,9 @@ namespace TankRacerViewer.Core
 
             _repositoryLinkButton = new ContentButtonElement(
                 text: _repositoryUrl,
-                normalSkin: StandardSkin.None,
-                hoverSkin: StandardSkin.None,
-                pressedSkin: StandardSkin.None,
+                normalSprite: null,
+                hoverSprite: null,
+                pressedSprite: null,
                 normalTextColor: Color.DeepSkyBlue,
                 hoverTextColor: Color.Coral,
                 pressedTextColor: Color.DarkBlue
@@ -52,9 +52,9 @@ namespace TankRacerViewer.Core
 
             _closeButton = new ContentButtonElement(
                 text: "Close",
-                normalSkin: StandardSkin.RoundedButton,
-                hoverSkin: StandardSkin.HoverRoundedButton,
-                pressedSkin: StandardSkin.PressedRoundedButton,
+                normalSprite: BuiltInSprite.RoundedButton,
+                hoverSprite: BuiltInSprite.HoverRoundedButton,
+                pressedSprite: BuiltInSprite.PressedRoundedButton,
                 normalTextColor: Color.Black,
                 hoverTextColor: Color.Black,
                 pressedTextColor: Color.Black

@@ -4,6 +4,8 @@ namespace ComposableUi
 {
     public sealed class Theme
     {
-        public SpriteFont DefaultSpriteFont { get; set; }
+        public required SpriteFont DefaultSpriteFont { get; set; }
+
+        public SpriteResolver SpriteResolver { get; } = new();
     }
 }

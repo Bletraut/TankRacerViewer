@@ -11,13 +11,6 @@ namespace ComposableUi
             set => SetAndChangeState(ref _spriteSource, value);
         }
 
-        private StandardSkin _skin;
-        public StandardSkin Skin
-        {
-            get => _skin;
-            set => SetAndChangeState(ref _skin, value);
-        }
-
         public Color Color { get; set; }
 
         private bool _sizeToSource;
@@ -38,7 +31,6 @@ namespace ComposableUi
 
         public SpriteElement(Vector2? size = default,
             ISpriteSource spriteSource = default,
-            StandardSkin skin = StandardSkin.None,
             Color? color = default,
             bool sizeToSource = false,
             DrawMode drawMode = DrawMode.Sliced)
@@ -46,7 +38,6 @@ namespace ComposableUi
             Size = size ?? Vector2.Zero;
 
             SpriteSource = spriteSource;
-            Skin = skin;
             Color = color ?? Color.White;
             SizeToSource = sizeToSource;
             DrawMode = drawMode;
@@ -70,11 +61,6 @@ namespace ComposableUi
             if (_currentSprite is not null)
             {
                 renderer.DrawSprite(_currentSprite, DrawMode,
-                    BoundingRectangle, ClipMask, Color);
-            }
-            else if (Skin is not StandardSkin.None)
-            {
-                renderer.DrawSkinnedRectangle(Skin, DrawMode,
                     BoundingRectangle, ClipMask, Color);
             }
         }

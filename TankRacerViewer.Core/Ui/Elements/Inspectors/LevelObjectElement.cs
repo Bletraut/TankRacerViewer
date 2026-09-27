@@ -16,8 +16,8 @@ namespace TankRacerViewer.Core
         public const int DefaultContentSpacing = 4;
         public const int DefaultContentPaddings = 4;
 
-        public const StandardSkin DefaultNormalBackgroundSkin = StandardSkin.LightRectangle;
-        public const StandardSkin DefaultHoverBackgroundSkin = StandardSkin.HoverLightRectangle;
+        public static readonly ISpriteSource DefaultNormalBackgroundSprite = BuiltInSprite.LightRectangle;
+        public static readonly ISpriteSource DefaultHoverBackgroundSprite = BuiltInSprite.HoverLightRectangle;
 
         // Static.
         public static readonly Vector2 DefaultIconSize = new(18);
@@ -27,15 +27,15 @@ namespace TankRacerViewer.Core
 
         private static readonly StringBuilder _stringBuilder = new();
 
-        public static ContentButtonElement CreateButton(StandardSkin iconSkin = default)
+        public static ContentButtonElement CreateButton(ISpriteSource iconSprite = default)
         {
             var button = new ContentButtonElement(
                 iconSize: DefaultIconSize,
-                iconSkin: iconSkin,
-                normalSkin: StandardSkin.LightRectangleButton,
-                hoverSkin: StandardSkin.HoverLightRectangleButton,
-                pressedSkin: StandardSkin.PressedLightRectangleButton,
-                disabledSkin: StandardSkin.DisabledLightRectangleButton,
+                iconSprite: iconSprite,
+                normalSprite: BuiltInSprite.LightRectangleButton,
+                hoverSprite: BuiltInSprite.HoverLightRectangleButton,
+                pressedSprite: BuiltInSprite.PressedLightRectangleButton,
+                disabledSprite: BuiltInSprite.DisabledLightRectangleButton,
                 normalButtonColor: Color.White,
                 hoverButtonColor: Color.White,
                 pressedButtonColor: Color.White
@@ -69,7 +69,7 @@ namespace TankRacerViewer.Core
         public LevelObjectElement()
         {
             _background = new SpriteElement(
-                skin: DefaultNormalBackgroundSkin
+                spriteSource: DefaultNormalBackgroundSprite
             );
 
             _visibilityButton = CreateButton();
@@ -78,7 +78,7 @@ namespace TankRacerViewer.Core
             _boundingBoxButton = CreateButton();
             _boundingBoxButton.PointerClick += OnBoundingBoxButtonPointerClick;
 
-            _lookAtButton = CreateButton(iconSkin: StandardSkin.ScrollButton);
+            _lookAtButton = CreateButton(iconSprite: BuiltInSprite.ScrollButton);
             _lookAtButton.Icon.SpriteSource = IconCollection.Get(IconName.LookAt);
             _lookAtButton.PointerClick += OnLookAtButtonPointerClick;
 
@@ -132,9 +132,9 @@ namespace TankRacerViewer.Core
 
         private void RefreshBackgroundColor()
         {
-            _background.Skin = _hoverInputHandler.IsHover
-                ? DefaultHoverBackgroundSkin
-                : DefaultNormalBackgroundSkin;
+            _background.SpriteSource = _hoverInputHandler.IsHover
+                ? DefaultHoverBackgroundSprite
+                : DefaultNormalBackgroundSprite;
         }
 
         private void RefreshBoundingBoxColor()

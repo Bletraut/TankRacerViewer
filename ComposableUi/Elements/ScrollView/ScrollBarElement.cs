@@ -54,14 +54,14 @@ namespace ComposableUi
             var defaultPadding = new Vector2(DefaultMainAxisPadding) * mainAxis
                 + new Vector2(DefaultCrossAxisPadding) * crossAxis;
 
-            Background = new SpriteElement(skin: StandardSkin.SolidDarkPixel);
+            Background = new SpriteElement(spriteSource: BuiltInSprite.SolidDarkPixel);
             AddChild(new ExpandedElement(innerElement: Background));
 
             Button = new ButtonElement(new Vector2(DefaultCrossAxisSize, DefaultCrossAxisSize),
-                normalSkin: StandardSkin.ScrollButton,
-                hoverSkin: StandardSkin.ScrollButtonHover,
-                pressedSkin: StandardSkin.ScrollButtonHover,
-                disabledSkin: StandardSkin.ScrollButtonHover);
+                normalSprite: BuiltInSprite.ScrollButton,
+                hoverSprite: BuiltInSprite.ScrollButtonHover,
+                pressedSprite: BuiltInSprite.ScrollButtonHover,
+                disabledSprite: BuiltInSprite.ScrollButtonHover);
             _buttonExpanded = new ExpandedElement(Button,
                 expandWidth: mainAxis.Y > 0,
                 expandHeight: mainAxis.X > 0,

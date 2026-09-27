@@ -8,9 +8,11 @@ namespace ComposableUi
         public const float DefaultContentSpacing = 4;
         public const float DefaultContentVerticalPadding = 4;
 
-        public const StandardSkin DefaultTitleBackgroundSkin = StandardSkin.SelectionSoftDarkPixel;
-        public const StandardSkin DefaultContentBackgroundSkin = StandardSkin.HoverSoftDarkPixel;
+        // Static.
+        public static readonly ISpriteSource DefaultTitleBackgroundSprite = BuiltInSprite.SelectionSoftDarkPixel;
+        public static readonly ISpriteSource DefaultContentBackgroundSprite = BuiltInSprite.HoverSoftDarkPixel;
 
+        // Class.
         public readonly float DefaultTitleHorizontalPadding = 4;
         public readonly float DefaultContentIndent = 12;
 
@@ -26,7 +28,7 @@ namespace ComposableUi
                 _isFolded = value;
 
                 ContentLayout.IsEnabled = !_isFolded;
-                RefreshFoldButtonSkin();
+                RefreshFoldButtonSprite();
             }
         }
 
@@ -42,19 +44,18 @@ namespace ComposableUi
 
         private readonly ColumnLayout _groupColumn;
 
-        public FoldableGroupElement(Sprite iconSprite = default,
-            StandardSkin iconSkin = default,
+        public FoldableGroupElement(ISpriteSource iconSprite = default,
             string name = default,
             Element content = default,
             bool isFolded = default,
-            StandardSkin titleBackgroundSkin = DefaultTitleBackgroundSkin,
-            StandardSkin contentBackgroundSkin = DefaultContentBackgroundSkin)
+            ISpriteSource titleBackgroundSprite = default,
+            ISpriteSource contentBackgroundSprite = default)
         {
             TitleBackground = new SpriteElement(
-                skin: titleBackgroundSkin
+                spriteSource: titleBackgroundSprite ?? DefaultTitleBackgroundSprite
             );
             ContentBackground = new SpriteElement(
-                skin: contentBackgroundSkin
+                spriteSource: contentBackgroundSprite ?? DefaultContentBackgroundSprite
             );
 
             FoldButton = new ButtonElement(
@@ -68,8 +69,7 @@ namespace ComposableUi
 
             Icon = new SpriteElement(
                 size: DefaultIconSize,
-                spriteSource: iconSprite,
-                skin: iconSkin
+                spriteSource: iconSprite
             );
 
             Name = new TextElement(
@@ -132,16 +132,16 @@ namespace ComposableUi
             IsFolded = isFolded;
         }
 
-        private void RefreshFoldButtonSkin()
+        private void RefreshFoldButtonSprite()
         {
-            var skin = IsFolded
-                ? StandardSkin.RightArrowIcon
-                : StandardSkin.DownArrowIcon;
+            var sprite = IsFolded
+                ? BuiltInSprite.RightArrowIcon
+                : BuiltInSprite.DownArrowIcon;
 
-            FoldButton.NormalSkin = skin;
-            FoldButton.HoverSkin = skin;
-            FoldButton.PressedSkin = skin;
-            FoldButton.DisabledSkin = skin;
+            FoldButton.NormalSprite = sprite;
+            FoldButton.HoverSprite = sprite;
+            FoldButton.PressedSprite = sprite;
+            FoldButton.DisabledSprite = sprite;
         }
 
         private void OnFoldButtonPointerClick(PointerInputHandlerElement sender,

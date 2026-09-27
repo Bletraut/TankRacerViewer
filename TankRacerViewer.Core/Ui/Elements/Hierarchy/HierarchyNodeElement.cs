@@ -9,42 +9,38 @@ namespace TankRacerViewer.Core
     {
         public const float DefaultSpacing = 4;
 
-        public const StandardSkin DefaultNormalBackgroundSkin = StandardSkin.None;
-        public const StandardSkin DefaultHoverBackgroundSkin = StandardSkin.HoverSoftDarkPixel;
-        public const StandardSkin DefaultSelectedBackgroundSkin = StandardSkin.SelectionStrongDarkPixel;
-
         private readonly float DefaultTitleHorizontalPadding = 4;
 
         public readonly Vector2 DefaultFoldButtonSize = new(12);
         public readonly Vector2 DefaultIconSize = new(24);
 
-        private StandardSkin _normalBackgroundSkin;
-        public StandardSkin NormalBackgroundSkin
+        private ISpriteSource _normalBackgroundSprite;
+        public ISpriteSource NormalBackgroundSprite
         {
-            get => _normalBackgroundSkin;
+            get => _normalBackgroundSprite;
             set
             {
-                _normalBackgroundSkin = value;
+                _normalBackgroundSprite = value;
                 RefreshBackgroundVisualState();
             }
         }
-        private StandardSkin _hoverBackgroundSkin;
-        public StandardSkin HoverBackgroundSkin
+        private ISpriteSource _hoverBackgroundSprite;
+        public ISpriteSource HoverBackgroundSprite
         {
-            get => _hoverBackgroundSkin;
+            get => _hoverBackgroundSprite;
             set
             {
-                _hoverBackgroundSkin = value;
+                _hoverBackgroundSprite = value;
                 RefreshBackgroundVisualState();
             }
         }
-        private StandardSkin _selectedBackgroundSkin;
-        public StandardSkin SelectedBackgroundSkin
+        private ISpriteSource _selectedBackgroundSprite;
+        public ISpriteSource SelectedBackgroundSprite
         {
-            get => _selectedBackgroundSkin;
+            get => _selectedBackgroundSprite;
             set
             {
-                _selectedBackgroundSkin = value;
+                _selectedBackgroundSprite = value;
                 RefreshBackgroundVisualState();
             }
         }
@@ -72,16 +68,16 @@ namespace TankRacerViewer.Core
         private readonly Element _foldButtonPlaceholder;
         private readonly RowLayout _titleRow;
 
-        public HierarchyNodeElement(StandardSkin normalBackgroundSkin = DefaultNormalBackgroundSkin,
-            StandardSkin hoverBackgroundSkin = DefaultHoverBackgroundSkin,
-            StandardSkin selectedBackgroundSkin = DefaultSelectedBackgroundSkin)
+        public HierarchyNodeElement(ISpriteSource normalBackgroundSprite = default,
+            ISpriteSource hoverBackgroundSprite = default,
+            ISpriteSource selectedBackgroundSprite = default)
         {
-            _normalBackgroundSkin = normalBackgroundSkin;
-            _hoverBackgroundSkin = hoverBackgroundSkin;
-            _selectedBackgroundSkin = selectedBackgroundSkin;
+            _normalBackgroundSprite = normalBackgroundSprite;
+            _hoverBackgroundSprite = hoverBackgroundSprite ?? BuiltInSprite.HoverSoftDarkPixel;
+            _selectedBackgroundSprite = selectedBackgroundSprite ?? BuiltInSprite.SelectionStrongDarkPixel;
 
             Background = new SpriteElement(
-                skin: _normalBackgroundSkin
+                spriteSource: _normalBackgroundSprite
             );
 
             ClickInputHandler = new PointerInputHandlerElement(
@@ -159,19 +155,19 @@ namespace TankRacerViewer.Core
             InnerElement = _titleRow;
         }
 
-        public void RefreshFoldButtonSkin()
+        public void RefreshFoldButtonSprite()
         {
             if (Data is null)
                 return;
 
-            var skin = Data.IsFolded
-                ? StandardSkin.RightArrowIcon
-                : StandardSkin.DownArrowIcon;
+            var sprite = Data.IsFolded
+                ? BuiltInSprite.RightArrowIcon
+                : BuiltInSprite.DownArrowIcon;
 
-            FoldButton.NormalSkin = skin;
-            FoldButton.HoverSkin = skin;
-            FoldButton.PressedSkin = skin;
-            FoldButton.DisabledSkin = skin;
+            FoldButton.NormalSprite = sprite;
+            FoldButton.HoverSprite = sprite;
+            FoldButton.PressedSprite = sprite;
+            FoldButton.DisabledSprite = sprite;
         }
 
         public void RefreshBackgroundVisualState()
@@ -181,13 +177,13 @@ namespace TankRacerViewer.Core
 
             if (Data.IsSelected)
             {
-                Background.Skin = SelectedBackgroundSkin;
+                Background.SpriteSource = SelectedBackgroundSprite;
             }
             else
             {
-                Background.Skin = HoverInputHandler.IsHover
-                    ? HoverBackgroundSkin
-                    : NormalBackgroundSkin;
+                Background.SpriteSource = HoverInputHandler.IsHover
+                    ? HoverBackgroundSprite
+                    : NormalBackgroundSprite;
             }
         }
 
@@ -208,11 +204,10 @@ namespace TankRacerViewer.Core
             Data = data;
 
             Icon.SpriteSource = Data.Sprite;
-            Icon.Skin = Data.Skin;
             Name.Text = Data.Name;
             Indent = Data.Indent;
 
-            RefreshFoldButtonSkin();
+            RefreshFoldButtonSprite();
             RefreshFoldButtonVisibility();
             RefreshBackgroundVisualState();
         }

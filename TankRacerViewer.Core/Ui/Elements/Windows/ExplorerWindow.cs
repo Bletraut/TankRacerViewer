@@ -516,7 +516,7 @@ namespace TankRacerViewer.Core
             {
                 FoldNode(node.Data);
             }
-            node.RefreshFoldButtonSkin();
+            node.RefreshFoldButtonSprite();
         }
 
         private void OnInputAreaClicked(PointerInputHandlerElement sender,

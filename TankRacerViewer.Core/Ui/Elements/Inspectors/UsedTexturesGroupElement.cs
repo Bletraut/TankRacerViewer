@@ -20,20 +20,18 @@ namespace TankRacerViewer.Core
         private readonly Dictionary<string, Texture2D> _usedTextures = [];
         private readonly List<MeshPart> _highlightedMeshParts = [];
 
-        public UsedTexturesGroupElement(Sprite iconSprite = default,
-            StandardSkin iconSkin = default,
+        public UsedTexturesGroupElement(ISpriteSource iconSprite = default,
             string name = default,
             Element content = default,
             bool isFolded = default,
-            StandardSkin titleBackgroundSkin = DefaultTitleBackgroundSkin,
-            StandardSkin contentBackgroundSkin = DefaultContentBackgroundSkin)
+            ISpriteSource titleBackgroundSprite = default,
+            ISpriteSource contentBackgroundSprite = default)
             : base(iconSprite,
-                  iconSkin,
                   name,
                   content,
                   isFolded,
-                  titleBackgroundSkin,
-                  contentBackgroundSkin)
+                  titleBackgroundSprite ?? DefaultTitleBackgroundSprite,
+                  contentBackgroundSprite ?? DefaultContentBackgroundSprite)
         {
             Icon.IsEnabled = false;
             ContentBackground.Color = Color.Black;

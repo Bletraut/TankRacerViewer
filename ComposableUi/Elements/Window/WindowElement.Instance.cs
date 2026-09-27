@@ -105,12 +105,14 @@ namespace ComposableUi
             var background = new ExpandedElement(
                 topPadding: DefaultBackgroundTopPadding,
                 innerElement: new SpriteElement(
-                    skin: StandardSkin.WindowBody
+                    spriteSource: BuiltInSprite.WindowBody
                 )
             );
 
             DragHandle = new PointerInputHandlerElement(
-                innerElement: new SpriteElement(skin: StandardSkin.InactiveTab)
+                innerElement: new SpriteElement(
+                    spriteSource: BuiltInSprite.InactiveTab
+                )
             );
             DragHandle.PointerDown += OnDragHandlePointerDown;
             DragHandle.PointerUp += OnDragHandlePointerUp;
@@ -131,7 +133,7 @@ namespace ComposableUi
             Tab.PointerDrag += OnTabButtonPointerDrag;
 
             ButtonsBackground = new SpriteElement(
-                skin: StandardSkin.TabButtonsBackground
+                spriteSource: BuiltInSprite.TabButtonsBackground
             );
 
             _buttonRow = new RowLayout(
@@ -148,16 +150,16 @@ namespace ComposableUi
                 innerElement: new ExpandedElement(ButtonsBackground)
             ));
 
-            RestoreButton = AddButton(null, StandardSkin.RestoreWindowIcon);
+            RestoreButton = AddButton(BuiltInSprite.RestoreWindowIcon);
             RestoreButton.IsEnabled = false;
             _buttonRow.AddChild(RestoreButton);
             RestoreButton.PointerClick += OnRestoreButtonPointerClick;
 
-            MaximizeButton = AddButton(null, StandardSkin.MaximizeWindowIcon);
+            MaximizeButton = AddButton(BuiltInSprite.MaximizeWindowIcon);
             _buttonRow.AddChild(MaximizeButton);
             MaximizeButton.PointerClick += OnMaximizeButtonPointerClick;
 
-            CloseButton = AddButton(null, StandardSkin.CloseIcon);
+            CloseButton = AddButton(BuiltInSprite.CloseIcon);
             _buttonRow.AddChild(CloseButton);
             CloseButton.PointerClick += OnCloseButtonPointerClick;
 
@@ -339,12 +341,12 @@ namespace ComposableUi
             _tabRow.AddChild(Tab);
         }
 
-        public ButtonElement AddButton(Sprite sprite, StandardSkin skin)
-            => InsertButton(_buttonRow.ChildCount, sprite, skin);
+        public ButtonElement AddButton(ISpriteSource spriteSource)
+            => InsertButton(_buttonRow.ChildCount, spriteSource);
 
-        public ButtonElement InsertButton(int index, Sprite sprite, StandardSkin skin)
+        public ButtonElement InsertButton(int index, ISpriteSource spriteSource)
         {
-            var button = CreateButtonWithIcon(DefaultButtonSize, sprite, skin);
+            var button = CreateButtonWithIcon(DefaultButtonSize, spriteSource);
             _buttonRow.InsertChild(index, button);
 
             return button;

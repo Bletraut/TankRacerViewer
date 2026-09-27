@@ -91,7 +91,7 @@ namespace ComposableUi
                   new DefaultKeyboardInputProvider(),
                   new DefaultTextInputProvider(gameWindow),
                   new DefaultClipboardProvider(),
-                  new DefaultUiRenderer(contentManager, spriteBatch))
+                  new DefaultUiRenderer(spriteBatch))
         {
         }
 
@@ -115,6 +115,7 @@ namespace ComposableUi
             {
                 DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont")
             };
+            BuiltInSprite.Load(contentManager, theme.SpriteResolver, "ComposableUi\\UiElementsAtlas");
             Context = new Context(theme);
 
             AddElementSolver(new HierarchyWheelScrollSolver());

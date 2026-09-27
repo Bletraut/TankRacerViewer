@@ -12,8 +12,10 @@ namespace TankRacerViewer.Core
     {
         public const float DefaultHeight = 30;
 
-        public const StandardSkin DefaultBackgroundSkin = StandardSkin.SoftLightPixel;
+        // Static.
+        public static readonly ISpriteSource DefaultBackgroundSprite = BuiltInSprite.SoftLightPixel;
 
+        // Class.
         public SpriteElement Background { get; private set; }
 
         private readonly RowLayout _itemsLayout;
@@ -50,7 +52,7 @@ namespace TankRacerViewer.Core
             ));
 
             Background = new SpriteElement(
-                skin: DefaultBackgroundSkin
+                spriteSource: DefaultBackgroundSprite
             );
             _itemsLayout.AddChild(new LayoutElement(
                 ignoreLayout: true,

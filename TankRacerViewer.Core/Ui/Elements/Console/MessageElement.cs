@@ -12,8 +12,6 @@ namespace TankRacerViewer.Core
 
         // Static.
         public static readonly Vector2 DefaultIconSize = new(30);
-        public static readonly StandardSkin DefaultEvenBackgroundSkin = StandardSkin.HoverSoftDarkPixel;
-        public static readonly StandardSkin DefaultOddBackgroundSkin = StandardSkin.SoftDarkPixel;
 
         // Class.
         private readonly SpriteElement _background;
@@ -23,7 +21,7 @@ namespace TankRacerViewer.Core
         public MessageElement()
         {
             _background = new SpriteElement(
-                skin: StandardSkin.HoverSoftDarkPixel
+                spriteSource: BuiltInSprite.HoverSoftDarkPixel
             );
 
             _icon = new SpriteElement(
@@ -61,9 +59,9 @@ namespace TankRacerViewer.Core
 
         void ILazyListItem<MessageData>.SetData(MessageData data)
         {
-            _background.Skin = data.Index % 2 == 0
-                ? DefaultEvenBackgroundSkin
-                : DefaultOddBackgroundSkin;
+            _background.SpriteSource = data.Index % 2 == 0
+                ? BuiltInSprite.HoverSoftDarkPixel
+                : BuiltInSprite.SoftDarkPixel;
 
             _icon.SpriteSource = data.Type switch
             {

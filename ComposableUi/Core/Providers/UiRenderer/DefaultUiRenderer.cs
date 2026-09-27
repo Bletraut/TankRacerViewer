@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-
-using ComposableUi.Utilities;
+﻿using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -36,16 +30,12 @@ namespace ComposableUi
 
         public long DrawCount { get; private set; }
 
-        private readonly ContentManager _contentManager;
-        private readonly SpriteBatch _spriteBatch;
-
         private readonly RasterizerState _scissorRasterizerState = new()
         {
             ScissorTestEnable = true,
         };
-        private readonly Dictionary<StandardSkin, Sprite> _standardSkinSprites = [];
-        private readonly Texture2D _standardSkinAtlasTexture;
 
+        private readonly SpriteBatch _spriteBatch;
         private readonly UiBatcher _uiBatcher = new();
         private readonly List<RenderSpriteData> _renderSpriteDataList = [];
         private readonly List<RenderTextData> _renderTextDataList = [];
@@ -53,9 +43,8 @@ namespace ComposableUi
         private bool _isBeginCalled;
         private Rectangle? _currentClipMask;
 
-        public DefaultUiRenderer(ContentManager contentManager, SpriteBatch spriteBatch)
+        public DefaultUiRenderer(SpriteBatch spriteBatch)
         {
-            _contentManager = contentManager;
             _spriteBatch = spriteBatch;
 
             if (FallbackTexture is null)
@@ -68,31 +57,6 @@ namespace ComposableUi
                     Texture = FallbackTexture,
                     SourceRectangle = new Rectangle(0, 0, FallbackTexture.Width, FallbackTexture.Height)
                 };
-            }
-
-            _standardSkinAtlasTexture = _contentManager.Load<Texture2D>("ComposableUi\\UiElementsAtlas");
-
-            PrepareStandardSkinSprites();
-        }
-
-        private void PrepareStandardSkinSprites()
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-
-            var atlasResourceName = assembly.GetManifestResourceNames()
-                .First(resource => resource.EndsWith("UiElementsAtlas.json"));
-
-            using var stream = assembly.GetManifestResourceStream(atlasResourceName);
-            using var reader = new StreamReader(stream);
-            var atlasJson = reader.ReadToEnd();
-
-            if (AsepriteUtilities.TryGetSlices(atlasJson, out var slices))
-            {
-                foreach (var slice in slices)
-                {
-                    if (Enum.TryParse<StandardSkin>(slice.Name, out var standardSkin))
-                        _standardSkinSprites[standardSkin] = slice.ToSprite();
-                }
             }
         }
 
@@ -138,7 +102,8 @@ namespace ComposableUi
         private void DrawSimpleSprite(Sprite sprite,
             Rectangle destinationRectangle, Color color)
         {
-            _spriteBatch.Draw(sprite.Texture, destinationRectangle,
+            var texture = sprite.Texture ?? FallbackTexture;
+            _spriteBatch.Draw(texture, destinationRectangle,
                 sprite.SourceRectangle, color);
         }
 
@@ -332,24 +297,6 @@ namespace ComposableUi
         void IUiRenderer.DrawSprite(Sprite sprite, DrawMode drawMode,
             Rectangle destinationRectangle, Rectangle? clipMask, Color color)
         {
-            AddDrawSpriteCommand(sprite, drawMode, destinationRectangle, clipMask, color);
-        }
-
-        void IUiRenderer.DrawSkinnedRectangle(StandardSkin skin, DrawMode drawMode,
-            Rectangle destinationRectangle, Rectangle? clipMask, Color color)
-        {
-            if (skin is StandardSkin.None)
-                return;
-
-            if (_standardSkinSprites.TryGetValue(skin, out var sprite))
-            {
-                sprite.Texture = _standardSkinAtlasTexture;
-            }
-            else
-            {
-                sprite = FallbackSprite;
-            }
-
             AddDrawSpriteCommand(sprite, drawMode, destinationRectangle, clipMask, color);
         }
 

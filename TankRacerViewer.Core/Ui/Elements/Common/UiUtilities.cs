@@ -19,17 +19,17 @@ namespace TankRacerViewer.Core
         {
             if (isActive)
             {
-                toggle.NormalSkin = StandardSkin.SoftDarkRectangle;
-                toggle.HoverSkin = StandardSkin.HoverSoftDarkRectangle;
-                toggle.PressedSkin = StandardSkin.HoverSoftDarkRectangle;
-                toggle.DisabledSkin = StandardSkin.HoverSoftDarkRectangle;
+                toggle.NormalSprite = BuiltInSprite.SoftDarkRectangle;
+                toggle.HoverSprite = BuiltInSprite.HoverSoftDarkRectangle;
+                toggle.PressedSprite = BuiltInSprite.HoverSoftDarkRectangle;
+                toggle.DisabledSprite = BuiltInSprite.HoverSoftDarkRectangle;
             }
             else
             {
-                toggle.NormalSkin = StandardSkin.DarkRectangle;
-                toggle.HoverSkin = StandardSkin.HoverDarkRectangle;
-                toggle.PressedSkin = StandardSkin.HoverDarkRectangle;
-                toggle.DisabledSkin = StandardSkin.HoverDarkRectangle;
+                toggle.NormalSprite = BuiltInSprite.DarkRectangle;
+                toggle.HoverSprite = BuiltInSprite.HoverDarkRectangle;
+                toggle.PressedSprite = BuiltInSprite.HoverDarkRectangle;
+                toggle.DisabledSprite = BuiltInSprite.HoverDarkRectangle;
             }
         }
     }

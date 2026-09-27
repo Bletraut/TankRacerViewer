@@ -252,8 +252,8 @@ namespace ComposableUi
                 return;
 
             // TODO: Add draw here.
-            renderer.DrawSkinnedRectangle(StandardSkin.TextField, DrawMode.Sliced,
-                BoundingRectangle, ClipMask, Color);
+            //renderer.DrawSprite(BuiltInSprite.TextField, DrawMode.Sliced,
+            //    BoundingRectangle, ClipMask, Color);
 
             //var wordIndex = 0;
             //var localPosition = -PivotOffset;

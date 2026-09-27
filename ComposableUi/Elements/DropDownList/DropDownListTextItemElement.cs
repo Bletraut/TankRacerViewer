@@ -9,10 +9,6 @@ namespace ComposableUi
     {
         public const float DefaultValueIndent = 6;
 
-        public const StandardSkin DefaultNormalBackgroundSkin = StandardSkin.None;
-        public const StandardSkin DefaultHoverBackgroundSkin = StandardSkin.SelectionStrongLightPixel;
-        public const StandardSkin DefaultSelectedBackgroundSkin = StandardSkin.SelectionStrongDarkPixel;
-
         // Static.
         public readonly Color DefaultNormalValueColor = Color.Black;
         public readonly Color DefaultHoverValueColor = Color.White;
@@ -25,8 +21,8 @@ namespace ComposableUi
             set => IsInteractable = value;
         }
 
-        private Sprite _normalBackgroundSprite;
-        public Sprite NormalBackgroundSprite
+        private ISpriteSource _normalBackgroundSprite;
+        public ISpriteSource NormalBackgroundSprite
         {
             get => _normalBackgroundSprite;
             set
@@ -36,8 +32,8 @@ namespace ComposableUi
             }
         }
 
-        private Sprite _hoverBackgroundSprite;
-        public Sprite HoverBackgroundSprite
+        private ISpriteSource _hoverBackgroundSprite;
+        public ISpriteSource HoverBackgroundSprite
         {
             get => _hoverBackgroundSprite;
             set
@@ -47,46 +43,13 @@ namespace ComposableUi
             }
         }
 
-        private Sprite _selectedBackgroundSprite;
-        public Sprite SelectedBackgroundSprite
+        private ISpriteSource _selectedBackgroundSprite;
+        public ISpriteSource SelectedBackgroundSprite
         {
             get => _selectedBackgroundSprite;
             set
             {
                 _selectedBackgroundSprite = value;
-                RefreshVisualState();
-            }
-        }
-
-        private StandardSkin _normalBackgroundSkin;
-        public StandardSkin NormalBackgroundSkin
-        {
-            get => _normalBackgroundSkin;
-            set
-            {
-                _normalBackgroundSkin = value;
-                RefreshVisualState();
-            }
-        }
-
-        private StandardSkin _hoverBackgroundSkin;
-        public StandardSkin HoverBackgroundSkin
-        {
-            get => _hoverBackgroundSkin;
-            set
-            {
-                _hoverBackgroundSkin = value;
-                RefreshVisualState();
-            }
-        }
-
-        private StandardSkin _selectedBackgroundSkin;
-        public StandardSkin SelectedBackgroundSkin
-        {
-            get => _selectedBackgroundSkin;
-            set
-            {
-                _selectedBackgroundSkin = value;
                 RefreshVisualState();
             }
         }
@@ -165,12 +128,9 @@ namespace ComposableUi
         private bool _isSelected;
 
         public DropDownListTextItemElement(string value = default,
-            Sprite normalBackgroundSprite = default,
-            Sprite hoverBackgroundSprite = default,
-            Sprite selectedBackgroundSprite = default,
-            StandardSkin normalBackgroundSkin = DefaultNormalBackgroundSkin,
-            StandardSkin hoverBackgroundSkin = DefaultHoverBackgroundSkin,
-            StandardSkin selectedBackgroundSkin = DefaultSelectedBackgroundSkin,
+            ISpriteSource normalBackgroundSprite = default,
+            ISpriteSource hoverBackgroundSprite = default,
+            ISpriteSource selectedBackgroundSprite = default,
             Color? normalBackgroundColor = default,
             Color? hoverBackgroundColor = default,
             Color? selectedBackgroundColor = default,
@@ -179,11 +139,8 @@ namespace ComposableUi
             Color? selectedValueColor = default)
         {
             _normalBackgroundSprite = normalBackgroundSprite;
-            _hoverBackgroundSprite = hoverBackgroundSprite;
-            _selectedBackgroundSprite = selectedBackgroundSprite;
-            _normalBackgroundSkin = normalBackgroundSkin;
-            _hoverBackgroundSkin = hoverBackgroundSkin;
-            _selectedBackgroundSkin = selectedBackgroundSkin;
+            _hoverBackgroundSprite = hoverBackgroundSprite ?? BuiltInSprite.SelectionStrongLightPixel;
+            _selectedBackgroundSprite = selectedBackgroundSprite ?? BuiltInSprite.SelectionStrongDarkPixel;
             _normalBackgroundColor = normalBackgroundColor ?? Color.White;
             _hoverBackgroundColor = hoverBackgroundColor ?? Color.White;
             _selectedBackgroundColor = selectedBackgroundColor ?? Color.White;
@@ -192,9 +149,7 @@ namespace ComposableUi
             _hoverValueColor = hoverValueColor ?? DefaultHoverValueColor;
             _selectedValueColor = selectedValueColor ?? DefaultSelectedValueColor;
 
-            Background = new SpriteElement(
-                skin: DefaultNormalBackgroundSkin
-            );
+            Background = new SpriteElement();
 
             Value = new TextElement(
                 text: value,
@@ -225,15 +180,14 @@ namespace ComposableUi
 
         private void RefreshVisualState()
         {
-            var (backgroundSprite, backgroundSkin, backgroundColor, valueColor) = (IsHover, _isSelected) switch
+            var (backgroundSprite, backgroundColor, valueColor) = (IsHover, _isSelected) switch
             {
-                (true, _) => (HoverBackgroundSprite, HoverBackgroundSkin, HoverBackgroundColor, HoverValueColor),
-                (false, true) => (SelectedBackgroundSprite, SelectedBackgroundSkin, SelectedBackgroundColor, SelectedValueColor),
-                _ => (NormalBackgroundSprite, NormalBackgroundSkin, NormalBackgroundColor, NormalValueColor)
+                (true, _) => (HoverBackgroundSprite, HoverBackgroundColor, HoverValueColor),
+                (false, true) => (SelectedBackgroundSprite, SelectedBackgroundColor, SelectedValueColor),
+                _ => (NormalBackgroundSprite, NormalBackgroundColor, NormalValueColor)
             };
 
             Background.SpriteSource = backgroundSprite;
-            Background.Skin = backgroundSkin;
             Background.Color = backgroundColor;
             Value.Color = valueColor;
         }

@@ -25,6 +25,8 @@ namespace TankRacerViewer.Core
 
         public string Text { get; set; }
 
+        private Sprite _currentSprite;
+
         public RenderInfoElement(Vector2? size = default,
             SpriteFont spriteFont = default,
             Color? backgroundColor = default,
@@ -38,6 +40,14 @@ namespace TankRacerViewer.Core
             TextOffset = textOffset ?? DefaultTextOffset;
         }
 
+        public override Vector2 CalculatePreferredSize()
+        {
+            ISpriteSource spriteSource = BuiltInSprite.WhitePixel;
+            _currentSprite = spriteSource.Resolve(Context);
+
+            return base.CalculatePreferredSize();
+        }
+
         void IDrawableElement.Draw(IUiRenderer renderer)
         {
             var spriteFont = SpriteFont ?? Context?.Theme.DefaultSpriteFont;
@@ -47,11 +57,14 @@ namespace TankRacerViewer.Core
             if (string.IsNullOrEmpty(Text))
                 return;
 
+            if (_currentSprite == null) 
+                return;
+
             var clipMask = ClipMask;
             var boundingRectangle = BoundingRectangle;
             var textPosition = TextOffset + boundingRectangle.Location.ToVector2();
 
-            renderer.DrawSkinnedRectangle(StandardSkin.WhitePixel, DrawMode.Simple,
+            renderer.DrawSprite(_currentSprite, DrawMode.Simple,
                 boundingRectangle, clipMask, BackgroundColor);
 
             renderer.DrawString(spriteFont, Text, textPosition,

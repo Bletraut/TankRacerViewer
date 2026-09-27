@@ -57,7 +57,7 @@ namespace ComposableUi
             ClampToRootWidth = clampToRootWidth;
             ClampToRootHeight = clampToRootHeight;
 
-            Background = new SpriteElement(skin: StandardSkin.RectanglePanel);
+            Background = new SpriteElement(spriteSource: BuiltInSprite.RectanglePanel);
             var backgroundParent = new LayoutElement(
                 ignoreLayout: true,
                 innerElement: new ExpandedElement(

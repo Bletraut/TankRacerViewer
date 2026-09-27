@@ -10,17 +10,19 @@ namespace TankRacerViewer.Core
     {
         private const int DefaultContentHorizontalPadding = 8;
 
-        public const StandardSkin DefaultBackgroundNormalSkin = StandardSkin.WhitePixel;
-        public const StandardSkin DefaultBackgroundHoverSkin = StandardSkin.HoverSoftLightPixel;
-        public const StandardSkin DefaultBackgroundSelectedSkin = StandardSkin.SelectionSoftDarkPixel;
+        // Static.
+        public static readonly ISpriteSource DefaultBackgroundNormalSprite = BuiltInSprite.WhitePixel;
+        public static readonly ISpriteSource DefaultBackgroundHoverSprite = BuiltInSprite.HoverSoftLightPixel;
+        public static readonly ISpriteSource DefaultBackgroundSelectedSprite = BuiltInSprite.SelectionSoftDarkPixel;
 
         public static readonly Color DefaultTextNormalColor = Color.Black;
         public static readonly Color DefaultTextHoverColor = Color.Black;
         public static readonly Color DefaultTextSelectedColor = Color.White;
 
-        public StandardSkin BackgroundNormalColor { get; set; } = DefaultBackgroundNormalSkin;
-        public StandardSkin BackgroundHoverColor { get; set; } = DefaultBackgroundHoverSkin;
-        public StandardSkin BackgroundSelectedColor { get; set; } = DefaultBackgroundSelectedSkin;
+        // Class.
+        public ISpriteSource BackgroundNormalSprite { get; set; } = DefaultBackgroundNormalSprite;
+        public ISpriteSource BackgroundHoverSprite { get; set; } = DefaultBackgroundHoverSprite;
+        public ISpriteSource BackgroundSelectedSprite { get; set; } = DefaultBackgroundSelectedSprite;
 
         public Color TextNormalColor { get; set; } = DefaultTextNormalColor;
         public Color TextHoverColor { get; set; } = DefaultTextHoverColor;
@@ -43,7 +45,7 @@ namespace TankRacerViewer.Core
             UnselectAction = unselectAction;
 
             Background = new SpriteElement(
-                skin: StandardSkin.WhitePixel
+                spriteSource: BuiltInSprite.WhitePixel
             );
 
             Text = new TextElement(
@@ -71,15 +73,15 @@ namespace TankRacerViewer.Core
 
         public void SetState(State state)
         {
-            (StandardSkin BackgroundSkin, Color TextColor) = state switch
+            (ISpriteSource BackgroundSprite, Color TextColor) = state switch
             {
-                State.Normal => (BackgroundNormalColor, TextNormalColor),
-                State.Hover => (BackgroundHoverColor, TextHoverColor),
-                State.Selected => (BackgroundSelectedColor, TextSelectedColor),
-                _ => (BackgroundNormalColor, TextNormalColor)
+                State.Normal => (BackgroundNormalSprite, TextNormalColor),
+                State.Hover => (BackgroundHoverSprite, TextHoverColor),
+                State.Selected => (BackgroundSelectedSprite, TextSelectedColor),
+                _ => (BackgroundNormalSprite, TextNormalColor)
             };
 
-            Background.Skin = BackgroundSkin;
+            Background.SpriteSource = BackgroundSprite;
             Text.Color = TextColor;
         }
 

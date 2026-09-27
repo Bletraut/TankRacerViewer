@@ -11,10 +11,6 @@ namespace TankRacerViewer.Core
         public const float DefaultSpacing = 4;
         public const float DefaultVerticalPaddings = 8;
 
-        public const StandardSkin DefaultEvenBackgroundSkin = StandardSkin.HoverSoftDarkPixel;
-        public const StandardSkin DefaultOddBackgroundSkin = StandardSkin.SoftDarkPixel;
-        public const StandardSkin DefaultHoverBackgroundSkin = StandardSkin.SelectionStrongLightPixel;
-
         // Static.
         public static readonly Vector2 DefaultSpriteSize = new(120);
 
@@ -31,7 +27,7 @@ namespace TankRacerViewer.Core
         public UsedTextureElement()
         {
             _background = new SpriteElement(
-                skin: StandardSkin.WhitePixel
+                spriteSource: BuiltInSprite.WhitePixel
             );
 
             _name = new TextElement(
@@ -80,13 +76,13 @@ namespace TankRacerViewer.Core
         {
             if (IsHover)
             {
-                _background.Skin = DefaultHoverBackgroundSkin;
+                _background.SpriteSource = BuiltInSprite.SelectionStrongLightPixel;
             }
             else
             {
-                _background.Skin = Data.Index % 2 == 0
-                    ? DefaultEvenBackgroundSkin
-                    : DefaultOddBackgroundSkin;
+                _background.SpriteSource = Data.Index % 2 == 0
+                    ? BuiltInSprite.HoverSoftDarkPixel
+                    : BuiltInSprite.SoftDarkPixel;
             }
         }
 

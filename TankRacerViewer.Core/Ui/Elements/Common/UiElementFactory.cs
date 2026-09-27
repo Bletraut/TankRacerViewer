@@ -14,10 +14,10 @@ namespace TankRacerViewer.Core
         {
             var toggle = new ContentButtonElement(
                 text: text,
-                normalSkin: StandardSkin.DarkRectangle,
-                hoverSkin: StandardSkin.HoverDarkRectangle,
-                pressedSkin: StandardSkin.HoverDarkRectangle,
-                disabledSkin: StandardSkin.HoverDarkRectangle,
+                normalSprite: BuiltInSprite.DarkRectangle,
+                hoverSprite: BuiltInSprite.HoverDarkRectangle,
+                pressedSprite: BuiltInSprite.HoverDarkRectangle,
+                disabledSprite: BuiltInSprite.HoverDarkRectangle,
                 hoverButtonColor: Color.White,
                 pressedButtonColor: Color.White,
                 normalTextColor: Color.White,

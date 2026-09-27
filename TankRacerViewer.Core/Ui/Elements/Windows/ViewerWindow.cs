@@ -50,7 +50,7 @@ namespace TankRacerViewer.Core
                 innerElement: new ContainerElement(
                     children: [
                         new SpriteElement(
-                            skin: StandardSkin.WhitePixel,
+                            spriteSource: BuiltInSprite.WhitePixel,
                             color: Color.LightGoldenrodYellow
                         ),
                         new ScrollViewElement(

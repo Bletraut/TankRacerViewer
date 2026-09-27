@@ -115,7 +115,7 @@ namespace ComposableUi
                     pivot: Alignment.BottomRight,
                     innerElement: new SpriteElement(
                         size: new Vector2(ScrollBarElement.DefaultCrossAxisSize),
-                        skin: StandardSkin.SolidDarkPixel)
+                        spriteSource: BuiltInSprite.SolidDarkPixel)
                     )
                 );
             AddChild(_bottomRightPlug);

@@ -98,17 +98,12 @@ namespace ComposableUi
         }
 
         public ContentButtonElement(Vector2? iconSize = default,
-            Sprite iconSprite = default,
-            StandardSkin iconSkin = StandardSkin.WhitePixel,
+            ISpriteSource iconSprite = default,
             string text = default,
-            Sprite normalSprite = default,
-            Sprite hoverSprite = default,
-            Sprite pressedSprite = default,
-            Sprite disabledSprite = default,
-            StandardSkin normalSkin = StandardSkin.RectangleButton,
-            StandardSkin hoverSkin = StandardSkin.HoverRectangleButton,
-            StandardSkin pressedSkin = StandardSkin.PressedRectangleButton,
-            StandardSkin disabledSkin = StandardSkin.DisabledRectangleButton,
+            ISpriteSource normalSprite = default,
+            ISpriteSource hoverSprite = default,
+            ISpriteSource pressedSprite = default,
+            ISpriteSource disabledSprite = default,
             Color? normalButtonColor = default,
             Color? hoverButtonColor = default,
             Color? pressedButtonColor = default,
@@ -122,14 +117,10 @@ namespace ComposableUi
             Color? pressedTextColor = default,
             Color? disabledTextColor = default,
             bool isInteractable = true)
-            : base(normalSprite: normalSprite,
-                  hoverSprite: hoverSprite,
-                  pressedSprite: pressedSprite,
-                  disabledSprite: disabledSprite,
-                  normalSkin: normalSkin,
-                  hoverSkin: hoverSkin,
-                  pressedSkin: pressedSkin,
-                  disabledSkin: disabledSkin,
+            : base(normalSprite: normalSprite ?? BuiltInSprite.RectangleButton,
+                  hoverSprite: hoverSprite ?? BuiltInSprite.HoverRectangleButton,
+                  pressedSprite: pressedSprite ?? BuiltInSprite.PressedRectangleButton,
+                  disabledSprite: disabledSprite ?? BuiltInSprite.DisabledRectangleButton,
                   normalColor: normalButtonColor,
                   hoverColor: hoverButtonColor,
                   pressedColor: pressedButtonColor,
@@ -148,9 +139,7 @@ namespace ComposableUi
 
             Icon = new SpriteElement(
                 size: iconSize ?? DefaultIconSize,
-                spriteSource: iconSprite,
-                skin: iconSkin,
-                sizeToSource: true,
+                spriteSource: iconSprite ?? BuiltInSprite.WhitePixel,
                 drawMode: DrawMode.Simple
             );
 

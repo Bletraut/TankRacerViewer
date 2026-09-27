@@ -14,31 +14,21 @@ namespace ComposableUi
         public SpriteElement Icon { get; }
         public TextElement Title { get; }
 
-        public Sprite InactiveSprite { get; set; }
-        public Sprite NormalSprite { get; set; }
-        public Sprite SelectedSprite { get; set; }
-
-        public StandardSkin InactiveSkin { get; set; }
-        public StandardSkin NormalSkin { get; set; }
-        public StandardSkin SelectedSkin { get; set; }
+        public ISpriteSource InactiveSprite { get; set; }
+        public ISpriteSource NormalSprite { get; set; }
+        public ISpriteSource SelectedSprite { get; set; }
 
         public TabState CurrentState { get; private set; }
 
         public TabElement(string titleText = default,
-            Sprite iconSprite = default,
-            Sprite inactiveSprite = default,
-            Sprite activeSprite = default,
-            Sprite focusedSprite = default,
-            StandardSkin inactiveSkin = StandardSkin.InactiveTab,
-            StandardSkin activeSkin = StandardSkin.ActiveTab,
-            StandardSkin focusedSkin = StandardSkin.SelectedTab)
+            ISpriteSource iconSprite = default,
+            ISpriteSource inactiveSprite = default,
+            ISpriteSource activeSprite = default,
+            ISpriteSource focusedSprite = default)
         {
-            InactiveSprite = inactiveSprite;
-            NormalSprite = activeSprite;
-            SelectedSprite = focusedSprite;
-            InactiveSkin = inactiveSkin;
-            NormalSkin = activeSkin;
-            SelectedSkin = focusedSkin;
+            InactiveSprite = inactiveSprite ?? BuiltInSprite.InactiveTab;
+            NormalSprite = activeSprite ?? BuiltInSprite.ActiveTab;
+            SelectedSprite = focusedSprite ?? BuiltInSprite.SelectedTab;
 
             Background = new SpriteElement();
             var backgroundParent = new LayoutElement(
@@ -50,8 +40,7 @@ namespace ComposableUi
 
             Icon = new SpriteElement(
                 size: new Vector2(DefaultIconSize),
-                spriteSource: iconSprite,
-                skin: StandardSkin.RectangleButton
+                spriteSource: iconSprite ?? BuiltInSprite.RectangleButton
             );
 
             Title = new TextElement(
@@ -79,15 +68,14 @@ namespace ComposableUi
 
             CurrentState = state;
 
-            (Sprite Sprite, StandardSkin Skin) = CurrentState switch
+            var sprite = CurrentState switch
             {
-                TabState.Inactive => (InactiveSprite, InactiveSkin),
-                TabState.Normal => (NormalSprite, NormalSkin),
-                TabState.Selected => (SelectedSprite, SelectedSkin),
-                _ => (InactiveSprite, InactiveSkin),
+                TabState.Inactive => InactiveSprite,
+                TabState.Normal => NormalSprite,
+                TabState.Selected => SelectedSprite,
+                _ => InactiveSprite,
             };
-            Background.SpriteSource = Sprite;
-            Background.Skin = Skin;
+            Background.SpriteSource = sprite;
         }
 
         public void CopyHeaderFrom(TabElement tab)

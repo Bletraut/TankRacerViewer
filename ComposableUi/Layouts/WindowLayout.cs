@@ -83,11 +83,11 @@ namespace ComposableUi
             AddChild(_floatPreviewTab);
 
             _embedPreviewBackground = new SpriteElement(
-                skin: StandardSkin.WhitePixel,
+                spriteSource: BuiltInSprite.WhitePixel,
                 color: DefaultEmbedPreviewBackgroundColor
             );
             _embedPreviewIcon = new SpriteElement(
-                skin: StandardSkin.MaximizeWindowIcon,
+                spriteSource: BuiltInSprite.MaximizeWindowIcon,
                 color: DefaultEmbedPreviewIconColor
             );
             _embedPreviewInputArea = new PointerInputHandlerElement(

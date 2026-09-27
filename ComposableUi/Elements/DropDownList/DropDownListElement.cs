@@ -72,16 +72,16 @@ namespace ComposableUi
             MaxListHeight = maxListHeight;
 
             Background = new SpriteElement(
-                skin: StandardSkin.TextField
+                spriteSource: BuiltInSprite.TextField
             );
 
             OpenButton = new ContentButtonElement(
                 iconSize: DefaultButtonIconSize,
-                iconSkin: StandardSkin.DownArrowIcon,
-                normalSkin: StandardSkin.SoftDarkPixel,
-                hoverSkin: StandardSkin.SelectionSoftDarkPixel,
-                pressedSkin: StandardSkin.HoverSoftDarkPixel,
-                disabledSkin: StandardSkin.SelectionSoftDarkPixel,
+                iconSprite: BuiltInSprite.DownArrowIcon,
+                normalSprite: BuiltInSprite.SoftDarkPixel,
+                hoverSprite: BuiltInSprite.SelectionSoftDarkPixel,
+                pressedSprite: BuiltInSprite.HoverSoftDarkPixel,
+                disabledSprite: BuiltInSprite.SelectionSoftDarkPixel,
                 normalButtonColor: Color.White,
                 hoverButtonColor: Color.White,
                 pressedButtonColor: Color.White
@@ -120,7 +120,7 @@ namespace ComposableUi
             );
 
             ContentBackground = new SpriteElement(
-                skin: StandardSkin.TextField
+                spriteSource: BuiltInSprite.TextField
             );
 
             _overlayInputInterceptor = new PointerInputHandlerElement(

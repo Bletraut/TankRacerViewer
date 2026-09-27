@@ -106,7 +106,7 @@ namespace TankRacerViewer.Core
                         ignoreLayout: true,
                         innerElement: new ExpandedElement(
                             innerElement: new SpriteElement(
-                                skin: LevelObjectElement.DefaultNormalBackgroundSkin
+                                spriteSource: LevelObjectElement.DefaultNormalBackgroundSprite
                             )
                         )
                     ),

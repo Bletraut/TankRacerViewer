@@ -30,7 +30,7 @@ namespace ComposableUi
                 }
                 else
                 {
-                    _buttonBackground.Skin = StandardSkin.None;
+                    _buttonBackground.SpriteSource = null;
                     SetContentColor(ContentDisabledColor);
                 }
             }
@@ -119,7 +119,7 @@ namespace ComposableUi
 
             Arrow = new SpriteElement(
                 size: new Vector2(DefaultArrowWidth),
-                skin: StandardSkin.RightArrowIcon,
+                spriteSource: BuiltInSprite.RightArrowIcon,
                 color: ContentNormalColor)
             {
                 Pivot = Alignment.MiddleRight
@@ -140,8 +140,7 @@ namespace ComposableUi
                 Pivot = Alignment.MiddleRight
             };
 
-            _buttonBackground = new SpriteElement(
-                skin: StandardSkin.None);
+            _buttonBackground = new SpriteElement();
             HoverColor = hoverColor ?? DefaultHoverColor;
 
             Button = new PointerInputHandlerElement(_buttonBackground);
@@ -165,12 +164,12 @@ namespace ComposableUi
 
             if (isHover)
             {
-                _buttonBackground.Skin = StandardSkin.WhitePixel;
+                _buttonBackground.SpriteSource = BuiltInSprite.WhitePixel;
                 SetContentColor(ContentHoverColor);
             }
             else
             {
-                _buttonBackground.Skin = StandardSkin.None;
+                _buttonBackground.SpriteSource = null;
                 SetContentColor(ContentNormalColor);
             }
         }
