@@ -5,6 +5,8 @@ namespace ComposableUi
 {
     public sealed class Sprite : ISpriteSource
     {
+        public static readonly Sprite Empty = new();
+
         public Texture2D Texture { get; set; }
         public Rectangle SourceRectangle { get; set; }
         public int LeftBorder { get; set; }

@@ -49,12 +49,23 @@ namespace ComposableUi
 
             if (FallbackTexture is null)
             {
-                FallbackTexture = new Texture2D(spriteBatch.GraphicsDevice, 2, 2);
-                FallbackTexture.SetData([Color.Pink, Color.DeepPink, Color.DeepPink, Color.Pink]);
+                var colors = new Color[]
+                {
+                    Color.Pink, Color.DeepPink, Color.Pink, Color.DeepPink,
+                    Color.DeepPink, Color.Pink, Color.DeepPink, Color.Pink,
+                    Color.Pink, Color.DeepPink, Color.Pink, Color.DeepPink,
+                    Color.DeepPink, Color.Pink, Color.DeepPink, Color.Pink
+                };
+                FallbackTexture = new Texture2D(spriteBatch.GraphicsDevice, 4, 4);
+                FallbackTexture.SetData(colors);
 
                 FallbackSprite = new Sprite()
                 {
                     Texture = FallbackTexture,
+                    LeftBorder = 1,
+                    RightBorder = 1,
+                    TopBorder = 1,
+                    BottomBorder = 1,
                     SourceRectangle = new Rectangle(0, 0, FallbackTexture.Width, FallbackTexture.Height)
                 };
             }
@@ -102,8 +113,7 @@ namespace ComposableUi
         private void DrawSimpleSprite(Sprite sprite,
             Rectangle destinationRectangle, Color color)
         {
-            var texture = sprite.Texture ?? FallbackTexture;
-            _spriteBatch.Draw(texture, destinationRectangle,
+            _spriteBatch.Draw(sprite.Texture, destinationRectangle,
                 sprite.SourceRectangle, color);
         }
 
@@ -297,6 +307,12 @@ namespace ComposableUi
         void IUiRenderer.DrawSprite(Sprite sprite, DrawMode drawMode,
             Rectangle destinationRectangle, Rectangle? clipMask, Color color)
         {
+            if (sprite == Sprite.Empty)
+                return;
+
+            if (sprite.Texture is null)
+                sprite = FallbackSprite;
+
             AddDrawSpriteCommand(sprite, drawMode, destinationRectangle, clipMask, color);
         }
 

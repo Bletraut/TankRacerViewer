@@ -10,6 +10,7 @@ namespace TankRacerViewer.Core
         public ExplorerWindow ExplorerWindow { get; private set; }
         public InspectorWindow InspectorWindow { get; private set; }
         public ConsoleWindow ConsoleWindow { get; private set; }
+        public RenderSettingsWindow RenderSettingsWindow { get; private set; }
         public AboutWindow AboutWindow { get; private set; }
 
         private WindowLayout _windowLayout;
@@ -39,6 +40,10 @@ namespace TankRacerViewer.Core
             ConsoleWindow = new ConsoleWindow();
             _windowLayout.AddFloatWindow(ConsoleWindow);
             WindowElement.Dock(ConsoleWindow, ViewerWindow.Container, Edge.Bottom);
+
+            RenderSettingsWindow = new RenderSettingsWindow();
+            _windowLayout.AddFloatWindow(RenderSettingsWindow);
+            WindowElement.DockAsTab(RenderSettingsWindow, ExplorerWindow, 1);
 
             AboutWindow = new AboutWindow(_mainWindow.UrlOpener)
             {

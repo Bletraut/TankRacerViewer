@@ -36,9 +36,9 @@ namespace TankRacerViewer.Core
 
             _repositoryLinkButton = new ContentButtonElement(
                 text: _repositoryUrl,
-                normalSprite: null,
-                hoverSprite: null,
-                pressedSprite: null,
+                normalSprite: Sprite.Empty,
+                hoverSprite: Sprite.Empty,
+                pressedSprite: Sprite.Empty,
                 normalTextColor: Color.DeepSkyBlue,
                 hoverTextColor: Color.Coral,
                 pressedTextColor: Color.DarkBlue

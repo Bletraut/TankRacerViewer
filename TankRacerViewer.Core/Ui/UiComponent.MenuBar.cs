@@ -135,6 +135,10 @@ namespace TankRacerViewer.Core
                     name: "Console",
                     clickAction: _ => SelectContextMenuItem(() => ShowWindow(ConsoleWindow))
                 ),
+                new ContextMenuItemElement(
+                    name: "Render Settings",
+                    clickAction: _ => SelectContextMenuItem(() => ShowWindow(RenderSettingsWindow))
+                ),
             ]);
 
             _aboutContextMenu = CreateAndAddContextMenu([
