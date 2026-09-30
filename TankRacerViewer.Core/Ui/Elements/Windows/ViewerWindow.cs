@@ -33,7 +33,7 @@ namespace TankRacerViewer.Core
 
         public ViewerWindow(GraphicsDevice graphicsDevice) : base("Viewer")
         {
-            this.SetScaledIcon(IconName.Viewer, UiElementFactory.DefaultSpriteScale);
+            Tab.Icon.SpriteSource = IconCollection.Get(IconName.Viewer);
 
             _viewer3d = new Viewer3D(graphicsDevice);
             _viewer3dParent = new ExpandedElement(_viewer3d);
@@ -51,7 +51,8 @@ namespace TankRacerViewer.Core
                     children: [
                         new SpriteElement(
                             spriteSource: BuiltInSprite.WhitePixel,
-                            color: Color.LightGoldenrodYellow
+                            color: Color.LightGoldenrodYellow,
+                            drawMode: DrawMode.Sliced
                         ),
                         new ScrollViewElement(
                             content: _text
@@ -64,8 +65,7 @@ namespace TankRacerViewer.Core
             _sprite = new Sprite();
             _textureView = new SpriteElement(
                 spriteSource: _sprite,
-                sizeToSource: true,
-                drawMode: DrawMode.Simple
+                sizeToSource: true
             );
             _textureViewer = new AspectRatioFitterElement(
                 aspectRatioMode: AspectRatioMode.FitInParent,

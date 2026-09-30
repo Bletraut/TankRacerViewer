@@ -63,22 +63,27 @@ namespace ComposableUi
             ExpandingContentHeightMode = expandingContentHeightMode;
             ScrollWheelMultiplier = scrollWheelMultiplier;
 
-            Background = new SpriteElement();
+            Background = new SpriteElement(
+                drawMode: DrawMode.Sliced
+            );
             AddChild(new ExpandedElement(Background));
 
             _contentParent = new AlignmentElement(
                 alignmentFactor: Alignment.TopLeft,
-                pivot: Alignment.TopLeft);
+                pivot: Alignment.TopLeft
+            );
 
             _contentExpanded = new ExpandedElement(
                 expandWidth: ExpandingContentWidthMode is ExpandingMode.FillParent,
                 expandHeight: ExpandingContentHeightMode is ExpandingMode.FillParent,
-                innerElement: _contentParent);
+                innerElement: _contentParent
+            );
 
             _view = new ClipMaskElement(
                 innerElement: new HolderElement(
-                    innerElement: _contentExpanded)
-                );
+                    innerElement: _contentExpanded
+                )
+            );
             _viewExpanded = new ExpandedElement(_view);
             AddChild(_viewExpanded);
 
@@ -93,8 +98,9 @@ namespace ComposableUi
                 innerElement: new AlignmentElement(
                     alignmentFactor: Alignment.BottomCenter,
                     pivot: Alignment.BottomCenter,
-                    innerElement: HorizontalScrollBar)
-                );
+                    innerElement: HorizontalScrollBar
+                )
+            );
             AddChild(_horizontalScrollBarParent);
 
             _verticalScrollBarParent = new ExpandedElement(
@@ -103,8 +109,9 @@ namespace ComposableUi
                 innerElement: new AlignmentElement(
                     alignmentFactor: Alignment.MiddleRight,
                     pivot: Alignment.MiddleRight,
-                    innerElement: VerticalScrollBar)
-                );
+                    innerElement: VerticalScrollBar
+                )
+            );
             AddChild(_verticalScrollBarParent);
 
             _bottomRightPlug = new ExpandedElement(
@@ -115,9 +122,11 @@ namespace ComposableUi
                     pivot: Alignment.BottomRight,
                     innerElement: new SpriteElement(
                         size: new Vector2(ScrollBarElement.DefaultCrossAxisSize),
-                        spriteSource: BuiltInSprite.SolidDarkPixel)
+                        spriteSource: BuiltInSprite.SolidDarkPixel,
+                        drawMode: DrawMode.Sliced
                     )
-                );
+                )
+            );
             AddChild(_bottomRightPlug);
 
             _scrollInputHandler = new PointerInputHandlerElement(blockInput: false);

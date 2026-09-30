@@ -10,7 +10,8 @@ namespace ComposableUi
     {
         private readonly Dictionary<string, Sprite> _sprites = [];
 
-        public void AddAsepriteSpriteSheet(Texture2D texture, string spriteSheetJson)
+        public void AddAsepriteSpriteSheet(Texture2D texture, string spriteSheetJson,
+            int defaultSpriteScale = 1)
         {
             if (AsepriteUtilities.TryGetSlices(spriteSheetJson, out var slices))
             {
@@ -18,6 +19,7 @@ namespace ComposableUi
                 {
                     var sprite = slice.ToSprite();
                     sprite.Texture = texture;
+                    sprite.Scale = defaultSpriteScale;
                     _sprites[slice.Name] = sprite;
                 }
             }

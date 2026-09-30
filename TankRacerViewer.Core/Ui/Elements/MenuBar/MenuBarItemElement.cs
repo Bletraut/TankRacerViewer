@@ -45,7 +45,8 @@ namespace TankRacerViewer.Core
             UnselectAction = unselectAction;
 
             Background = new SpriteElement(
-                spriteSource: BuiltInSprite.WhitePixel
+                spriteSource: BuiltInSprite.WhitePixel,
+                drawMode: DrawMode.Sliced
             );
 
             Text = new TextElement(

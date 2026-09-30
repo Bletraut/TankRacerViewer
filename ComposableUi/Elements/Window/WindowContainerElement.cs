@@ -140,7 +140,8 @@ namespace ComposableUi
                 ignoreLayout: true,
                 innerElement: new ExpandedElement(
                     innerElement: new SpriteElement(
-                        spriteSource: BuiltInSprite.SolidDarkPixel
+                        spriteSource: BuiltInSprite.SolidDarkPixel,
+                        drawMode: DrawMode.Sliced
                     )
                 )
             ));

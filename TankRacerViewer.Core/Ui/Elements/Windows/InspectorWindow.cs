@@ -16,7 +16,7 @@ namespace TankRacerViewer.Core
 
         public InspectorWindow() : base("Inspector")
         {
-            this.SetScaledIcon(IconName.Inspector, UiElementFactory.DefaultSpriteScale);
+            Tab.Icon.SpriteSource = IconCollection.Get(IconName.Inspector);
 
             _scrollView = new ScrollViewElement(
                 expandingContentWidthMode: ScrollViewElement.ExpandingMode.FillParent

@@ -84,11 +84,13 @@ namespace ComposableUi
 
             _embedPreviewBackground = new SpriteElement(
                 spriteSource: BuiltInSprite.WhitePixel,
-                color: DefaultEmbedPreviewBackgroundColor
+                color: DefaultEmbedPreviewBackgroundColor,
+                drawMode: DrawMode.Sliced
             );
             _embedPreviewIcon = new SpriteElement(
                 spriteSource: BuiltInSprite.MaximizeWindowIcon,
-                color: DefaultEmbedPreviewIconColor
+                color: DefaultEmbedPreviewIconColor,
+                drawMode: DrawMode.Sliced
             );
             _embedPreviewInputArea = new PointerInputHandlerElement(
                 innerElement: new ContainerElement(

@@ -52,7 +52,8 @@ namespace TankRacerViewer.Core
             ));
 
             Background = new SpriteElement(
-                spriteSource: DefaultBackgroundSprite
+                spriteSource: DefaultBackgroundSprite,
+                drawMode: DrawMode.Sliced
             );
             _itemsLayout.AddChild(new LayoutElement(
                 ignoreLayout: true,

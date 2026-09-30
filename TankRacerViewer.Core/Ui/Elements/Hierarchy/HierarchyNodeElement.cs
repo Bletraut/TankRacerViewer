@@ -12,7 +12,6 @@ namespace TankRacerViewer.Core
         private readonly float DefaultTitleHorizontalPadding = 4;
 
         public readonly Vector2 DefaultFoldButtonSize = new(12);
-        public readonly Vector2 DefaultIconSize = new(24);
 
         private ISpriteSource _normalBackgroundSprite;
         public ISpriteSource NormalBackgroundSprite
@@ -77,7 +76,8 @@ namespace TankRacerViewer.Core
             _selectedBackgroundSprite = selectedBackgroundSprite ?? BuiltInSprite.SelectionStrongDarkPixel;
 
             Background = new SpriteElement(
-                spriteSource: _normalBackgroundSprite
+                spriteSource: _normalBackgroundSprite,
+                drawMode: DrawMode.Sliced
             );
 
             ClickInputHandler = new PointerInputHandlerElement(
@@ -107,7 +107,7 @@ namespace TankRacerViewer.Core
             FoldButton.PointerClick += OnFoldButtonPointerClick;
 
             Icon = new SpriteElement(
-                size: DefaultIconSize
+                sizeToSource: true
             );
 
             Name = new TextElement(

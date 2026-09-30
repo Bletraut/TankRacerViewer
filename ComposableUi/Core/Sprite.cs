@@ -9,6 +9,9 @@ namespace ComposableUi
 
         public Texture2D Texture { get; set; }
         public Rectangle SourceRectangle { get; set; }
+
+        public int Scale { get; set; } = 1;
+
         public int LeftBorder { get; set; }
         public int RightBorder { get; set; }
         public int TopBorder { get; set; }

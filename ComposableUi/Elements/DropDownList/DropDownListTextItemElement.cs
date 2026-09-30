@@ -149,7 +149,9 @@ namespace ComposableUi
             _hoverValueColor = hoverValueColor ?? DefaultHoverValueColor;
             _selectedValueColor = selectedValueColor ?? DefaultSelectedValueColor;
 
-            Background = new SpriteElement();
+            Background = new SpriteElement(
+                drawMode: DrawMode.Sliced
+            );
 
             Value = new TextElement(
                 text: value,

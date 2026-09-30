@@ -107,23 +107,24 @@ namespace ComposableUi
                 size: new Vector2(height),
                 textAlignmentFactor: Alignment.MiddleRight,
                 sizeToTextWidth: true,
-                color: ContentNormalColor);
+                color: ContentNormalColor
+            );
             Name = name;
 
             KeyBindingsText = new TextElement(
                 size: new Vector2(height),
                 textAlignmentFactor: Alignment.MiddleRight,
                 sizeToTextWidth: true,
-                color: ContentNormalColor);
+                color: ContentNormalColor
+            );
             KeyBindings = keyBindings;
 
             Arrow = new SpriteElement(
                 size: new Vector2(DefaultArrowWidth),
+                pivot: Alignment.MiddleRight,
                 spriteSource: BuiltInSprite.RightArrowIcon,
-                color: ContentNormalColor)
-            {
-                Pivot = Alignment.MiddleRight
-            };
+                color: ContentNormalColor
+            );
 
             _arrowSpaceHolder = new Element()
             {
@@ -140,7 +141,9 @@ namespace ComposableUi
                 Pivot = Alignment.MiddleRight
             };
 
-            _buttonBackground = new SpriteElement();
+            _buttonBackground = new SpriteElement(
+                drawMode: DrawMode.Sliced
+            );
             HoverColor = hoverColor ?? DefaultHoverColor;
 
             Button = new PointerInputHandlerElement(_buttonBackground);

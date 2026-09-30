@@ -54,7 +54,10 @@ namespace ComposableUi
             var defaultPadding = new Vector2(DefaultMainAxisPadding) * mainAxis
                 + new Vector2(DefaultCrossAxisPadding) * crossAxis;
 
-            Background = new SpriteElement(spriteSource: BuiltInSprite.SolidDarkPixel);
+            Background = new SpriteElement(
+                spriteSource: BuiltInSprite.SolidDarkPixel,
+                drawMode: DrawMode.Sliced
+            );
             AddChild(new ExpandedElement(innerElement: Background));
 
             Button = new ButtonElement(new Vector2(DefaultCrossAxisSize, DefaultCrossAxisSize),

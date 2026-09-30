@@ -20,7 +20,7 @@ namespace TankRacerViewer.Core
 
         public AboutWindow(IPlatformUrlOpener urlOpener) : base("About")
         {
-            this.SetScaledIcon(IconName.About, UiElementFactory.DefaultSpriteScale);
+            Tab.Icon.SpriteSource = IconCollection.Get(IconName.About);
 
             _urlOpener = urlOpener;
 
@@ -80,8 +80,7 @@ namespace TankRacerViewer.Core
                                 new SpriteElement(
                                     size: new Vector2(100),
                                     spriteSource: IconCollection.Get(IconName.Logo),
-                                    sizeToSource: false,
-                                    drawMode: DrawMode.Simple
+                                    sizeToSource: false
                                 )
                             ]
                         ),

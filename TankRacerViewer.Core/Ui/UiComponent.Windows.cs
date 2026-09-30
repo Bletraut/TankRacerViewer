@@ -59,7 +59,8 @@ namespace TankRacerViewer.Core
             _overlayInputInterceptor = new PointerInputHandlerElement(
                 innerElement: new SpriteElement(
                     spriteSource: BuiltInSprite.WhitePixel,
-                    color: new Color(Color.Black, 0.25f)
+                    color: new Color(Color.Black, 0.25f),
+                    drawMode: DrawMode.Sliced
                 )
             );
             _overlayInputInterceptorParent = new ExpandedElement(_overlayInputInterceptor);

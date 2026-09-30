@@ -20,7 +20,7 @@ namespace ComposableUi
                 {
                     DefaultSpriteFont = contentManager.Load<SpriteFont>("ComposableUi\\MainFont")
                 };
-                BuiltInSprite.Load(contentManager, _defaultTheme.SpriteResolver, "ComposableUi\\UiElementsAtlas");
+                BuiltInSprite.Load(contentManager, _defaultTheme.SpriteResolver, "ComposableUi\\UiElementsAtlas", 2);
             }
 
             return _defaultTheme;

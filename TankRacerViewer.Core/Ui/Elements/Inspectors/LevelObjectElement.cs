@@ -20,8 +20,6 @@ namespace TankRacerViewer.Core
         public static readonly ISpriteSource DefaultHoverBackgroundSprite = BuiltInSprite.HoverLightRectangle;
 
         // Static.
-        public static readonly Vector2 DefaultIconSize = new(18);
-
         public static readonly Color EnabledBoundingBoxColor = Color.Fuchsia;
         public static readonly Color SelectedBoundingBoxColor = Color.GreenYellow;
 
@@ -30,7 +28,6 @@ namespace TankRacerViewer.Core
         public static ContentButtonElement CreateButton(ISpriteSource iconSprite = default)
         {
             var button = new ContentButtonElement(
-                iconSize: DefaultIconSize,
                 iconSprite: iconSprite,
                 normalSprite: BuiltInSprite.LightRectangleButton,
                 hoverSprite: BuiltInSprite.HoverLightRectangleButton,
@@ -40,7 +37,6 @@ namespace TankRacerViewer.Core
                 hoverButtonColor: Color.White,
                 pressedButtonColor: Color.White
             );
-            button.Icon.SizeToSource = false;
             button.Text.IsEnabled = false;
             button.ContentLayout.LeftPadding = DefaultButtonPaddings;
             button.ContentLayout.RightPadding = DefaultButtonPaddings;
@@ -69,7 +65,8 @@ namespace TankRacerViewer.Core
         public LevelObjectElement()
         {
             _background = new SpriteElement(
-                spriteSource: DefaultNormalBackgroundSprite
+                spriteSource: DefaultNormalBackgroundSprite,
+                drawMode: DrawMode.Sliced
             );
 
             _visibilityButton = CreateButton();

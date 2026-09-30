@@ -52,10 +52,12 @@ namespace ComposableUi
             ISpriteSource contentBackgroundSprite = default)
         {
             TitleBackground = new SpriteElement(
-                spriteSource: titleBackgroundSprite ?? DefaultTitleBackgroundSprite
+                spriteSource: titleBackgroundSprite ?? DefaultTitleBackgroundSprite,
+                drawMode: DrawMode.Sliced
             );
             ContentBackground = new SpriteElement(
-                spriteSource: contentBackgroundSprite ?? DefaultContentBackgroundSprite
+                spriteSource: contentBackgroundSprite ?? DefaultContentBackgroundSprite,
+                drawMode: DrawMode.Sliced
             );
 
             FoldButton = new ButtonElement(

@@ -30,12 +30,14 @@ namespace ComposableUi
         private Sprite _currentSprite;
 
         public SpriteElement(Vector2? size = default,
+            Vector2? pivot = default,
             ISpriteSource spriteSource = default,
             Color? color = default,
             bool sizeToSource = false,
-            DrawMode drawMode = DrawMode.Sliced)
+            DrawMode drawMode = DrawMode.Simple)
         {
             Size = size ?? Vector2.Zero;
+            Pivot = pivot ?? Alignment.Center;
 
             SpriteSource = spriteSource;
             Color = color ?? Color.White;
@@ -53,7 +55,7 @@ namespace ComposableUi
             if (useSelfSize)
                 return base.CalculatePreferredSize();
 
-            return _currentSprite.SourceRectangle.Size.ToVector2();
+            return _currentSprite.SourceRectangle.Size.ToVector2() * _currentSprite.Scale;
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)

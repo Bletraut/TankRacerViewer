@@ -7,10 +7,6 @@ namespace ComposableUi
         public const float DefaultContentSpacing = 4;
         public const float DefaultContentPaddings = 4;
 
-        // Static.
-        public static readonly Vector2 DefaultIconSize = new(18);
-
-        // Class.
         public SpriteElement Icon { get; }
         public TextElement Text { get; }
         public RowLayout ContentLayout { get; }
@@ -97,8 +93,7 @@ namespace ComposableUi
             }
         }
 
-        public ContentButtonElement(Vector2? iconSize = default,
-            ISpriteSource iconSprite = default,
+        public ContentButtonElement(ISpriteSource iconSprite = default,
             string text = default,
             ISpriteSource normalSprite = default,
             ISpriteSource hoverSprite = default,
@@ -138,9 +133,8 @@ namespace ComposableUi
             _disabledTextColor = disabledTextColor ?? Color.White;
 
             Icon = new SpriteElement(
-                size: iconSize ?? DefaultIconSize,
-                spriteSource: iconSprite ?? BuiltInSprite.WhitePixel,
-                drawMode: DrawMode.Simple
+                spriteSource: iconSprite ?? Sprite.Empty,
+                sizeToSource: true
             );
 
             Text = new TextElement(

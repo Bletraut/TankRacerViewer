@@ -43,6 +43,7 @@ namespace TankRacerViewer.Core
                     {
                         var sprite = slice.ToSprite();
                         sprite.Texture = atlas;
+                        sprite.Scale = 2;
 
                         _cache.Add(slice.Name, sprite);
                     }

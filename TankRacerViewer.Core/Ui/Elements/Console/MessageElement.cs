@@ -10,10 +10,6 @@ namespace TankRacerViewer.Core
         public const float DefaultSpacing = 8;
         public const float DefaultPaddings = 6;
 
-        // Static.
-        public static readonly Vector2 DefaultIconSize = new(30);
-
-        // Class.
         private readonly SpriteElement _background;
         private readonly SpriteElement _icon;
         private readonly TextElement _message;
@@ -21,12 +17,12 @@ namespace TankRacerViewer.Core
         public MessageElement()
         {
             _background = new SpriteElement(
-                spriteSource: BuiltInSprite.HoverSoftDarkPixel
+                spriteSource: BuiltInSprite.HoverSoftDarkPixel,
+                drawMode: DrawMode.Sliced
             );
 
             _icon = new SpriteElement(
-                size: DefaultIconSize,
-                sizeToSource: false
+                sizeToSource: true
             );
 
             _message = new TextElement(

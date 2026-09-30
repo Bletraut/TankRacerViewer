@@ -70,13 +70,13 @@ namespace TankRacerViewer.Core
             _viewModeList.ItemSelected += OnViewModeSelected;
 
             _controlsInfoToggle = UiElementFactory.CreateToggleButton();
-            _controlsInfoToggle.Icon.SetScaledSprite(IconName.ControlsInfo, UiElementFactory.DefaultSpriteScale);
+            _controlsInfoToggle.Icon.SpriteSource = IconCollection.Get(IconName.ControlsInfo);
             _controlsInfoToggle.Text.IsEnabled = false;
             _controlsInfoToggle.SetToggle(true);
             _controlsInfoToggle.PointerClick += OnControlsInfoToggleClicked;
 
             _statisticsToggle = UiElementFactory.CreateToggleButton();
-            _statisticsToggle.Icon.SetScaledSprite(IconName.Statistics, UiElementFactory.DefaultSpriteScale);
+            _statisticsToggle.Icon.SpriteSource = IconCollection.Get(IconName.Statistics);
             _statisticsToggle.Text.IsEnabled = false;
             _statisticsToggle.SetToggle(true);
             _statisticsToggle.PointerClick += OnStatisticsToggleClicked;
@@ -130,7 +130,8 @@ namespace TankRacerViewer.Core
                                         ignoreLayout: true,
                                         innerElement: new ExpandedElement(
                                             innerElement: new SpriteElement(
-                                                spriteSource: BuiltInSprite.DarkPixel
+                                                spriteSource: BuiltInSprite.DarkPixel,
+                                                drawMode: DrawMode.Sliced
                                             )
                                         )
                                     ),
@@ -168,7 +169,8 @@ namespace TankRacerViewer.Core
                         innerElement: new ExpandedElement(
                             innerElement: new SpriteElement(
                                 spriteSource: BuiltInSprite.WhitePixel,
-                                color: RenderInfoElement.DefaultBackgroundColor
+                                color: RenderInfoElement.DefaultBackgroundColor,
+                                drawMode: DrawMode.Sliced
                             )
                         )
                     ),

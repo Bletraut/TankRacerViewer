@@ -1,11 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-
-namespace ComposableUi
+﻿namespace ComposableUi
 {
     public sealed class TabElement : PointerInputHandlerElement
     {
-        public const float DefaultIconSize = 22;
-
         public const int DefaultLeftPadding = 6;
         public const int DefaultRightPadding = 12;
         public const int DefaultItemSpacing = 4;
@@ -30,7 +26,9 @@ namespace ComposableUi
             NormalSprite = activeSprite ?? BuiltInSprite.ActiveTab;
             SelectedSprite = focusedSprite ?? BuiltInSprite.SelectedTab;
 
-            Background = new SpriteElement();
+            Background = new SpriteElement(
+                drawMode: DrawMode.Sliced
+            );
             var backgroundParent = new LayoutElement(
                 ignoreLayout: true,
                 innerElement: new ExpandedElement(
@@ -39,8 +37,8 @@ namespace ComposableUi
             );
 
             Icon = new SpriteElement(
-                size: new Vector2(DefaultIconSize),
-                spriteSource: iconSprite ?? BuiltInSprite.RectangleButton
+                spriteSource: iconSprite ?? BuiltInSprite.RectangleButton,
+                sizeToSource: true
             );
 
             Title = new TextElement(

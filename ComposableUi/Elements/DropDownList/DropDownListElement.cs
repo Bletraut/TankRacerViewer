@@ -31,7 +31,6 @@ namespace ComposableUi
         public static readonly Vector2 DefaultSize = new(100, 24);
 
         public static readonly Vector2 DefaultButtonSize = new(24);
-        public static readonly Vector2 DefaultButtonIconSize = new(10);
 
         public float MaxListHeight { get; set; }
 
@@ -72,11 +71,11 @@ namespace ComposableUi
             MaxListHeight = maxListHeight;
 
             Background = new SpriteElement(
-                spriteSource: BuiltInSprite.TextField
+                spriteSource: BuiltInSprite.TextField,
+                drawMode: DrawMode.Sliced
             );
 
             OpenButton = new ContentButtonElement(
-                iconSize: DefaultButtonIconSize,
                 iconSprite: BuiltInSprite.DownArrowIcon,
                 normalSprite: BuiltInSprite.SoftDarkPixel,
                 hoverSprite: BuiltInSprite.SelectionSoftDarkPixel,
@@ -120,7 +119,8 @@ namespace ComposableUi
             );
 
             ContentBackground = new SpriteElement(
-                spriteSource: BuiltInSprite.TextField
+                spriteSource: BuiltInSprite.TextField,
+                drawMode: DrawMode.Sliced
             );
 
             _overlayInputInterceptor = new PointerInputHandlerElement(

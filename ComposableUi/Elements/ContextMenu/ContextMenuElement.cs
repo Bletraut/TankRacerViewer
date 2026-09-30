@@ -57,7 +57,10 @@ namespace ComposableUi
             ClampToRootWidth = clampToRootWidth;
             ClampToRootHeight = clampToRootHeight;
 
-            Background = new SpriteElement(spriteSource: BuiltInSprite.RectanglePanel);
+            Background = new SpriteElement(
+                spriteSource: BuiltInSprite.RectanglePanel,
+                drawMode: DrawMode.Sliced
+            );
             var backgroundParent = new LayoutElement(
                 ignoreLayout: true,
                 innerElement: new ExpandedElement(
@@ -66,7 +69,8 @@ namespace ComposableUi
 
             _buttonsColumn = new ColumnLayout(
                 expandChildrenMainAxis: true,
-                expandChildrenCrossAxis: true);
+                expandChildrenCrossAxis: true
+            );
             var buttonsParent = new LayoutElement(
                 ignoreLayout: true,
                 innerElement: new ExpandedElement(
@@ -74,18 +78,21 @@ namespace ComposableUi
                     rightPadding: DefaultContentPadding,
                     topPadding: DefaultContentPadding,
                     bottomPadding: DefaultContentPadding,
-                    innerElement: _buttonsColumn)
-                );
+                    innerElement: _buttonsColumn
+                )
+            );
 
             _itemNamesColumn = new ColumnLayout(
                 alignmentFactor: Alignment.TopLeft,
                 sizeMainAxisToContent: true,
-                sizeCrossAxisToContent: true);
+                sizeCrossAxisToContent: true
+            );
 
             _itemKeyBindingsColumn = new ColumnLayout(
                 alignmentFactor: Alignment.TopRight,
                 sizeMainAxisToContent: true,
-                sizeCrossAxisToContent: true);
+                sizeCrossAxisToContent: true
+            );
 
             _columnsRow = new RowLayout(
                 children: [backgroundParent, buttonsParent, _itemNamesColumn, _itemKeyBindingsColumn],
@@ -96,7 +103,8 @@ namespace ComposableUi
                 bottomPadding: DefaultContentPadding,
                 alignmentFactor: Alignment.TopLeft,
                 sizeMainAxisToContent: true,
-                sizeCrossAxisToContent: true);
+                sizeCrossAxisToContent: true
+            );
 
             AddChild(_columnsRow);
 

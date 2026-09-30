@@ -8,8 +8,6 @@ namespace ComposableUi
 {
     public sealed class DefaultUiRenderer : IUiRenderer
     {
-        public const int DefaultNineSlicedScale = 2;
-
         // Static.
         private static void SkipClipMaskIfContains(ref Rectangle? clipMask, Rectangle destinationRectangle)
         {
@@ -23,8 +21,6 @@ namespace ComposableUi
         // Class.
         public static Texture2D FallbackTexture { get; private set; }
         public static Sprite FallbackSprite { get; private set; }
-
-        public int NineSlicedScale = DefaultNineSlicedScale;
 
         public RenderTarget2D RenderTarget { get; set; }
 
@@ -62,11 +58,12 @@ namespace ComposableUi
                 FallbackSprite = new Sprite()
                 {
                     Texture = FallbackTexture,
+                    SourceRectangle = new Rectangle(0, 0, FallbackTexture.Width, FallbackTexture.Height),
+                    Scale = 2,
                     LeftBorder = 1,
                     RightBorder = 1,
                     TopBorder = 1,
-                    BottomBorder = 1,
-                    SourceRectangle = new Rectangle(0, 0, FallbackTexture.Width, FallbackTexture.Height)
+                    BottomBorder = 1
                 };
             }
         }
@@ -126,6 +123,8 @@ namespace ComposableUi
                 return;
             }
 
+            var scale = sprite.Scale;
+
             // Top left.
             var sliceSourceRectangle = new Rectangle(sprite.SourceRectangle.Left,
                 sprite.SourceRectangle.Top,
@@ -133,8 +132,8 @@ namespace ComposableUi
                 sprite.TopBorder);
             var sliceDestinationRectangle = new Rectangle(destinationRectangle.Left,
                 destinationRectangle.Top,
-                sliceSourceRectangle.Width * NineSlicedScale,
-                sliceSourceRectangle.Height * NineSlicedScale);
+                sliceSourceRectangle.Width * scale,
+                sliceSourceRectangle.Height * scale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
@@ -143,10 +142,10 @@ namespace ComposableUi
                 sprite.SourceRectangle.Top,
                 sprite.RightBorder,
                 sprite.TopBorder);
-            sliceDestinationRectangle = new Rectangle(destinationRectangle.Right - sliceSourceRectangle.Width * NineSlicedScale,
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Right - sliceSourceRectangle.Width * scale,
                 destinationRectangle.Top,
-                sliceSourceRectangle.Width * NineSlicedScale,
-                sliceSourceRectangle.Height * NineSlicedScale);
+                sliceSourceRectangle.Width * scale,
+                sliceSourceRectangle.Height * scale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
@@ -156,9 +155,9 @@ namespace ComposableUi
                 sprite.LeftBorder,
                 sprite.BottomBorder);
             sliceDestinationRectangle = new Rectangle(destinationRectangle.Left,
-                destinationRectangle.Bottom - sliceSourceRectangle.Height * NineSlicedScale,
-                sliceSourceRectangle.Width * NineSlicedScale,
-                sliceSourceRectangle.Height * NineSlicedScale);
+                destinationRectangle.Bottom - sliceSourceRectangle.Height * scale,
+                sliceSourceRectangle.Width * scale,
+                sliceSourceRectangle.Height * scale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
@@ -167,10 +166,10 @@ namespace ComposableUi
                 sprite.SourceRectangle.Bottom - sprite.BottomBorder,
                 sprite.RightBorder,
                 sprite.BottomBorder);
-            sliceDestinationRectangle = new Rectangle(destinationRectangle.Right - sliceSourceRectangle.Width * NineSlicedScale,
-                destinationRectangle.Bottom - sliceSourceRectangle.Height * NineSlicedScale,
-                sliceSourceRectangle.Width * NineSlicedScale,
-                sliceSourceRectangle.Height * NineSlicedScale);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Right - sliceSourceRectangle.Width * scale,
+                destinationRectangle.Bottom - sliceSourceRectangle.Height * scale,
+                sliceSourceRectangle.Width * scale,
+                sliceSourceRectangle.Height * scale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
@@ -180,9 +179,9 @@ namespace ComposableUi
                 sprite.LeftBorder,
                 sprite.SourceRectangle.Height - sprite.TopBorder - sprite.BottomBorder);
             sliceDestinationRectangle = new Rectangle(destinationRectangle.Left,
-                destinationRectangle.Top + sprite.TopBorder * NineSlicedScale,
-                sliceSourceRectangle.Width * NineSlicedScale,
-                destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * NineSlicedScale);
+                destinationRectangle.Top + sprite.TopBorder * scale,
+                sliceSourceRectangle.Width * scale,
+                destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * scale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
@@ -191,10 +190,10 @@ namespace ComposableUi
                 sprite.SourceRectangle.Top + sprite.TopBorder,
                 sprite.RightBorder,
                 sprite.SourceRectangle.Height - sprite.TopBorder - sprite.BottomBorder);
-            sliceDestinationRectangle = new Rectangle(destinationRectangle.Right - sliceSourceRectangle.Width * NineSlicedScale,
-                destinationRectangle.Top + sprite.TopBorder * NineSlicedScale,
-                sliceSourceRectangle.Width * NineSlicedScale,
-                destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * NineSlicedScale);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Right - sliceSourceRectangle.Width * scale,
+                destinationRectangle.Top + sprite.TopBorder * scale,
+                sliceSourceRectangle.Width * scale,
+                destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * scale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
@@ -203,10 +202,10 @@ namespace ComposableUi
                 sprite.SourceRectangle.Top,
                 sprite.SourceRectangle.Width - sprite.LeftBorder - sprite.RightBorder,
                 sprite.TopBorder);
-            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left + sprite.LeftBorder * NineSlicedScale,
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left + sprite.LeftBorder * scale,
                 destinationRectangle.Top,
-                destinationRectangle.Width - (sprite.LeftBorder + sprite.RightBorder) * NineSlicedScale,
-                sprite.TopBorder * NineSlicedScale);
+                destinationRectangle.Width - (sprite.LeftBorder + sprite.RightBorder) * scale,
+                sprite.TopBorder * scale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
@@ -215,10 +214,10 @@ namespace ComposableUi
                 sprite.SourceRectangle.Bottom - sprite.BottomBorder,
                 sprite.SourceRectangle.Width - sprite.LeftBorder - sprite.RightBorder,
                 sprite.BottomBorder);
-            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left + sprite.LeftBorder * NineSlicedScale,
-                destinationRectangle.Bottom - sprite.BottomBorder * NineSlicedScale,
-                destinationRectangle.Width - (sprite.LeftBorder + sprite.RightBorder) * NineSlicedScale,
-                sprite.BottomBorder * NineSlicedScale);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left + sprite.LeftBorder * scale,
+                destinationRectangle.Bottom - sprite.BottomBorder * scale,
+                destinationRectangle.Width - (sprite.LeftBorder + sprite.RightBorder) * scale,
+                sprite.BottomBorder * scale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
@@ -227,10 +226,10 @@ namespace ComposableUi
                 sprite.SourceRectangle.Top + sprite.TopBorder,
                 sprite.SourceRectangle.Width - sprite.LeftBorder - sprite.RightBorder,
                 sprite.SourceRectangle.Height - sprite.TopBorder - sprite.BottomBorder);
-            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left + sprite.LeftBorder * NineSlicedScale,
-                destinationRectangle.Top + sprite.TopBorder * NineSlicedScale,
-                destinationRectangle.Width - (sprite.LeftBorder + sprite.RightBorder) * NineSlicedScale,
-                destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * NineSlicedScale);
+            sliceDestinationRectangle = new Rectangle(destinationRectangle.Left + sprite.LeftBorder * scale,
+                destinationRectangle.Top + sprite.TopBorder * scale,
+                destinationRectangle.Width - (sprite.LeftBorder + sprite.RightBorder) * scale,
+                destinationRectangle.Height - (sprite.TopBorder + sprite.BottomBorder) * scale);
             _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
         }

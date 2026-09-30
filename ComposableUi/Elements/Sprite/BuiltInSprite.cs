@@ -73,7 +73,7 @@ namespace ComposableUi
         public static readonly ThemeSpriteSource RestoreWindowIcon = new(nameof(RestoreWindowIcon));
 
         public static void Load(ContentManager contentManager, SpriteResolver spriteResolver,
-            string spriteSheetAssetName)
+            string spriteSheetAssetName, int defaultSpriteScale = 1)
         {
             var assembly = Assembly.GetExecutingAssembly();
 
@@ -85,7 +85,7 @@ namespace ComposableUi
             var spriteSheetJson = reader.ReadToEnd();
 
             var spriteSheetTexture = contentManager.Load<Texture2D>(spriteSheetAssetName);
-            spriteResolver.AddAsepriteSpriteSheet(spriteSheetTexture, spriteSheetJson);
+            spriteResolver.AddAsepriteSpriteSheet(spriteSheetTexture, spriteSheetJson, defaultSpriteScale);
         }
     }
 }

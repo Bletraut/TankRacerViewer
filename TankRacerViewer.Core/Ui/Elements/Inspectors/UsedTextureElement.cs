@@ -27,7 +27,8 @@ namespace TankRacerViewer.Core
         public UsedTextureElement()
         {
             _background = new SpriteElement(
-                spriteSource: BuiltInSprite.WhitePixel
+                spriteSource: BuiltInSprite.WhitePixel,
+                drawMode: DrawMode.Sliced
             );
 
             _name = new TextElement(
@@ -40,8 +41,7 @@ namespace TankRacerViewer.Core
             _sprite = new Sprite();
             _image = new SpriteElement(
                 spriteSource: _sprite,
-                sizeToSource: true,
-                drawMode: DrawMode.Simple
+                sizeToSource: true
             );
 
             _aspectRatioFitter = new AspectRatioFitterElement(

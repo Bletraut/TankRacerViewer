@@ -105,13 +105,15 @@ namespace ComposableUi
             var background = new ExpandedElement(
                 topPadding: DefaultBackgroundTopPadding,
                 innerElement: new SpriteElement(
-                    spriteSource: BuiltInSprite.WindowBody
+                    spriteSource: BuiltInSprite.WindowBody,
+                    drawMode: DrawMode.Sliced
                 )
             );
 
             DragHandle = new PointerInputHandlerElement(
                 innerElement: new SpriteElement(
-                    spriteSource: BuiltInSprite.InactiveTab
+                    spriteSource: BuiltInSprite.InactiveTab,
+                    drawMode: DrawMode.Sliced
                 )
             );
             DragHandle.PointerDown += OnDragHandlePointerDown;
@@ -133,7 +135,8 @@ namespace ComposableUi
             Tab.PointerDrag += OnTabButtonPointerDrag;
 
             ButtonsBackground = new SpriteElement(
-                spriteSource: BuiltInSprite.TabButtonsBackground
+                spriteSource: BuiltInSprite.TabButtonsBackground,
+                drawMode: DrawMode.Sliced
             );
 
             _buttonRow = new RowLayout(

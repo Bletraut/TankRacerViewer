@@ -41,27 +41,24 @@ namespace TankRacerViewer.Core
 
         public ConsoleWindow() : base("Console")
         {
-            this.SetScaledIcon(IconName.Console, UiElementFactory.DefaultSpriteScale);
+            Tab.Icon.SpriteSource = IconCollection.Get(IconName.Console);
 
             _clearButton = UiElementFactory.CreateToggleButton("Clear");
             _clearButton.Icon.IsEnabled = false;
             _clearButton.PointerClick += OnClearButtonClicked;
 
             _infoToggle = UiElementFactory.CreateToggleButton("0");
-            _infoToggle.Icon.SetScaledSprite(IconName.MessageSmall,
-                UiElementFactory.DefaultSpriteScale);
+            _infoToggle.Icon.SpriteSource = IconCollection.Get(IconName.MessageSmall);
             _infoToggle.SetToggle(_isInfoEnabled);
             _infoToggle.PointerClick += OnInfoToggleClicked;
 
             _warningToggle = UiElementFactory.CreateToggleButton("0");
-            _warningToggle.Icon.SetScaledSprite(IconName.WarningSmall,
-                UiElementFactory.DefaultSpriteScale);
+            _warningToggle.Icon.SpriteSource = IconCollection.Get(IconName.WarningSmall);
             _warningToggle.SetToggle(_isWarningEnabled);
             _warningToggle.PointerClick += OnWarningToggleClicked;
 
             _errorToggle = UiElementFactory.CreateToggleButton("0");
-            _errorToggle.Icon.SetScaledSprite(IconName.ErrorSmall,
-                UiElementFactory.DefaultSpriteScale);
+            _errorToggle.Icon.SpriteSource = IconCollection.Get(IconName.ErrorSmall);
             _errorToggle.SetToggle(_isErrorEnabled);
             _errorToggle.PointerClick += OnErrorToggleClicked;
 
@@ -93,7 +90,8 @@ namespace TankRacerViewer.Core
                                         ignoreLayout: true,
                                         innerElement: new ExpandedElement(
                                             innerElement: new SpriteElement(
-                                                spriteSource: BuiltInSprite.DarkPixel
+                                                spriteSource: BuiltInSprite.DarkPixel,
+                                                drawMode: DrawMode.Sliced
                                             )
                                         )
                                     ),
