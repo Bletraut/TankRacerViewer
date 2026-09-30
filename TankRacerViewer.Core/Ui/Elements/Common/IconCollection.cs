@@ -13,7 +13,7 @@ namespace TankRacerViewer.Core
 {
     public static class IconCollection
     {
-        private static readonly Dictionary<string, Sprite> _cache = [];
+        private static readonly SpriteResolver _spriteResolver = new();
 
         public static void Initialize(ContentManager contentManager)
         {
@@ -22,7 +22,7 @@ namespace TankRacerViewer.Core
         }
 
         public static Sprite Get(string name)
-            => _cache.GetValueOrDefault(name);
+            => _spriteResolver.GetSpriteOrDefault(name);
 
         private static void PrepareIconSprites(Texture2D atlas)
         {
@@ -37,20 +37,13 @@ namespace TankRacerViewer.Core
                 using var reader = new StreamReader(stream);
                 var atlasJson = reader.ReadToEnd();
 
-                if (AsepriteUtilities.TryGetSlices(atlasJson, out var slices))
-                {
-                    foreach (var slice in slices)
-                    {
-                        var sprite = slice.ToSprite();
-                        sprite.Texture = atlas;
-                        sprite.Scale = 2;
-
-                        _cache.Add(slice.Name, sprite);
-                    }
-                }
+                _spriteResolver.AddAsepriteSpriteSheet(atlas, atlasJson, 2);
             }
             catch
             {
+#if DEBUG
+                throw;
+#endif
             }
         }
     }

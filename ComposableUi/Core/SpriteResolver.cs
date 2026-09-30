@@ -27,5 +27,8 @@ namespace ComposableUi
 
         public bool TryGetSprite(string spriteName, out Sprite sprite)
             => _sprites.TryGetValue(spriteName, out sprite);
+
+        public Sprite GetSpriteOrDefault(string spriteName)
+            => _sprites.GetValueOrDefault(spriteName);
     }
 }
