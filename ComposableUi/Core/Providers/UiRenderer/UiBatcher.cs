@@ -1,25 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace ComposableUi
 {
-    public sealed class UiBatcher
+    public sealed class UiBatcher<T> where T : struct, IRenderCommand<T>
     {
         // Static.
-        private static bool CanBatch(in RenderCommand commandA, in RenderCommand commandB)
+        private static bool IsBoundingRectangleIntersects(Rectangle boundingRectangle, List<T> commands)
         {
-            return commandA.Type == commandB.Type
-                && commandA.ClipMask == commandB.ClipMask
-                && commandA.Texture == commandB.Texture;
-        }
-
-        private static bool IsBoundingBoxIntersects(in RenderCommand command, List<RenderCommand> commands)
-        {
-            for (var i = 0; i < commands.Count; i++)
+            var commandsSpan = CollectionsMarshal.AsSpan(commands);
+            foreach (ref var command in commandsSpan)
             {
-                if (command.BoundingRectangle.Intersects(commands[i].BoundingRectangle))
+                if (boundingRectangle.Intersects(command.BoundingRectangle))
                     return true;
             }
 
@@ -27,38 +22,30 @@ namespace ComposableUi
         }
 
         // Class.
-        private readonly List<RenderCommand> _batchedCommands = [];
-        public IReadOnlyList<RenderCommand> BatchedCommands { get; }
+        private readonly List<T> _batchedCommands = [];
+        public ReadOnlySpan<T> BatchedCommands => CollectionsMarshal.AsSpan(_batchedCommands);
 
-        private readonly List<RenderCommand> _addedCommands = [];
+        private readonly List<T> _addedCommands = [];
 
-        private readonly List<RenderCommand> _currentCommands = [];
-        private readonly List<RenderCommand> _breakingCommands = [];
+        private readonly List<T> _currentCommands = [];
+        private readonly List<T> _breakingCommands = [];
 
-        private int _addedCommandCount = 0;
+        private int _addedCommandCount;
 
         private bool _isBatchDirty;
 
-        public UiBatcher()
+        public void AddRenderCommand(T renderCommand)
         {
-            BatchedCommands = _batchedCommands.AsReadOnly();
-        }
-
-        public void AddRenderCommand(int id, int type,
-            Rectangle boundingRectangle, Rectangle? clipMask, Texture texture)
-        {
-            var newCommand = new RenderCommand(id, type, boundingRectangle, clipMask, texture);
-
             if (_addedCommandCount >= _addedCommands.Count)
             {
                 _isBatchDirty = true;
-                _addedCommands.Add(newCommand);
+                _addedCommands.Add(renderCommand);
             }
             else
             {
                 _isBatchDirty = _isBatchDirty 
-                    || newCommand != _addedCommands[_addedCommandCount];
-                _addedCommands[_addedCommandCount] = newCommand;
+                    || !renderCommand.Equals(_addedCommands[_addedCommandCount]);
+                _addedCommands[_addedCommandCount] = renderCommand;
             }
 
             _addedCommandCount++;
@@ -92,8 +79,8 @@ namespace ComposableUi
                 {
                     var nextCommand = currentCommands[i];
 
-                    var canBatchCommand = CanBatch(currentCommand, nextCommand)
-                        && !IsBoundingBoxIntersects(nextCommand, breakingCommands);
+                    var canBatchCommand = currentCommand.CanBatchWith(nextCommand)
+                        && !IsBoundingRectangleIntersects(nextCommand.BoundingRectangle, breakingCommands);
                     if (canBatchCommand)
                     {
                         _batchedCommands.Add(nextCommand);
