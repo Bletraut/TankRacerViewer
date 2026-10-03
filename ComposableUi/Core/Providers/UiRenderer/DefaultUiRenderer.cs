@@ -101,6 +101,11 @@ namespace ComposableUi
             _spriteBatch.DrawString(data.SpriteFont, data.Text, data.Position, data.Color);
         }
 
+        private void RunDrawGeometryCommand(in RenderCommand command)
+        {
+            // TODO: Implement draw logic.
+        }
+
         private void DrawSimpleSprite(Sprite sprite,
             Rectangle destinationRectangle, Color color)
         {
@@ -298,6 +303,9 @@ namespace ComposableUi
                     case RenderCommandType.Text:
                         RunDrawTextCommand(renderCommand);
                         break;
+                    case RenderCommandType.Geometry:
+                        RunDrawGeometryCommand(renderCommand);
+                        break;
                 }
             }
 
@@ -349,6 +357,13 @@ namespace ComposableUi
                 ClipMask = clipMask,
                 Texture = spriteFont.Texture,
             });
+        }
+
+        void IUiRenderer.DrawGeometry(Geometry geometry,
+            Vector2 position, Rectangle? clipMask, Color color)
+        {
+            // TODO: Implement draw geometry logic.
+            throw new System.NotImplementedException();
         }
 
         private readonly record struct RenderSpriteData(Sprite Sprite,

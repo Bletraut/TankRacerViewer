@@ -13,5 +13,8 @@ namespace ComposableUi
 
         public void DrawString(SpriteFont spriteFont, string text,
             Vector2 position, Rectangle? clipMask, Color color);
+
+        public void DrawGeometry(Geometry geometry,
+            Vector2 position, Rectangle? clipMask, Color color);
     }
 }

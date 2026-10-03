@@ -1,4 +1,7 @@
-﻿using ComposableUi;
+﻿using System;
+using System.Linq;
+
+using ComposableUi;
 
 using Microsoft.Xna.Framework;
 
@@ -14,8 +17,7 @@ namespace TankRacerViewer.Core
 
             var searchField = new RichTextElement(
                 text: "This chapter describes a method for fast, stable fluid simulation that runs entirely on the GPU.\nIt introduces fluid dynamics and the associated mathematics, and it describes in detail the techniques to perform the simulation on the GPU.",
-                size: new Vector2(DefaultSearchFieldHeight),
-                wrappingMode: WrappingMode.Wrap
+                size: new Vector2(DefaultSearchFieldHeight)
             );
             ContentContainer.AddChild(new ExpandedElement(
                 leftPadding: 2,
@@ -29,75 +31,68 @@ namespace TankRacerViewer.Core
             ));
 
             // FOR DEBUG
-            var alignment = new Vector2[]
-            {
-                Alignment.TopLeft, Alignment.TopCenter, Alignment.TopRight,
-                Alignment.MiddleLeft, Alignment.Center, Alignment.MiddleRight,
-                Alignment.BottomLeft, Alignment.BottomCenter, Alignment.BottomRight
-            };
-            var textAlignment = new DropDownListElement(
-                items: [
-                    new DropDownListTextItemElement(nameof(Alignment.TopLeft)),
-                    new DropDownListTextItemElement(nameof(Alignment.TopCenter)),
-                    new DropDownListTextItemElement(nameof(Alignment.TopRight)),
-                    new DropDownListTextItemElement(nameof(Alignment.MiddleLeft)),
-                    new DropDownListTextItemElement(nameof(Alignment.Center)),
-                    new DropDownListTextItemElement(nameof(Alignment.MiddleRight)),
-                    new DropDownListTextItemElement(nameof(Alignment.BottomLeft)),
-                    new DropDownListTextItemElement(nameof(Alignment.BottomCenter)),
-                    new DropDownListTextItemElement(nameof(Alignment.BottomRight)),
-                ]
+            var horizontalAlignmentMode = new DropDownListElement(
+                items: Enum.GetNames<HorizontalAlignmentMode>()
+                    .Select(name => new DropDownListTextItemElement(name))
             );
-            textAlignment.ItemSelected += (_, i) =>
+            horizontalAlignmentMode.ItemSelected += (_, i) =>
             {
-                searchField.TextAlignmentFactor = alignment[i];
+                searchField.HorizontalAlignmentMode = (HorizontalAlignmentMode)i;
             };
-            textAlignment.SelectItem(0);
+            horizontalAlignmentMode.SelectItem(0);
 
-            var justificationMode = new DropDownListElement(
-                items: [
-                    new DropDownListTextItemElement(JustificationMode.Natural.ToString()),
-                    new DropDownListTextItemElement(JustificationMode.Justified.ToString()),
-                    new DropDownListTextItemElement(JustificationMode.Flush.ToString())
-                ]
+            var verticalAlignmentMode = new DropDownListElement(
+                items: Enum.GetNames<VerticalAlignmentMode>()
+                    .Select(name => new DropDownListTextItemElement(name))
             );
-            justificationMode.ItemSelected += (_, i) =>
+            verticalAlignmentMode.ItemSelected += (_, i) =>
             {
-                searchField.JustificationMode = (JustificationMode)i;
+                searchField.VerticalAlignmentMode = (VerticalAlignmentMode)i;
             };
-            justificationMode.SelectItem(0);
+            verticalAlignmentMode.SelectItem(0);
 
-            var wrapMode = new DropDownListElement(
-                items: [
-                    new DropDownListTextItemElement(WrappingMode.NoWrap.ToString()),
-                    new DropDownListTextItemElement(WrappingMode.Wrap.ToString()),
-                ]
-            );
-            wrapMode.ItemSelected += (_, i) =>
+            var multilineToggle = UiElementFactory.CreateToggleButton("Multiline");
+            RefreshToggle(multilineToggle, searchField.Multiline);
+            multilineToggle.PointerClick += (_, _) =>
             {
-                searchField.WrappingMode = (WrappingMode)i;
+                searchField.Multiline = !searchField.Multiline;
+                RefreshToggle(multilineToggle, searchField.Multiline);
             };
-            wrapMode.SelectItem(1);
+
+            var wordWrapToggle = UiElementFactory.CreateToggleButton("Wrap Mode");
+            RefreshToggle(wordWrapToggle, searchField.WordWrap);
+            wordWrapToggle.PointerClick += (_, _) =>
+            {
+                searchField.WordWrap = !searchField.WordWrap;
+                RefreshToggle(wordWrapToggle, searchField.WordWrap);
+            };
+
+            var preserveWhitespaceToggle = UiElementFactory.CreateToggleButton("Preserve Whitespace");
+            RefreshToggle(preserveWhitespaceToggle, searchField.PreserveWhitespace);
+            preserveWhitespaceToggle.PointerClick += (_, _) =>
+            {
+                searchField.PreserveWhitespace = !searchField.PreserveWhitespace;
+                RefreshToggle(preserveWhitespaceToggle, searchField.PreserveWhitespace);
+            };
 
             var propertiesColumn = new ColumnLayout(
+                spacing: 4,
                 sizeMainAxisToContent: true,
                 expandChildrenCrossAxis: true,
                 children: [
                     new TextElement(
-                        text: "Alignment:",
+                        text: "Horizontal alignment:",
                         sizeToTextHeight: true
                     ),
-                    textAlignment,
+                    horizontalAlignmentMode,
                     new TextElement(
-                        text: "Justification:",
+                        text: "Vertical alignment:",
                         sizeToTextHeight: true
                     ),
-                    justificationMode,
-                    new TextElement(
-                        text: "WrapMode:",
-                        sizeToTextHeight: true
-                    ),
-                    wrapMode,
+                    verticalAlignmentMode,
+                    multilineToggle,
+                    wordWrapToggle,
+                    preserveWhitespaceToggle
                 ]
             );
 
@@ -110,6 +105,22 @@ namespace TankRacerViewer.Core
                 )
             ));
             // END
+        }
+
+        private void RefreshToggle(ContentButtonElement toggle, bool value)
+        {
+            if (value)
+            {
+                toggle.NormalSprite = BuiltInSprite.LightRectangle;
+                toggle.HoverSprite = BuiltInSprite.HoverLightRectangle;
+                toggle.PressedSprite = BuiltInSprite.HoverLightRectangle;
+            }
+            else
+            {
+                toggle.NormalSprite = BuiltInSprite.DarkRectangle;
+                toggle.HoverSprite = BuiltInSprite.HoverDarkRectangle;
+                toggle.PressedSprite = BuiltInSprite.HoverDarkRectangle;
+            }
         }
     }
 }
