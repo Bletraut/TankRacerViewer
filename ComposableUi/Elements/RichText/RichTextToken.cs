@@ -7,8 +7,8 @@
     {
         LetterOrDigit,
         Symbol,
-        Space,
+        Whitespace,
         WordBreak,
-        NewLine
+        LineBreak
     }
 }

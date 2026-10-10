@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -228,20 +229,20 @@ namespace ComposableUi
                         length++;
                     }
 
-                    _tokens.Add(new RichTextToken(TokenType.NewLine, currentIndex, length));
+                    _tokens.Add(new RichTextToken(TokenType.LineBreak, currentIndex, length));
                     continue;
                 }
 
                 var isNewLine = currentCharacter == '\n';
                 if (isNewLine)
                 {
-                    _tokens.Add(new RichTextToken(TokenType.NewLine, currentIndex, length));
+                    _tokens.Add(new RichTextToken(TokenType.LineBreak, currentIndex, length));
                     continue;
                 }
 
                 if (char.IsWhiteSpace(currentCharacter))
                 {
-                    _tokens.Add(new RichTextToken(TokenType.Space, currentIndex, length));
+                    _tokens.Add(new RichTextToken(TokenType.Whitespace, currentIndex, length));
                     _tokens.Add(new RichTextToken(TokenType.WordBreak, currentIndex, 0));
                     continue;
                 }
@@ -298,11 +299,12 @@ namespace ComposableUi
             if (_currentSpriteFont.DefaultCharacter.HasValue)
                 defaultGlyph = glyphs[_currentSpriteFont.DefaultCharacter.Value];
 
+            var isNewParagraph = true;
+
             var lineWidth = 0f;
             var lineWidthBeforeWordBreak = 0f;
             var lineLength = 0;
             var lineLengthBeforeWordBreak = 0;
-            var isFirstCharacterOfLine = true;
 
             var tokens = Tokens;
             for (int i = 0; i < tokens.Count; i++)
@@ -310,23 +312,25 @@ namespace ComposableUi
                 var token = Tokens[i];
                 switch (token.TokenType)
                 {
-                    case TokenType.LetterOrDigit or TokenType.Symbol or TokenType.Space:
+                    case TokenType.LetterOrDigit or TokenType.Symbol or TokenType.Whitespace:
+                        var skipLeadingWhitespace = token.TokenType is TokenType.Whitespace
+                            && !PreserveWhitespace
+                            && !isNewParagraph
+                            && lineLength == 0;
+                        if (skipLeadingWhitespace)
+                            continue;
+
                         var character = _text[token.StartIndex];
-                        if (!glyphs.TryGetValue(character, out var glyph))
-                        {
-                            if (!defaultGlyph.HasValue)
-                                continue;
+                        if (!TryGetGlyph(character, out var glyph))
+                            continue;
 
-                            glyph = defaultGlyph.Value;
-                        }
-
-                        var shouldWrapWord = WordWrap
+                        var shouldWrapWord = WordWrap 
+                            && Multiline
+                            && lineLength > 0
                             && lineWidth + glyph.LeftSideBearing + glyph.Width > Size.X;
-                        var shouldAddNewLine = Multiline
-                            && (isFirstCharacterOfLine || shouldWrapWord);
-                        if (shouldAddNewLine)
+                        if (shouldWrapWord)
                         {
-                            isFirstCharacterOfLine = false;
+                            isNewParagraph = false;
 
                             if (lineLengthBeforeWordBreak > 0)
                             {
@@ -341,9 +345,15 @@ namespace ComposableUi
                             }
                             else
                             {
-                                lineWidth = MathF.Max(0, glyph.LeftSideBearing);
                                 AddNewLine(lineLength);
                             }
+
+                            i--;
+                            continue;
+                        }
+                        else if (lineLength <= 0)
+                        {
+                            lineWidth = MathF.Max(0, glyph.LeftSideBearing);
                         }
                         else
                         {
@@ -369,15 +379,14 @@ namespace ComposableUi
                         lineWidthBeforeWordBreak = lineWidth;
                         lineLengthBeforeWordBreak = lineLength;
                         break;
-                    case TokenType.NewLine:
+                    case TokenType.LineBreak:
                         if (!Multiline)
                             continue;
-
-                        isFirstCharacterOfLine = true;
 
                         _characters.Add(new RichTextCharacter()
                         {
                             TokenIndex = i,
+                            TokenType = token.TokenType,
                             Position = Vector2.Zero,
                             FontTexture = _currentSpriteFont.Texture,
                             Glyph = default,
@@ -385,6 +394,8 @@ namespace ComposableUi
                         lineLength++;
 
                         AddNewLine(lineLength);
+
+                        isNewParagraph = true;
                         break;
                 }
             }
@@ -392,12 +403,53 @@ namespace ComposableUi
 
             ApplyAlignment();
 
+            bool TryGetGlyph(char character, out Glyph glyph)
+            {
+                if (!glyphs.TryGetValue(character, out glyph))
+                {
+                    if (!defaultGlyph.HasValue)
+                        return false;
+
+                    glyph = defaultGlyph.Value;
+                }
+
+                return true;
+            }
+
             void AddNewLine(int length)
             {
                 if (length <= 0)
                     return;
 
-                _lines.Add(length);
+                var characterCount = length;
+                if (!PreserveWhitespace)
+                {
+                    var minWhitespaceIndex = int.MaxValue;
+                    var maxWhitespaceIndex = int.MinValue;
+                    for (var i = 0; i < length; i++)
+                    {
+                        var index = _characters.Count - lineLength + length - i - 1;
+                        var character = _characters[index];
+
+                        if (character.TokenType is TokenType.LineBreak)
+                            continue;
+
+                        if (character.TokenType is not TokenType.Whitespace)
+                            break;
+
+                        minWhitespaceIndex = Math.Min(minWhitespaceIndex, index);
+                        maxWhitespaceIndex = Math.Max(maxWhitespaceIndex, index);
+                    }
+
+                    if (maxWhitespaceIndex >= minWhitespaceIndex)
+                    {
+                        var count = maxWhitespaceIndex - minWhitespaceIndex + 1;
+                        _characters.RemoveRange(minWhitespaceIndex, count);
+
+                        characterCount -= count;
+                    }
+                }
+                _lines.Add(characterCount);
 
                 lineLength -= length;
                 lineWidthBeforeWordBreak = 0;
@@ -528,8 +580,7 @@ namespace ComposableUi
         Left,
         Center,
         Right,
-        Justified,
-        Flush
+        Justified
     }
 
     public enum VerticalAlignmentMode

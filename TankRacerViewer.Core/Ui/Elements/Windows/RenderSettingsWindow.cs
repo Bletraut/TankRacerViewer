@@ -16,7 +16,7 @@ namespace TankRacerViewer.Core
             MinSize = Vector2.Zero;
 
             var searchField = new RichTextElement(
-                text: "This chapter describes a method for fast, stable fluid simulation that runs entirely on the GPU.\nIt introduces fluid dynamics and the associated mathematics, and it describes in detail the techniques to perform the simulation on the GPU.",
+                text: "This chapter describes a method for fast, stable fluid simulation A                     simulation A that runs entirely on the GPU.\nIt introduces fluid dynamics and the associated mathematics, and it describes in detail the techniques to perform the simulation on the GPU.",
                 size: new Vector2(DefaultSearchFieldHeight)
             );
             ContentContainer.AddChild(new ExpandedElement(
