@@ -1,51 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-
-using static Microsoft.Xna.Framework.Graphics.SpriteFont;
 
 namespace ComposableUi
 {
     public sealed class RichTextElement : Element,
         IDrawableElement
     {
-        // Static.
-        private static readonly Dictionary<SpriteFont, Dictionary<char, SpriteFont.Glyph>> _glyphCache = [];
-        private static readonly WordBreakRule[] _wordBreakRules =
-        [
-            new(['!', '?', '-', '}', '/', '|'],
-                [')', ']', '.', ',', '"', '\'', ';', ':'],
-                true),
-            new ([')', ']', '.', ',', ';', ':', '$', '%', '\\', '+', '№'],
-                ['(', '[', '{', '$', '%', '\\', '+', '№'],
-                false)
-        ];
-
-        public static Dictionary<char, SpriteFont.Glyph> GetCachedGlyphs(SpriteFont spriteFont)
-        {
-            if (!_glyphCache.TryGetValue(spriteFont, out var glyphs))
-            {
-                glyphs = spriteFont.GetGlyphs();
-                _glyphCache[spriteFont] = glyphs;
-            }
-
-            return glyphs;
-        }
-
-        public static float MeasureCharWidth(Dictionary<char, SpriteFont.Glyph> glyphs, char character)
-        {
-            if (!glyphs.TryGetValue(character, out SpriteFont.Glyph glyph))
-                return 0;
-
-            var width = glyph.Width + MathF.Max(0, glyph.LeftSideBearing) + MathF.Max(0, glyph.RightSideBearing);
-            return width;
-        }
-
-        // Class.
         private string _text;
         public string Text
         {
@@ -155,13 +118,12 @@ namespace ComposableUi
             }
         }
 
-        private readonly List<RichTextCharacter> _characters = [];
-        private readonly List<int> _lines = [];
+        private readonly RichTextLayout _preferredTextLayout = new();
+        private readonly RichTextLayout _textLayout = new();
 
         private SpriteFont _currentSpriteFont;
 
         private bool _isTextDirty;
-        private bool _isTextLayoutDirty;
 
         public RichTextElement(string text = default,
             SpriteFont spriteFont = default,
@@ -207,290 +169,16 @@ namespace ComposableUi
             _isTextDirty = false;
 
             _tokens.Clear();
-
-            for (var i = 0; i < Text.Length; i++)
-            {
-                var currentIndex = i;
-                var length = 1;
-
-                var currentCharacter = Text[i];
-                char? nextCharacter = currentIndex < Text.Length - 1
-                    ? Text[currentIndex + 1]
-                    : null;
-
-                var isCaretReturn = currentCharacter == '\r';
-                if (isCaretReturn)
-                {
-                    var hasNextNewLine = nextCharacter.HasValue
-                        && nextCharacter.Value == '\n';
-                    if (hasNextNewLine)
-                    {
-                        i++;
-                        length++;
-                    }
-
-                    _tokens.Add(new RichTextToken(TokenType.LineBreak, currentIndex, length));
-                    continue;
-                }
-
-                var isNewLine = currentCharacter == '\n';
-                if (isNewLine)
-                {
-                    _tokens.Add(new RichTextToken(TokenType.LineBreak, currentIndex, length));
-                    continue;
-                }
-
-                if (char.IsWhiteSpace(currentCharacter))
-                {
-                    _tokens.Add(new RichTextToken(TokenType.Whitespace, currentIndex, length));
-                    _tokens.Add(new RichTextToken(TokenType.WordBreak, currentIndex, 0));
-                    continue;
-                }
-
-                if (char.IsControl(currentCharacter))
-                    continue;
-
-                if (char.IsLetterOrDigit(currentCharacter))
-                {
-                    _tokens.Add(new RichTextToken(TokenType.LetterOrDigit, currentIndex, length));
-                    continue;
-                }
-
-                _tokens.Add(new RichTextToken(TokenType.Symbol, currentIndex, length));
-
-                if (!nextCharacter.HasValue)
-                    break;
-
-                foreach (var wordBreakRule in _wordBreakRules)
-                {
-                    if (Array.IndexOf(wordBreakRule.TriggerCharacters, currentCharacter) < 0)
-                        continue;
-                    
-                    var nextCharacterMatchesCondition = Array.IndexOf(wordBreakRule.ConditionalCharacters, nextCharacter.Value) >= 0;
-                    if (nextCharacterMatchesCondition == !wordBreakRule.NegateCondition)
-                    {
-                        _tokens.Add(new RichTextToken(TokenType.WordBreak, currentIndex, 0));
-                        break;
-                    }
-                }
-            }
+            RichTextTokenizer.Tokenize(Text, _tokens);
         }
 
-        private void RebuildTextLayoutIfDirty()
+        private RichTextLayoutOptions GetRichTextLayoutOptions()
         {
-            if (_currentSpriteFont is null)
-                return;
-
-            if (!_isTextLayoutDirty)
-                return;
-
-            _isTextLayoutDirty = false;
-
-            _characters.Clear();
-            _lines.Clear();
-
-            if (!_glyphCache.TryGetValue(_currentSpriteFont, out var glyphs))
-            {
-                glyphs = _currentSpriteFont.GetGlyphs();
-                _glyphCache.Add(_currentSpriteFont, glyphs);
-            }
-
-            Glyph? defaultGlyph = null;
-            if (_currentSpriteFont.DefaultCharacter.HasValue)
-                defaultGlyph = glyphs[_currentSpriteFont.DefaultCharacter.Value];
-
-            var isNewParagraph = true;
-
-            var lineWidth = 0f;
-            var lineWidthBeforeWordBreak = 0f;
-            var lineLength = 0;
-            var lineLengthBeforeWordBreak = 0;
-
-            var tokens = Tokens;
-            for (int i = 0; i < tokens.Count; i++)
-            {
-                var token = Tokens[i];
-                switch (token.TokenType)
-                {
-                    case TokenType.LetterOrDigit or TokenType.Symbol or TokenType.Whitespace:
-                        var skipLeadingWhitespace = token.TokenType is TokenType.Whitespace
-                            && !PreserveWhitespace
-                            && !isNewParagraph
-                            && lineLength == 0;
-                        if (skipLeadingWhitespace)
-                            continue;
-
-                        var character = _text[token.StartIndex];
-                        if (!TryGetGlyph(character, out var glyph))
-                            continue;
-
-                        var shouldWrapWord = WordWrap 
-                            && Multiline
-                            && lineLength > 0
-                            && lineWidth + glyph.LeftSideBearing + glyph.Width > Size.X;
-                        if (shouldWrapWord)
-                        {
-                            isNewParagraph = false;
-
-                            if (lineLengthBeforeWordBreak > 0)
-                            {
-                                lineWidth -= lineWidthBeforeWordBreak;
-                                AddNewLine(lineLengthBeforeWordBreak);
-
-                                if (lineLength > 0)
-                                {
-                                    var firstGlyphOfLine = _characters[^lineLength].Glyph;
-                                    lineWidth -= MathF.Min(0, firstGlyphOfLine.LeftSideBearing);
-                                }
-                            }
-                            else
-                            {
-                                AddNewLine(lineLength);
-                            }
-
-                            i--;
-                            continue;
-                        }
-                        else if (lineLength <= 0)
-                        {
-                            lineWidth = MathF.Max(0, glyph.LeftSideBearing);
-                        }
-                        else
-                        {
-                            lineWidth += _currentSpriteFont.Spacing + CharacterSpacing + glyph.LeftSideBearing;
-                        }
-
-                        _characters.Add(new RichTextCharacter()
-                        {
-                            TokenIndex = i,
-                            TokenType = token.TokenType,
-                            Position = new Vector2(glyph.Cropping.X, glyph.Cropping.Y),
-                            FontTexture = _currentSpriteFont.Texture,
-                            Glyph = glyph,
-                        });
-                        lineLength++;
-
-                        lineWidth += glyph.Width + glyph.RightSideBearing;
-                        break;
-                    case TokenType.WordBreak:
-                        if (!WordWrap)
-                            continue;
-
-                        lineWidthBeforeWordBreak = lineWidth;
-                        lineLengthBeforeWordBreak = lineLength;
-                        break;
-                    case TokenType.LineBreak:
-                        if (!Multiline)
-                            continue;
-
-                        _characters.Add(new RichTextCharacter()
-                        {
-                            TokenIndex = i,
-                            TokenType = token.TokenType,
-                            Position = Vector2.Zero,
-                            FontTexture = _currentSpriteFont.Texture,
-                            Glyph = default,
-                        });
-                        lineLength++;
-
-                        AddNewLine(lineLength);
-
-                        isNewParagraph = true;
-                        break;
-                }
-            }
-            AddNewLine(lineLength);
-
-            ApplyAlignment();
-
-            bool TryGetGlyph(char character, out Glyph glyph)
-            {
-                if (!glyphs.TryGetValue(character, out glyph))
-                {
-                    if (!defaultGlyph.HasValue)
-                        return false;
-
-                    glyph = defaultGlyph.Value;
-                }
-
-                return true;
-            }
-
-            void AddNewLine(int length)
-            {
-                if (length <= 0)
-                    return;
-
-                var characterCount = length;
-                if (!PreserveWhitespace)
-                {
-                    var minWhitespaceIndex = int.MaxValue;
-                    var maxWhitespaceIndex = int.MinValue;
-                    for (var i = 0; i < length; i++)
-                    {
-                        var index = _characters.Count - lineLength + length - i - 1;
-                        var character = _characters[index];
-
-                        if (character.TokenType is TokenType.LineBreak)
-                            continue;
-
-                        if (character.TokenType is not TokenType.Whitespace)
-                            break;
-
-                        minWhitespaceIndex = Math.Min(minWhitespaceIndex, index);
-                        maxWhitespaceIndex = Math.Max(maxWhitespaceIndex, index);
-                    }
-
-                    if (maxWhitespaceIndex >= minWhitespaceIndex)
-                    {
-                        var count = maxWhitespaceIndex - minWhitespaceIndex + 1;
-                        _characters.RemoveRange(minWhitespaceIndex, count);
-
-                        characterCount -= count;
-                    }
-                }
-                _lines.Add(characterCount);
-
-                lineLength -= length;
-                lineWidthBeforeWordBreak = 0;
-                lineLengthBeforeWordBreak = 0;
-            }
-        }
-
-        private void ApplyAlignment()
-        {
-            var offset = Vector2.Zero;
-
-            var characterIndex = 0;
-            foreach (var characterCount in _lines)
-            {
-                var isFirstCharacterOfLine = true;
-                for (var i = 0; i < characterCount; i++)
-                {
-                    var character = _characters[characterIndex];
-
-                    if (isFirstCharacterOfLine)
-                    {
-                        isFirstCharacterOfLine = false;
-                        offset.X = MathF.Max(0, character.Glyph.LeftSideBearing);
-                    }
-                    else
-                    {
-                        offset.X += _currentSpriteFont.Spacing + CharacterSpacing + character.Glyph.LeftSideBearing;
-                    }
-
-                    _characters[characterIndex] = character with
-                    {
-                        Position = character.Position + offset
-                    };
-
-                    offset.X += character.Glyph.Width + character.Glyph.RightSideBearing;
-
-                    characterIndex++;
-                }
-
-                offset.Y += _currentSpriteFont.LineSpacing + LineSpacing;
-            }
+            return new RichTextLayoutOptions(_currentSpriteFont, Tokens, Text,
+                Size, SizeToTextWidth, SizeToTextHeight,
+                Multiline, WordWrap, PreserveWhitespace,
+                CharacterSpacing, WordSpacing, LineSpacing,
+                VerticalAlignmentMode, HorizontalAlignmentMode);
         }
 
         public override Vector2 CalculatePreferredSize()
@@ -504,9 +192,8 @@ namespace ComposableUi
         public override void Rebuild(Vector2 size)
         {
             Size = size;
-            OnTextLayoutChanged();
 
-            RebuildTextLayoutIfDirty();
+            _textLayout.RebuildIfNeeded(GetRichTextLayoutOptions());
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)
@@ -514,6 +201,7 @@ namespace ComposableUi
             if (_currentSpriteFont is null)
                 return;
 
+            // TODO: Add draw here.
             // Test.
             if (BuiltInSprite.TextField is ISpriteSource spriteSource)
             {
@@ -526,7 +214,7 @@ namespace ComposableUi
             }
 
             var position = Position + Size * Alignment.TopLeft - PivotOffset;
-            foreach (var character in _characters)
+            foreach (ref readonly var character in _textLayout.Characters)
             {
                 var sprite = new Sprite()
                 {
@@ -537,41 +225,11 @@ namespace ComposableUi
                     new Rectangle((character.Position + position).ToPoint(), character.Glyph.BoundsInTexture.Size),
                     ClipMask, Color);
             }
-
-            // TODO: Add draw here.
-            //renderer.DrawSprite(BuiltInSprite.TextField, DrawMode.Sliced,
-            //    BoundingRectangle, ClipMask, Color);
-
-            //var wordIndex = 0;
-            //var localPosition = -PivotOffset;
-
-            //foreach (var line in _lines)
-            //{
-            //    for (var i = 0; i < line.WordCount; i++)
-            //    {
-            //        var word = _words[wordIndex];
-
-            //        renderer.DrawString(SpriteFont, word.Text,
-            //            localPosition + Position, null, word.Color);
-
-            //        wordIndex++;
-            //        localPosition.X += word.Size.X + SpriteFont.Spacing;
-            //    }
-
-            //    localPosition.X = -PivotOffset.X;
-            //    localPosition.Y += SpriteFont.LineSpacing;
-            //}
         }
 
         private void OnTextChanged()
         {
             _isTextDirty = true;
-            OnTextLayoutChanged();
-        }
-
-        private void OnTextLayoutChanged()
-        {
-            _isTextLayoutDirty = true;
         }
     }
 
