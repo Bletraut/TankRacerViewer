@@ -13,34 +13,26 @@ namespace ComposableUi
         // Static.
         private static readonly Dictionary<SpriteFont, Dictionary<char, SpriteFont.Glyph>> _glyphCache = [];
 
-        public static Dictionary<char, SpriteFont.Glyph> GetCachedGlyphs(SpriteFont spriteFont)
-        {
-            if (!_glyphCache.TryGetValue(spriteFont, out var glyphs))
-            {
-                glyphs = spriteFont.GetGlyphs();
-                _glyphCache[spriteFont] = glyphs;
-            }
-
-            return glyphs;
-        }
-
-        public static float MeasureCharWidth(Dictionary<char, SpriteFont.Glyph> glyphs, char character)
-        {
-            if (!glyphs.TryGetValue(character, out SpriteFont.Glyph glyph))
-                return 0;
-
-            var width = glyph.Width + MathF.Max(0, glyph.LeftSideBearing) + MathF.Max(0, glyph.RightSideBearing);
-            return width;
-        }
-
         // Class.
+        public float Width { get; private set; }
+        public float Height { get; private set; }
+
         public ReadOnlySpan<RichTextCharacter> Characters => CollectionsMarshal.AsSpan(_characters);
-        public ReadOnlySpan<int> Lines => CollectionsMarshal.AsSpan(_lines);
+        public ReadOnlySpan<RichTextLine> Lines => CollectionsMarshal.AsSpan(_lines);
+
+        private float CharacterSpacing => _currentOptions.SpriteFont?.Spacing ?? 0 + _currentOptions.CharacterSpacing;
+        private float WordSpacing => _currentOptions.WordSpacing;
+        private float LineSpacing => _currentOptions.SpriteFont?.LineSpacing ?? 0 + _currentOptions.LineSpacing;
 
         private readonly List<RichTextCharacter> _characters = [];
-        private readonly List<int> _lines = [];
+        private readonly List<RichTextLine> _lines = [];
 
         private RichTextLayoutOptions _currentOptions;
+
+        private Line _currentLine;
+        private Line _lineBeforeWordBreak;
+
+        private SpriteFont.Glyph? _defaultGlyph;
 
         public void RebuildIfNeeded(in RichTextLayoutOptions options)
         {
@@ -53,25 +45,25 @@ namespace ComposableUi
             if (spriteFont is null)
                 return;
 
+            var isNewParagraph = true;
+
             _characters.Clear();
             _lines.Clear();
+
+            _currentLine = Line.Empty;
+            _lineBeforeWordBreak = Line.Empty;
+
+            var characterSpacing = CharacterSpacing;
+            var wordSpacing = WordSpacing;
 
             if (!_glyphCache.TryGetValue(spriteFont, out var glyphs))
             {
                 glyphs = spriteFont.GetGlyphs();
                 _glyphCache.Add(spriteFont, glyphs);
-            }
+            }   
 
-            SpriteFont.Glyph? defaultGlyph = null;
             if (spriteFont.DefaultCharacter.HasValue)
-                defaultGlyph = glyphs[spriteFont.DefaultCharacter.Value];
-
-            var isNewParagraph = true;
-
-            var lineWidth = 0f;
-            var lineWidthBeforeWordBreak = 0f;
-            var lineLength = 0;
-            var lineLengthBeforeWordBreak = 0;
+                _defaultGlyph = glyphs[spriteFont.DefaultCharacter.Value];
 
             var tokens = _currentOptions.Tokens;
             for (int i = 0; i < tokens.Count; i++)
@@ -80,51 +72,56 @@ namespace ComposableUi
                 switch (token.TokenType)
                 {
                     case TokenType.LetterOrDigit or TokenType.Symbol or TokenType.Whitespace:
-                        var skipLeadingWhitespace = token.TokenType is TokenType.Whitespace
+                        var isWhitespace = token.TokenType is TokenType.Whitespace;
+                        var skipLeadingWhitespace = isWhitespace
                             && !_currentOptions.PreserveWhitespace
                             && !isNewParagraph
-                            && lineLength == 0;
+                            && _currentLine.Length == 0;
                         if (skipLeadingWhitespace)
                             continue;
 
                         var character = _currentOptions.Text[token.StartIndex];
-                        if (!TryGetGlyph(character, out var glyph))
+                        if (!TryGetGlyph(glyphs, character, out var glyph))
                             continue;
+
+                        var glyphWidth = glyph.Width;
+                        if (isWhitespace)
+                            glyphWidth += wordSpacing;
 
                         var shouldWrapWord = _currentOptions.WordWrap
                             && _currentOptions.Multiline
-                            && lineLength > 0
-                            && lineWidth + glyph.LeftSideBearing + glyph.Width > _currentOptions.Size.X;
+                            && _currentLine.Length > 0
+                            && _currentLine.Width + glyph.LeftSideBearing + glyphWidth > _currentOptions.Size.X;
                         if (shouldWrapWord)
                         {
                             isNewParagraph = false;
 
-                            if (lineLengthBeforeWordBreak > 0)
+                            if (_lineBeforeWordBreak.Length > 0)
                             {
-                                lineWidth -= lineWidthBeforeWordBreak;
-                                AddNewLine(lineLengthBeforeWordBreak);
+                                _currentLine.Width -= _lineBeforeWordBreak.Width;
+                                AddNewLine(_lineBeforeWordBreak.Length);
 
-                                if (lineLength > 0)
+                                if (_currentLine.Length > 0)
                                 {
-                                    var firstGlyphOfLine = _characters[^lineLength].Glyph;
-                                    lineWidth -= MathF.Min(0, firstGlyphOfLine.LeftSideBearing);
+                                    var firstGlyphOfLine = _characters[^_currentLine.Length].Glyph;
+                                    _currentLine.Width -= MathF.Min(0, firstGlyphOfLine.LeftSideBearing);
                                 }
                             }
                             else
                             {
-                                AddNewLine(lineLength);
+                                AddNewLine(_currentLine.Length);
                             }
 
                             i--;
                             continue;
                         }
-                        else if (lineLength <= 0)
+                        else if (_currentLine.Length <= 0)
                         {
-                            lineWidth = MathF.Max(0, glyph.LeftSideBearing);
+                            _currentLine.Width = MathF.Max(0, glyph.LeftSideBearing);
                         }
                         else
                         {
-                            lineWidth += spriteFont.Spacing + _currentOptions.CharacterSpacing + glyph.LeftSideBearing;
+                            _currentLine.Width += characterSpacing + glyph.LeftSideBearing;
                         }
 
                         _characters.Add(new RichTextCharacter()
@@ -135,16 +132,19 @@ namespace ComposableUi
                             FontTexture = spriteFont.Texture,
                             Glyph = glyph,
                         });
-                        lineLength++;
+                        _currentLine.Length++;
 
-                        lineWidth += glyph.Width + glyph.RightSideBearing;
+                        if (isWhitespace)
+                            _currentLine.WhitespaceCount++;
+
+                        _currentLine.Width += glyphWidth + glyph.RightSideBearing;
                         break;
                     case TokenType.WordBreak:
                         if (!_currentOptions.WordWrap)
                             continue;
 
-                        lineWidthBeforeWordBreak = lineWidth;
-                        lineLengthBeforeWordBreak = lineLength;
+                        _lineBeforeWordBreak.Width = _currentLine.Width;
+                        _lineBeforeWordBreak.Length = _currentLine.Length;
                         break;
                     case TokenType.LineBreak:
                         if (!_currentOptions.Multiline)
@@ -158,86 +158,89 @@ namespace ComposableUi
                             FontTexture = spriteFont.Texture,
                             Glyph = default,
                         });
-                        lineLength++;
+                        _currentLine.Length++;
 
-                        AddNewLine(lineLength);
+                        AddNewLine(_currentLine.Length);
 
                         isNewParagraph = true;
                         break;
                 }
             }
-            AddNewLine(lineLength);
+            AddNewLine(_currentLine.Length);
 
-            ApplyAlignment();
-
-            bool TryGetGlyph(char character, out SpriteFont.Glyph glyph)
-            {
-                if (!glyphs.TryGetValue(character, out glyph))
-                {
-                    if (!defaultGlyph.HasValue)
-                        return false;
-
-                    glyph = defaultGlyph.Value;
-                }
-
-                return true;
-            }
-
-            void AddNewLine(int length)
-            {
-                if (length <= 0)
-                    return;
-
-                var characterCount = length;
-                if (!_currentOptions.PreserveWhitespace)
-                {
-                    var minWhitespaceIndex = int.MaxValue;
-                    var maxWhitespaceIndex = int.MinValue;
-                    for (var i = 0; i < length; i++)
-                    {
-                        var index = _characters.Count - lineLength + length - i - 1;
-                        var character = _characters[index];
-
-                        if (character.TokenType is TokenType.LineBreak)
-                            continue;
-
-                        if (character.TokenType is not TokenType.Whitespace)
-                            break;
-
-                        minWhitespaceIndex = Math.Min(minWhitespaceIndex, index);
-                        maxWhitespaceIndex = Math.Max(maxWhitespaceIndex, index);
-                    }
-
-                    if (maxWhitespaceIndex >= minWhitespaceIndex)
-                    {
-                        var count = maxWhitespaceIndex - minWhitespaceIndex + 1;
-                        _characters.RemoveRange(minWhitespaceIndex, count);
-
-                        characterCount -= count;
-                    }
-                }
-                _lines.Add(characterCount);
-
-                lineLength -= length;
-                lineWidthBeforeWordBreak = 0;
-                lineLengthBeforeWordBreak = 0;
-            }
+            MeasureLines();
+            //ApplyAlignment();
         }
 
-        private void ApplyAlignment()
+        private bool TryGetGlyph(Dictionary<char, SpriteFont.Glyph> glyphs, char character,
+            out SpriteFont.Glyph glyph)
         {
-            var spriteFont = _currentOptions.SpriteFont;
+            if (!glyphs.TryGetValue(character, out glyph))
+            {
+                if (!_defaultGlyph.HasValue)
+                    return false;
 
-            var characterSpacing = spriteFont.Spacing + _currentOptions.CharacterSpacing;
-            var lineSpacing = spriteFont.LineSpacing + _currentOptions.LineSpacing;
+                glyph = _defaultGlyph.Value;
+            }
+
+            return true;
+        }
+
+        private void AddNewLine(int length)
+        {
+            if (length <= 0)
+                return;
+
+            var newLength = length;
+            if (!_currentOptions.PreserveWhitespace)
+            {
+                var minWhitespaceIndex = int.MaxValue;
+                var maxWhitespaceIndex = int.MinValue;
+                for (var i = 0; i < length; i++)
+                {
+                    var index = _characters.Count - _currentLine.Length + length - i - 1;
+                    var character = _characters[index];
+
+                    if (character.TokenType is TokenType.LineBreak)
+                        continue;
+
+                    if (character.TokenType is not TokenType.Whitespace)
+                        break;
+
+                    minWhitespaceIndex = Math.Min(minWhitespaceIndex, index);
+                    maxWhitespaceIndex = Math.Max(maxWhitespaceIndex, index);
+                }
+
+                if (maxWhitespaceIndex >= minWhitespaceIndex)
+                {
+                    var count = maxWhitespaceIndex - minWhitespaceIndex + 1;
+                    _characters.RemoveRange(minWhitespaceIndex, count);
+
+                    newLength -= count;
+                    _currentLine.WhitespaceCount -= count;
+                }
+            }
+            _lines.Add(new RichTextLine(newLength, _currentLine.WhitespaceCount, 0, 0));
+
+            _currentLine.Length -= length;
+            _lineBeforeWordBreak.Length = 0;
+            _lineBeforeWordBreak.WhitespaceCount = 0;
+            _lineBeforeWordBreak.Width = 0;
+        }
+
+        private void MeasureLines()
+        {
+            var characterSpacing = CharacterSpacing;
+            var wordSpacing = WordSpacing;
+            var lineSpacing = LineSpacing;
 
             var offset = Vector2.Zero;
 
             var characterIndex = 0;
-            foreach (var characterCount in _lines)
+            foreach (var line in _lines)
             {
                 var isFirstCharacterOfLine = true;
-                for (var i = 0; i < characterCount; i++)
+                for (var i = 0; i < line.Length; i++)
                 {
                     var character = _characters[characterIndex];
 
@@ -263,6 +266,57 @@ namespace ComposableUi
 
                 offset.Y += lineSpacing;
             }
+        }
+
+        private void ApplyAlignment()
+        {
+            var characterSpacing = CharacterSpacing;
+            var wordSpacing = WordSpacing;
+            var lineSpacing = LineSpacing;
+
+            var offset = Vector2.Zero;
+
+            var characterIndex = 0;
+            foreach (var line in _lines)
+            {
+                var isFirstCharacterOfLine = true;
+                for (var i = 0; i < line.Length; i++)
+                {
+                    var character = _characters[characterIndex];
+
+                    if (isFirstCharacterOfLine)
+                    {
+                        isFirstCharacterOfLine = false;
+                        offset.X = MathF.Max(0, character.Glyph.LeftSideBearing);
+                    }
+                    else
+                    {
+                        offset.X += characterSpacing + character.Glyph.LeftSideBearing;
+                    }
+
+                    _characters[characterIndex] = character with
+                    {
+                        Position = character.Position + offset
+                    };
+
+                    offset.X += character.Glyph.Width + character.Glyph.RightSideBearing;
+
+                    characterIndex++;
+                }
+
+                offset.Y += lineSpacing;
+            }
+        }
+
+        private struct Line
+        {
+            public static Line Empty => new();
+
+            public int Length;
+
+            public int WhitespaceCount;
+
+            public float Width;
         }
     }
 }
