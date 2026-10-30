@@ -20,6 +20,8 @@ namespace ComposableUi
             }
         }
 
+        public Color Color { get; set; }
+
         private SpriteFont _spriteFont;
         public SpriteFont SpriteFont
         {
@@ -45,7 +47,19 @@ namespace ComposableUi
             set => SetAndChangeState(ref _sizeToTextHeight, value);
         }
 
-        public Color Color { get; set; }
+        private TextBoundsMode _horizontalSizingMode;
+        public TextBoundsMode HorizontalSizingMode
+        {
+            get => _horizontalSizingMode;
+            set => SetAndChangeState(ref _horizontalSizingMode, value);
+        }
+
+        private TextBoundsMode _verticalSizingMode;
+        public TextBoundsMode VerticalSizingMode
+        {
+            get => _verticalSizingMode;
+            set => SetAndChangeState(ref _verticalSizingMode, value);
+        }
 
         private bool _multiline;
         public bool Multiline
@@ -107,6 +121,20 @@ namespace ComposableUi
             set => SetAndChangeState(ref _verticalAlignmentMode, value);
         }
 
+        private TextBoundsMode _horizontalAlignmentBoundsMode;
+        public TextBoundsMode HorizontalAlignmentBoundsMode
+        {
+            get => _horizontalAlignmentBoundsMode;
+            set => SetAndChangeState(ref _horizontalAlignmentBoundsMode, value);
+        }
+
+        private TextBoundsMode _verticalAlignmentBoundsMode;
+        public TextBoundsMode VerticalAlignmentBoundsMode
+        {
+            get => _verticalAlignmentBoundsMode;
+            set => SetAndChangeState(ref _verticalAlignmentBoundsMode, value);
+        }
+
         private readonly List<RichTextToken> _tokens = [];
         private readonly IReadOnlyList<RichTextToken> _readOnlyTokens;
         public IReadOnlyList<RichTextToken> Tokens
@@ -126,11 +154,13 @@ namespace ComposableUi
         private bool _isTextDirty;
 
         public RichTextElement(string text = default,
+            Color? color = default,
             SpriteFont spriteFont = default,
             Vector2? size = default,
             bool sizeToTextWidth = default,
             bool sizeToTextHeight = default,
-            Color? color = default,
+            TextBoundsMode horizontalSizingMode = TextBoundsMode.Typographic,
+            TextBoundsMode verticalSizingMode = TextBoundsMode.Typographic,
             bool multiline = true,
             bool wordWrap = true,
             bool preserveWhiteSpace = default,
@@ -138,16 +168,21 @@ namespace ComposableUi
             float wordSpacing = default,
             float lineSpacing = default,
             HorizontalAlignmentMode horizontalAlignmentMode = HorizontalAlignmentMode.Left,
-            VerticalAlignmentMode verticalAlignmentMode = VerticalAlignmentMode.Top)
+            VerticalAlignmentMode verticalAlignmentMode = VerticalAlignmentMode.Top,
+            TextBoundsMode horizontalAlignmentBoundsMode = TextBoundsMode.Typographic,
+            TextBoundsMode verticalAlignmentBoundsMode = TextBoundsMode.Typographic)
         {
             _readOnlyTokens = _tokens.AsReadOnly();
 
             Text = text ?? string.Empty;
+            Color = color ?? Color.White;
             SpriteFont = spriteFont;
+
             Size = size ?? TextElement.DefaultSize;
             SizeToTextWidth = sizeToTextWidth;
             SizeToTextHeight = sizeToTextHeight;
-            Color = color ?? Color.White;
+            HorizontalSizingMode = horizontalSizingMode;
+            VerticalSizingMode = verticalSizingMode;
 
             Multiline = multiline;
             WordWrap = wordWrap;
@@ -159,6 +194,8 @@ namespace ComposableUi
 
             HorizontalAlignmentMode = horizontalAlignmentMode;
             VerticalAlignmentMode = verticalAlignmentMode;
+            HorizontalAlignmentBoundsMode = horizontalAlignmentBoundsMode;
+            VerticalAlignmentBoundsMode = verticalAlignmentBoundsMode;
         }
 
         private void TokenizeIfDirty()
@@ -178,7 +215,8 @@ namespace ComposableUi
                 Size, SizeToTextWidth, SizeToTextHeight,
                 Multiline, WordWrap, PreserveWhitespace,
                 CharacterSpacing, WordSpacing, LineSpacing,
-                VerticalAlignmentMode, HorizontalAlignmentMode);
+                HorizontalAlignmentMode, VerticalAlignmentMode,
+                HorizontalAlignmentBoundsMode, VerticalAlignmentBoundsMode);
         }
 
         public override Vector2 CalculatePreferredSize()
@@ -246,5 +284,11 @@ namespace ComposableUi
         Top,
         Middle,
         Bottom
+    }
+
+    public enum TextBoundsMode
+    {
+        Typographic,
+        Geometric
     }
 }

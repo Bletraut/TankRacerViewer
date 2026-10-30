@@ -10,6 +10,8 @@ namespace ComposableUi
         Vector2 Size, bool SizeToTextWidth, bool SizeToTextHeight,
         bool Multiline, bool WordWrap, bool PreserveWhitespace,
         float CharacterSpacing, float WordSpacing, float LineSpacing,
+        HorizontalAlignmentMode HorizontalAlignmentMode,
         VerticalAlignmentMode VerticalAlignmentMode,
-        HorizontalAlignmentMode HorizontalAlignmentMode);
+        TextBoundsMode HorizontalAlignmentBoundsMode,
+        TextBoundsMode VerticalAlignmentBoundsMode);
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using Microsoft.Xna.Framework;
@@ -53,6 +52,7 @@ namespace ComposableUi
             _currentLine = Line.Empty;
             _lineBeforeWordBreak = Line.Empty;
 
+            var useTypographicWidth = _currentOptions.HorizontalAlignmentBoundsMode is TextBoundsMode.Typographic;
             var characterSpacing = CharacterSpacing;
             var wordSpacing = WordSpacing;
 
@@ -88,10 +88,14 @@ namespace ComposableUi
                         if (isWhitespace)
                             glyphWidth += wordSpacing;
 
+                        var additionalGlyphWidth = glyph.LeftSideBearing + glyphWidth;
+                        if (useTypographicWidth)
+                            additionalGlyphWidth += glyph.RightSideBearing;
+
                         var shouldWrapWord = _currentOptions.WordWrap
                             && _currentOptions.Multiline
                             && _currentLine.Length > 0
-                            && _currentLine.Width + glyph.LeftSideBearing + glyphWidth > _currentOptions.Size.X;
+                            && _currentLine.Width + additionalGlyphWidth > _currentOptions.Size.X;
                         if (shouldWrapWord)
                         {
                             isNewParagraph = false;
@@ -99,17 +103,18 @@ namespace ComposableUi
                             if (_lineBeforeWordBreak.Length > 0)
                             {
                                 _currentLine.Width -= _lineBeforeWordBreak.Width;
-                                AddNewLine(_lineBeforeWordBreak.Length);
+                                AddNewLine(_lineBeforeWordBreak.Length, true);
 
                                 if (_currentLine.Length > 0)
                                 {
                                     var firstGlyphOfLine = _characters[^_currentLine.Length].Glyph;
-                                    _currentLine.Width -= MathF.Min(0, firstGlyphOfLine.LeftSideBearing);
+                                    if (!useTypographicWidth)
+                                        _currentLine.Width -= firstGlyphOfLine.LeftSideBearing;
                                 }
                             }
                             else
                             {
-                                AddNewLine(_currentLine.Length);
+                                AddNewLine(_currentLine.Length, true);
                             }
 
                             i--;
@@ -117,7 +122,9 @@ namespace ComposableUi
                         }
                         else if (_currentLine.Length <= 0)
                         {
-                            _currentLine.Width = MathF.Max(0, glyph.LeftSideBearing);
+                            _currentLine.Width = useTypographicWidth 
+                                ? glyph.LeftSideBearing 
+                                : 0;
                         }
                         else
                         {
@@ -128,7 +135,7 @@ namespace ComposableUi
                         {
                             TokenIndex = i,
                             TokenType = token.TokenType,
-                            Position = new Vector2(glyph.Cropping.X, glyph.Cropping.Y),
+                            Position = Vector2.Zero,
                             FontTexture = spriteFont.Texture,
                             Glyph = glyph,
                         });
@@ -160,13 +167,13 @@ namespace ComposableUi
                         });
                         _currentLine.Length++;
 
-                        AddNewLine(_currentLine.Length);
+                        AddNewLine(_currentLine.Length, false);
 
                         isNewParagraph = true;
                         break;
                 }
             }
-            AddNewLine(_currentLine.Length);
+            AddNewLine(_currentLine.Length, false);
 
             MeasureLines();
             //ApplyAlignment();
@@ -186,7 +193,7 @@ namespace ComposableUi
             return true;
         }
 
-        private void AddNewLine(int length)
+        private void AddNewLine(int length, bool isJustifiable)
         {
             if (length <= 0)
                 return;
@@ -220,7 +227,8 @@ namespace ComposableUi
                     _currentLine.WhitespaceCount -= count;
                 }
             }
-            _lines.Add(new RichTextLine(newLength, _currentLine.WhitespaceCount, 0, 0));
+            _lines.Add(new RichTextLine(newLength, _currentLine.WhitespaceCount,
+                isJustifiable, Vector2.Zero, Vector2.Zero));
 
             _currentLine.Length -= length;
             _lineBeforeWordBreak.Length = 0;
@@ -234,13 +242,18 @@ namespace ComposableUi
             var wordSpacing = WordSpacing;
             var lineSpacing = LineSpacing;
 
+            var minTypographicPosition = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            var maxTypographicPosition = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            var minGeometricPosition = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            var maxGeometricPosition = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+
             var offset = Vector2.Zero;
 
             var characterIndex = 0;
             foreach (var line in _lines)
             {
                 var isFirstCharacterOfLine = true;
-                for (var i = 0; i < line.Length; i++)
+                for (var i = 0; i < line.Length; i++, characterIndex++)
                 {
                     var character = _characters[characterIndex];
 
@@ -254,14 +267,14 @@ namespace ComposableUi
                         offset.X += characterSpacing + character.Glyph.LeftSideBearing;
                     }
 
+                    var glyphPosition = character.Glyph.Cropping.Location.ToVector2();
+                    var position = glyphPosition + offset;
                     _characters[characterIndex] = character with
                     {
-                        Position = character.Position + offset
+                        Position = position
                     };
 
                     offset.X += character.Glyph.Width + character.Glyph.RightSideBearing;
-
-                    characterIndex++;
                 }
 
                 offset.Y += lineSpacing;

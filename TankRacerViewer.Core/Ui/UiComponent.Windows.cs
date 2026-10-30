@@ -41,6 +41,10 @@ namespace TankRacerViewer.Core
             _windowLayout.AddFloatWindow(ConsoleWindow);
             WindowElement.Dock(ConsoleWindow, ViewerWindow.Container, Edge.Bottom);
 
+            var testWindow = new TestTextWindow();
+            _windowLayout.AddFloatWindow(testWindow);
+            WindowElement.DockAsTab(testWindow, ViewerWindow, 1);
+
             RenderSettingsWindow = new RenderSettingsWindow();
             _windowLayout.AddFloatWindow(RenderSettingsWindow);
             WindowElement.DockAsTab(RenderSettingsWindow, ExplorerWindow, 1);

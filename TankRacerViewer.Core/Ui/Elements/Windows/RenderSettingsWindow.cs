@@ -9,28 +9,11 @@ namespace TankRacerViewer.Core
 {
     public sealed class RenderSettingsWindow : WindowElement
     {
-        public const int DefaultSearchFieldHeight = 8;
-
         public RenderSettingsWindow() : base("Render Settings")
         {
-            MinSize = Vector2.Zero;
-
-            var searchField = new RichTextElement(
-                text: "This chapter describes a method for fast, stable fluid simulation A                     simulation A that runs entirely on the GPU.\nIt introduces fluid dynamics and the associated mathematics, and it describes in detail the techniques to perform the simulation on the GPU.",
-                size: new Vector2(DefaultSearchFieldHeight)
-            );
-            ContentContainer.AddChild(new ExpandedElement(
-                leftPadding: 2,
-                rightPadding: 2,
-                expandHeight: false,
-                innerElement: new AlignmentElement(
-                    alignmentFactor: Alignment.TopCenter,
-                    pivot: Alignment.TopCenter,
-                    innerElement: searchField
-                )
-            ));
-
             // FOR DEBUG
+            var searchField = TestTextWindow.Instance.SearchField;
+
             var horizontalAlignmentMode = new DropDownListElement(
                 items: Enum.GetNames<HorizontalAlignmentMode>()
                     .Select(name => new DropDownListTextItemElement(name))
@@ -50,6 +33,26 @@ namespace TankRacerViewer.Core
                 searchField.VerticalAlignmentMode = (VerticalAlignmentMode)i;
             };
             verticalAlignmentMode.SelectItem(0);
+
+            var horizontalAlignmentBoundsMode = new DropDownListElement(
+                items: Enum.GetNames<TextBoundsMode>()
+                    .Select(name => new DropDownListTextItemElement(name))
+            );
+            horizontalAlignmentBoundsMode.ItemSelected += (_, i) =>
+            {
+                searchField.HorizontalAlignmentBoundsMode = (TextBoundsMode)i;
+            };
+            horizontalAlignmentBoundsMode.SelectItem(0);
+
+            var verticalAlignmentBoundsMode = new DropDownListElement(
+                items: Enum.GetNames<TextBoundsMode>()
+                    .Select(name => new DropDownListTextItemElement(name))
+            );
+            verticalAlignmentBoundsMode.ItemSelected += (_, i) =>
+            {
+                searchField.VerticalAlignmentBoundsMode = (TextBoundsMode)i;
+            };
+            verticalAlignmentBoundsMode.SelectItem(0);
 
             var multilineToggle = UiElementFactory.CreateToggleButton("Multiline");
             RefreshToggle(multilineToggle, searchField.Multiline);
@@ -90,6 +93,16 @@ namespace TankRacerViewer.Core
                         sizeToTextHeight: true
                     ),
                     verticalAlignmentMode,
+                    new TextElement(
+                        text: "Horizontal Bounds:",
+                        sizeToTextHeight: true
+                    ),
+                    horizontalAlignmentBoundsMode,
+                    new TextElement(
+                        text: "Vertical Bounds:",
+                        sizeToTextHeight: true
+                    ),
+                    verticalAlignmentBoundsMode,
                     multilineToggle,
                     wordWrapToggle,
                     preserveWhitespaceToggle
@@ -99,8 +112,8 @@ namespace TankRacerViewer.Core
             ContentContainer.AddChild(new ExpandedElement(
                 expandHeight: false,
                 innerElement: new AlignmentElement(
-                    alignmentFactor: Alignment.BottomCenter,
-                    pivot: Alignment.BottomCenter,
+                    alignmentFactor: Alignment.TopCenter,
+                    pivot: Alignment.TopCenter,
                     innerElement: propertiesColumn
                 )
             ));
