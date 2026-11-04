@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using Microsoft.Xna.Framework;
@@ -13,8 +14,8 @@ namespace ComposableUi
         private static readonly Dictionary<SpriteFont, Dictionary<char, SpriteFont.Glyph>> _glyphCache = [];
 
         // Class.
-        public float Width { get; private set; }
-        public float Height { get; private set; }
+        public Vector2 TypographicSize { get; private set; }
+        public Vector2 GeometricSize { get; private set; }
 
         public ReadOnlySpan<RichTextCharacter> Characters => CollectionsMarshal.AsSpan(_characters);
         public ReadOnlySpan<RichTextLine> Lines => CollectionsMarshal.AsSpan(_lines);
@@ -135,7 +136,7 @@ namespace ComposableUi
                         {
                             TokenIndex = i,
                             TokenType = token.TokenType,
-                            Position = Vector2.Zero,
+                            Position = glyph.Cropping.Location.ToVector2(),
                             FontTexture = spriteFont.Texture,
                             Glyph = glyph,
                         });
@@ -175,8 +176,8 @@ namespace ComposableUi
             }
             AddNewLine(_currentLine.Length, false);
 
-            MeasureLines();
-            //ApplyAlignment();
+            CalculateLineMetricsAndCharacterPositions();
+            ApplyAlignment();
         }
 
         private bool TryGetGlyph(Dictionary<char, SpriteFont.Glyph> glyphs, char character,
@@ -231,13 +232,16 @@ namespace ComposableUi
                 isJustifiable, Vector2.Zero, Vector2.Zero));
 
             _currentLine.Length -= length;
+            _currentLine.WhitespaceCount = 0;
             _lineBeforeWordBreak.Length = 0;
             _lineBeforeWordBreak.WhitespaceCount = 0;
             _lineBeforeWordBreak.Width = 0;
         }
 
-        private void MeasureLines()
+        private void CalculateLineMetricsAndCharacterPositions()
         {
+            var useTypographicWidth = _currentOptions.HorizontalAlignmentBoundsMode is TextBoundsMode.Typographic;
+
             var characterSpacing = CharacterSpacing;
             var wordSpacing = WordSpacing;
             var lineSpacing = LineSpacing;
@@ -250,74 +254,126 @@ namespace ComposableUi
             var offset = Vector2.Zero;
 
             var characterIndex = 0;
-            foreach (var line in _lines)
+            for (int i = 0; i < _lines.Count; i++)
             {
+                RichTextLine line = _lines[i];
+
+                var minLineTypographicPosition = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+                var maxLineTypographicPosition = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+                var minLineGeometricPosition = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+                var maxLineGeometricPosition = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+
                 var isFirstCharacterOfLine = true;
-                for (var i = 0; i < line.Length; i++, characterIndex++)
+                for (var j = 0; j < line.Length; j++, characterIndex++)
                 {
                     var character = _characters[characterIndex];
+                    var glyph = character.Glyph;
 
                     if (isFirstCharacterOfLine)
                     {
                         isFirstCharacterOfLine = false;
-                        offset.X = MathF.Max(0, character.Glyph.LeftSideBearing);
+                        offset.X = useTypographicWidth
+                            ? glyph.LeftSideBearing
+                            : 0;
                     }
                     else
                     {
-                        offset.X += characterSpacing + character.Glyph.LeftSideBearing;
+                        offset.X += characterSpacing + glyph.LeftSideBearing;
                     }
 
-                    var glyphPosition = character.Glyph.Cropping.Location.ToVector2();
-                    var position = glyphPosition + offset;
+                    var position = character.Position + offset;
                     _characters[characterIndex] = character with
                     {
                         Position = position
                     };
 
-                    offset.X += character.Glyph.Width + character.Glyph.RightSideBearing;
+                    minLineTypographicPosition = Vector2.Min(minLineTypographicPosition, offset);
+                    maxLineTypographicPosition = Vector2.Max(maxLineTypographicPosition,
+                        offset + new Vector2(glyph.WidthIncludingBearings, MathF.Max(lineSpacing, glyph.Cropping.Height)));
+
+                    minLineGeometricPosition = Vector2.Min(minLineGeometricPosition, position);
+                    maxLineGeometricPosition = Vector2.Max(maxLineGeometricPosition,
+                        position + glyph.BoundsInTexture.Size.ToVector2());
+
+                    minTypographicPosition = Vector2.Min(minTypographicPosition, minLineTypographicPosition);
+                    maxTypographicPosition = Vector2.Max(maxTypographicPosition, maxLineTypographicPosition);
+                    minGeometricPosition = Vector2.Min(minGeometricPosition, minLineGeometricPosition);
+                    maxGeometricPosition = Vector2.Max(maxGeometricPosition, maxLineGeometricPosition);
+
+                    offset.X += glyph.Width + glyph.RightSideBearing;
+                    if (character.TokenType is TokenType.Whitespace)
+                        offset.X += wordSpacing;
                 }
 
                 offset.Y += lineSpacing;
+
+                _lines[i] = line with
+                {
+                    TypographicSize = maxLineTypographicPosition - minLineTypographicPosition,
+                    GeometricSize = maxLineGeometricPosition - minLineGeometricPosition
+                };
             }
+
+            TypographicSize = maxTypographicPosition - minTypographicPosition;
+            GeometricSize = minGeometricPosition - minTypographicPosition;
         }
 
         private void ApplyAlignment()
         {
-            var characterSpacing = CharacterSpacing;
-            var wordSpacing = WordSpacing;
-            var lineSpacing = LineSpacing;
+            var a = _currentOptions.HorizontalAlignmentMode is HorizontalAlignmentMode.Left
+                && _currentOptions.VerticalAlignmentMode is VerticalAlignmentMode.Top;
+            if (a)
+                return;
 
-            var offset = Vector2.Zero;
+            var size = _currentOptions.VerticalAlignmentBoundsMode is TextBoundsMode.Typographic
+                ? TypographicSize
+                : GeometricSize;
 
             var characterIndex = 0;
             foreach (var line in _lines)
             {
-                var isFirstCharacterOfLine = true;
-                for (var i = 0; i < line.Length; i++)
+                var lineWidth = _currentOptions.HorizontalAlignmentBoundsMode is TextBoundsMode.Typographic
+                    ? line.TypographicSize.X
+                    : line.GeometricSize.X;
+
+                var offset = Vector2.Zero;
+                offset.X = _currentOptions.HorizontalAlignmentMode switch
+                {
+                    HorizontalAlignmentMode.Left => 0,
+                    HorizontalAlignmentMode.Center => -lineWidth / 2,
+                    HorizontalAlignmentMode.Right => -lineWidth,
+                    HorizontalAlignmentMode.Justified => 0,
+                    _ => throw new NotImplementedException(),
+                };
+                offset.Y = _currentOptions.VerticalAlignmentMode switch
+                {
+                    VerticalAlignmentMode.Top => 0,
+                    VerticalAlignmentMode.Middle => -size.Y / 2,
+                    VerticalAlignmentMode.Bottom => -size.Y,
+                    _ => throw new NotImplementedException(),
+                };
+
+                var isJustified = line.IsJustifiable
+                    && _currentOptions.HorizontalAlignmentMode is HorizontalAlignmentMode.Justified;
+                var additionalWhitespaceWidth = isJustified
+                    ? (_currentOptions.Size.X - lineWidth) / line.WhitespaceCount
+                    : 0;
+
+                for (var i = 0; i < line.Length; i++, characterIndex++)
                 {
                     var character = _characters[characterIndex];
 
-                    if (isFirstCharacterOfLine)
-                    {
-                        isFirstCharacterOfLine = false;
-                        offset.X = MathF.Max(0, character.Glyph.LeftSideBearing);
-                    }
-                    else
-                    {
-                        offset.X += characterSpacing + character.Glyph.LeftSideBearing;
-                    }
-
+                    var position = character.Position + offset;
                     _characters[characterIndex] = character with
                     {
-                        Position = character.Position + offset
+                        Position = position
                     };
 
-                    offset.X += character.Glyph.Width + character.Glyph.RightSideBearing;
-
-                    characterIndex++;
+                    var addAdditionWhitespaceWidth = isJustified
+                        && character.TokenType is TokenType.Whitespace;
+                    if (addAdditionWhitespaceWidth)
+                        offset.X += additionalWhitespaceWidth;
                 }
-
-                offset.Y += lineSpacing;
             }
         }
 

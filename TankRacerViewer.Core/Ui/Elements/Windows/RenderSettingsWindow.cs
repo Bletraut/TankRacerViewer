@@ -79,6 +79,8 @@ namespace TankRacerViewer.Core
             };
 
             var propertiesColumn = new ColumnLayout(
+                leftPadding: 2,
+                rightPadding: 2,
                 spacing: 4,
                 sizeMainAxisToContent: true,
                 expandChildrenCrossAxis: true,
@@ -110,11 +112,9 @@ namespace TankRacerViewer.Core
             );
 
             ContentContainer.AddChild(new ExpandedElement(
-                expandHeight: false,
-                innerElement: new AlignmentElement(
-                    alignmentFactor: Alignment.TopCenter,
-                    pivot: Alignment.TopCenter,
-                    innerElement: propertiesColumn
+                innerElement: new ScrollViewElement(
+                    expandingContentWidthMode: ScrollViewElement.ExpandingMode.FillParent,
+                    content: propertiesColumn
                 )
             ));
             // END
