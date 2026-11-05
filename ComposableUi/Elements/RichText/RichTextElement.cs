@@ -224,7 +224,28 @@ namespace ComposableUi
             if (SetAndChangeState(ref _currentSpriteFont, SpriteFont ?? Context?.Theme.DefaultSpriteFont))
                 OnTextChanged();
 
-            return base.CalculatePreferredSize();
+            var useSelfSize = _currentSpriteFont is null
+                || (!SizeToTextWidth && !SizeToTextHeight);
+            if (useSelfSize)
+                return base.CalculatePreferredSize();
+
+            _preferredTextLayout.RebuildIfNeeded(GetRichTextLayoutOptions());
+
+            var textSize = new Vector2()
+            {
+                X = HorizontalSizingMode is TextBoundsMode.Typographic
+                    ? _preferredTextLayout.TypographicSize.X
+                    : _preferredTextLayout.GeometricSize.X,
+                Y = VerticalSizingMode is TextBoundsMode.Typographic
+                    ? _preferredTextLayout.TypographicSize.Y
+                    : _preferredTextLayout.GeometricSize.Y,
+            };
+
+            return new Vector2()
+            {
+                X = SizeToTextWidth ? textSize.X : Size.X,
+                Y = SizeToTextHeight ? textSize.Y : Size.Y,
+            };
         }
 
         public override void Rebuild(Vector2 size)

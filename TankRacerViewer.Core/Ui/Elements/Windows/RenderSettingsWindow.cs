@@ -13,6 +13,7 @@ namespace TankRacerViewer.Core
         {
             // FOR DEBUG
             var searchField = TestTextWindow.Instance.SearchField;
+            var scrollView = TestTextWindow.Instance.ScrollView;
 
             var horizontalAlignmentMode = new DropDownListElement(
                 items: Enum.GetNames<HorizontalAlignmentMode>()
@@ -78,6 +79,36 @@ namespace TankRacerViewer.Core
                 RefreshToggle(preserveWhitespaceToggle, searchField.PreserveWhitespace);
             };
 
+            var sizeToTextWidthToggle = UiElementFactory.CreateToggleButton("Size To Text Width");
+            RefreshToggle(sizeToTextWidthToggle, searchField.SizeToTextWidth);
+            scrollView.ExpandingContentWidthMode = searchField.SizeToTextWidth
+                ? ScrollViewElement.ExpandingMode.None
+                : ScrollViewElement.ExpandingMode.FillParent;
+            sizeToTextWidthToggle.PointerClick += (_, _) =>
+            {
+                searchField.SizeToTextWidth = !searchField.SizeToTextWidth;
+                RefreshToggle(sizeToTextWidthToggle, searchField.SizeToTextWidth);
+
+                scrollView.ExpandingContentWidthMode = searchField.SizeToTextWidth
+                    ? ScrollViewElement.ExpandingMode.None
+                    : ScrollViewElement.ExpandingMode.FillParent;
+            };
+
+            var sizeToTextHeightToggle = UiElementFactory.CreateToggleButton("Size To Text Height");
+            RefreshToggle(sizeToTextHeightToggle, searchField.SizeToTextHeight);
+            scrollView.ExpandingContentHeightMode = searchField.SizeToTextHeight
+                ? ScrollViewElement.ExpandingMode.None
+                : ScrollViewElement.ExpandingMode.FillParent;
+            sizeToTextHeightToggle.PointerClick += (_, _) =>
+            {
+                searchField.SizeToTextHeight = !searchField.SizeToTextHeight;
+                RefreshToggle(sizeToTextHeightToggle, searchField.SizeToTextHeight);
+
+                scrollView.ExpandingContentHeightMode = searchField.SizeToTextHeight
+                    ? ScrollViewElement.ExpandingMode.None
+                    : ScrollViewElement.ExpandingMode.FillParent;
+            };
+
             var propertiesColumn = new ColumnLayout(
                 leftPadding: 2,
                 rightPadding: 2,
@@ -105,9 +136,19 @@ namespace TankRacerViewer.Core
                         sizeToTextHeight: true
                     ),
                     verticalAlignmentBoundsMode,
+                    new TextElement(
+                        text: "Wrapping:",
+                        sizeToTextHeight: true
+                    ),
                     multilineToggle,
                     wordWrapToggle,
-                    preserveWhitespaceToggle
+                    preserveWhitespaceToggle,
+                    new TextElement(
+                        text: "Sizing:",
+                        sizeToTextHeight: true
+                    ),
+                    sizeToTextWidthToggle,
+                    sizeToTextHeightToggle
                 ]
             );
 

@@ -95,6 +95,7 @@ namespace ComposableUi
 
                         var shouldWrapWord = _currentOptions.WordWrap
                             && _currentOptions.Multiline
+                            && !_currentOptions.SizeToTextWidth
                             && _currentLine.Length > 0
                             && _currentLine.Width + additionalGlyphWidth > _currentOptions.Size.X;
                         if (shouldWrapWord)
@@ -320,14 +321,14 @@ namespace ComposableUi
 
         private void ApplyAlignment()
         {
-            var a = _currentOptions.HorizontalAlignmentMode is HorizontalAlignmentMode.Left
+            var isDefaultAlignmentApplied = _currentOptions.HorizontalAlignmentMode is HorizontalAlignmentMode.Left
                 && _currentOptions.VerticalAlignmentMode is VerticalAlignmentMode.Top;
-            if (a)
+            if (isDefaultAlignmentApplied)
                 return;
 
-            var size = _currentOptions.VerticalAlignmentBoundsMode is TextBoundsMode.Typographic
-                ? TypographicSize
-                : GeometricSize;
+            var height = _currentOptions.VerticalAlignmentBoundsMode is TextBoundsMode.Typographic
+                ? TypographicSize.Y
+                : GeometricSize.Y;
 
             var characterIndex = 0;
             foreach (var line in _lines)
@@ -340,16 +341,16 @@ namespace ComposableUi
                 offset.X = _currentOptions.HorizontalAlignmentMode switch
                 {
                     HorizontalAlignmentMode.Left => 0,
-                    HorizontalAlignmentMode.Center => -lineWidth / 2,
-                    HorizontalAlignmentMode.Right => -lineWidth,
+                    HorizontalAlignmentMode.Center => (_currentOptions.Size.X - lineWidth) / 2,
+                    HorizontalAlignmentMode.Right => _currentOptions.Size.X - lineWidth,
                     HorizontalAlignmentMode.Justified => 0,
                     _ => throw new NotImplementedException(),
                 };
                 offset.Y = _currentOptions.VerticalAlignmentMode switch
                 {
                     VerticalAlignmentMode.Top => 0,
-                    VerticalAlignmentMode.Middle => -size.Y / 2,
-                    VerticalAlignmentMode.Bottom => -size.Y,
+                    VerticalAlignmentMode.Middle => (_currentOptions.Size.Y - height) / 2,
+                    VerticalAlignmentMode.Bottom => _currentOptions.Size.Y - height,
                     _ => throw new NotImplementedException(),
                 };
 
