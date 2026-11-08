@@ -233,7 +233,7 @@ namespace ComposableUi
 
             if (_itemPreview is null)
             {
-                _itemPreview = CurrentItem.CreateEmpty();
+                _itemPreview = CurrentItem.CreatePreview();
                 _itemPreview.IsSelectable = false;
                 _itemPreviewParent.AddChild(_itemPreview);
             }

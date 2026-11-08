@@ -200,7 +200,7 @@ namespace ComposableUi
             RefreshVisualState();
         }
 
-        DropDownListTextItemElement IDropDownListItem<DropDownListTextItemElement>.CreateEmpty()
+        DropDownListTextItemElement IDropDownListItem<DropDownListTextItemElement>.CreatePreview()
         {
             return new DropDownListTextItemElement();
         }

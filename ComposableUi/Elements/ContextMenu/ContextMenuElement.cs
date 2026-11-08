@@ -19,14 +19,14 @@ namespace ComposableUi
         private static readonly Stack<Submenu> _stack = [];
 
         // Class.
-        public bool _clampToRootWidth;
+        private bool _clampToRootWidth;
         public bool ClampToRootWidth
         {
             get => _clampToRootWidth;
             set => SetAndChangeState(ref _clampToRootWidth, value);
         }
 
-        public bool _clampToRootHeight;
+        private bool _clampToRootHeight;
         public bool ClampToRootHeight
         {
             get => _clampToRootHeight;

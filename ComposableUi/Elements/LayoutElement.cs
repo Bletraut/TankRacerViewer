@@ -2,14 +2,14 @@
 {
     public sealed class LayoutElement : HolderElement
     {
-        public bool _ignoreLayout;
+        private bool _ignoreLayout;
         public bool IgnoreLayout
         {
             get => _ignoreLayout;
             set => SetAndChangeState(ref _ignoreLayout, value);
         }
 
-        public float _flexFactor;
+        private float _flexFactor;
         public float FlexFactor
         {
             get => _flexFactor;

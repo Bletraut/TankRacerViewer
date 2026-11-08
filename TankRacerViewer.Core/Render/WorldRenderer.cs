@@ -377,7 +377,7 @@ namespace TankRacerViewer.Core
             _depthRenderTarget = new RenderTarget2D(_graphicsDevice, width, height,
                 false, SurfaceFormat.Single, DepthFormat.None);
 
-            _transparentLayerRenderTargets = new RenderTarget2D[TransparentLayerCount];
+            _transparentLayerRenderTargets ??= new RenderTarget2D[TransparentLayerCount];
             for (var i = 0; i < TransparentLayerCount; i++)
             {
                 _transparentLayerRenderTargets[i]?.Dispose();

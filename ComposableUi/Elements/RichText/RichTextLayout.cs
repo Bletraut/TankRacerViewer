@@ -20,9 +20,9 @@ namespace ComposableUi
         public ReadOnlySpan<RichTextCharacter> Characters => CollectionsMarshal.AsSpan(_characters);
         public ReadOnlySpan<RichTextLine> Lines => CollectionsMarshal.AsSpan(_lines);
 
-        private float CharacterSpacing => _currentOptions.SpriteFont?.Spacing ?? 0 + _currentOptions.CharacterSpacing;
+        private float CharacterSpacing => (_currentOptions.SpriteFont?.Spacing ?? 0) + _currentOptions.CharacterSpacing;
         private float WordSpacing => _currentOptions.WordSpacing;
-        private float LineSpacing => _currentOptions.SpriteFont?.LineSpacing ?? 0 + _currentOptions.LineSpacing;
+        private float LineSpacing => (_currentOptions.SpriteFont?.LineSpacing ?? 0) + _currentOptions.LineSpacing;
 
         private readonly List<RichTextCharacter> _characters = [];
         private readonly List<RichTextLine> _lines = [];

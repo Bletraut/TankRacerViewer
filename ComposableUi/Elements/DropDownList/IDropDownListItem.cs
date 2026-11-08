@@ -8,7 +8,7 @@
 
         public void SetSelected(bool value);
 
-        public TItem CreateEmpty();
+        public TItem CreatePreview();
         public void Clone(TItem source);
     }
 }

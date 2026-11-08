@@ -93,7 +93,7 @@ namespace ComposableUi
             set => SetAndChangeState(ref _characterSpacing, value);
         }
 
-        public float _wordSpacing;
+        private float _wordSpacing;
         public float WordSpacing
         {
             get => _wordSpacing;

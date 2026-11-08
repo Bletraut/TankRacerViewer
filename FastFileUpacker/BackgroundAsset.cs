@@ -131,7 +131,7 @@ namespace FastFileUnpacker
                     AddGroundQuad(polygons, bottomUv1, bottomUv2, textureName1);
 
                 if (textureName2 != NullTextureName)
-                    AddCloudsQuad(polygons, topUv1, topUv2, textureName1);
+                    AddCloudsQuad(polygons, topUv1, topUv2, textureName2);
             }
         }
     }
