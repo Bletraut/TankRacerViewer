@@ -32,6 +32,7 @@ namespace TankRacerViewer.Core
             );
 
             ContentContainer.AddChild(new ExpandedElement(
+                leftPadding: 2,
                 innerElement: ScrollView
             ));
         }

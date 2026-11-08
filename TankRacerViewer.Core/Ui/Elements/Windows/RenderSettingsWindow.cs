@@ -109,6 +109,26 @@ namespace TankRacerViewer.Core
                     : ScrollViewElement.ExpandingMode.FillParent;
             };
 
+            var horizontalSizingMode = new DropDownListElement(
+                items: Enum.GetNames<TextBoundsMode>()
+                    .Select(name => new DropDownListTextItemElement(name))
+            );
+            horizontalSizingMode.ItemSelected += (_, i) =>
+            {
+                searchField.HorizontalSizingMode = (TextBoundsMode)i;
+            };
+            horizontalSizingMode.SelectItem(0);
+
+            var verticalSizingMode = new DropDownListElement(
+                items: Enum.GetNames<TextBoundsMode>()
+                    .Select(name => new DropDownListTextItemElement(name))
+            );
+            verticalSizingMode.ItemSelected += (_, i) =>
+            {
+                searchField.VerticalSizingMode = (TextBoundsMode)i;
+            };
+            verticalSizingMode.SelectItem(0);
+
             var propertiesColumn = new ColumnLayout(
                 leftPadding: 2,
                 rightPadding: 2,
@@ -148,7 +168,17 @@ namespace TankRacerViewer.Core
                         sizeToTextHeight: true
                     ),
                     sizeToTextWidthToggle,
-                    sizeToTextHeightToggle
+                    sizeToTextHeightToggle,
+                    new TextElement(
+                        text: "Horizontal Sizing Mode:",
+                        sizeToTextHeight: true
+                    ),
+                    horizontalSizingMode,
+                    new TextElement(
+                        text: "Vertical Sizing Mode:",
+                        sizeToTextHeight: true
+                    ),
+                    verticalSizingMode
                 ]
             );
 

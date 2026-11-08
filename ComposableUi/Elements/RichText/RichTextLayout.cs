@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using Microsoft.Xna.Framework;
@@ -34,7 +33,13 @@ namespace ComposableUi
 
         private SpriteFont.Glyph? _defaultGlyph;
 
-        public void RebuildIfNeeded(in RichTextLayoutOptions options)
+        private Vector2 _minTypographicPosition;
+        private Vector2 _maxTypographicPosition;
+        private Vector2 _minGeometricPosition;
+        private Vector2 _maxGeometricPosition;
+
+        public void RebuildIfNeeded(in RichTextLayoutOptions options,
+            bool applyAlignment)
         {
             if (_currentOptions.Equals(options))
                 return;
@@ -137,7 +142,7 @@ namespace ComposableUi
                         {
                             TokenIndex = i,
                             TokenType = token.TokenType,
-                            Position = glyph.Cropping.Location.ToVector2(),
+                            Position = Vector2.Zero,
                             FontTexture = spriteFont.Texture,
                             Glyph = glyph,
                         });
@@ -178,7 +183,9 @@ namespace ComposableUi
             AddNewLine(_currentLine.Length, false);
 
             CalculateLineMetricsAndCharacterPositions();
-            ApplyAlignment();
+
+            if (applyAlignment)
+                ApplyAlignment();
         }
 
         private bool TryGetGlyph(Dictionary<char, SpriteFont.Glyph> glyphs, char character,
@@ -247,10 +254,10 @@ namespace ComposableUi
             var wordSpacing = WordSpacing;
             var lineSpacing = LineSpacing;
 
-            var minTypographicPosition = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
-            var maxTypographicPosition = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
-            var minGeometricPosition = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
-            var maxGeometricPosition = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            _minTypographicPosition = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            _maxTypographicPosition = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            _minGeometricPosition = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            _maxGeometricPosition = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
 
             var offset = Vector2.Zero;
 
@@ -264,42 +271,55 @@ namespace ComposableUi
                 var minLineGeometricPosition = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
                 var maxLineGeometricPosition = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
 
+                offset.X = 0;
+
                 var isFirstCharacterOfLine = true;
                 for (var j = 0; j < line.Length; j++, characterIndex++)
                 {
                     var character = _characters[characterIndex];
                     var glyph = character.Glyph;
 
+                    minLineTypographicPosition = Vector2.Min(minLineTypographicPosition, offset);
+                    maxLineTypographicPosition = Vector2.Max(maxLineTypographicPosition,
+                        offset + new Vector2(MathF.Max(0, glyph.WidthIncludingBearings), MathF.Max(lineSpacing, glyph.Cropping.Height)));
+
+                    _minTypographicPosition = Vector2.Min(_minTypographicPosition, minLineTypographicPosition);
+                    _maxTypographicPosition = Vector2.Max(_maxTypographicPosition, maxLineTypographicPosition);
+
                     if (isFirstCharacterOfLine)
                     {
                         isFirstCharacterOfLine = false;
-                        offset.X = useTypographicWidth
-                            ? glyph.LeftSideBearing
-                            : 0;
+
+                        if (useTypographicWidth)
+                            offset.X = glyph.LeftSideBearing;
                     }
                     else
                     {
-                        offset.X += characterSpacing + glyph.LeftSideBearing;
+                        offset.X += glyph.LeftSideBearing + characterSpacing;
                     }
 
-                    var position = character.Position + offset;
+                    var position = glyph.Cropping.Location.ToVector2() + offset;
                     _characters[characterIndex] = character with
                     {
                         Position = position
                     };
 
-                    minLineTypographicPosition = Vector2.Min(minLineTypographicPosition, offset);
-                    maxLineTypographicPosition = Vector2.Max(maxLineTypographicPosition,
-                        offset + new Vector2(glyph.WidthIncludingBearings, MathF.Max(lineSpacing, glyph.Cropping.Height)));
+                    var hasWidthOnly = character.TokenType is TokenType.Whitespace or TokenType.LineBreak;
+                    if (hasWidthOnly)
+                    {
+                        minLineGeometricPosition.X = MathF.Min(minLineGeometricPosition.X, offset.X);
+                        maxLineGeometricPosition.X = MathF.Max(maxLineGeometricPosition.X, 
+                            offset.X + glyph.Width + glyph.RightSideBearing + wordSpacing);
+                    }
+                    else
+                    {
+                        minLineGeometricPosition = Vector2.Min(minLineGeometricPosition, position);
+                        maxLineGeometricPosition = Vector2.Max(maxLineGeometricPosition,
+                            position + glyph.BoundsInTexture.Size.ToVector2());
+                    }
 
-                    minLineGeometricPosition = Vector2.Min(minLineGeometricPosition, position);
-                    maxLineGeometricPosition = Vector2.Max(maxLineGeometricPosition,
-                        position + glyph.BoundsInTexture.Size.ToVector2());
-
-                    minTypographicPosition = Vector2.Min(minTypographicPosition, minLineTypographicPosition);
-                    maxTypographicPosition = Vector2.Max(maxTypographicPosition, maxLineTypographicPosition);
-                    minGeometricPosition = Vector2.Min(minGeometricPosition, minLineGeometricPosition);
-                    maxGeometricPosition = Vector2.Max(maxGeometricPosition, maxLineGeometricPosition);
+                    _minGeometricPosition = Vector2.Min(_minGeometricPosition, minLineGeometricPosition);
+                    _maxGeometricPosition = Vector2.Max(_maxGeometricPosition, maxLineGeometricPosition);
 
                     offset.X += glyph.Width + glyph.RightSideBearing;
                     if (character.TokenType is TokenType.Whitespace)
@@ -315,20 +335,25 @@ namespace ComposableUi
                 };
             }
 
-            TypographicSize = maxTypographicPosition - minTypographicPosition;
-            GeometricSize = maxGeometricPosition - minTypographicPosition;
+            TypographicSize = _maxTypographicPosition - _minTypographicPosition;
+            GeometricSize = _maxGeometricPosition - _minGeometricPosition;
         }
 
         private void ApplyAlignment()
         {
-            var isDefaultAlignmentApplied = _currentOptions.HorizontalAlignmentMode is HorizontalAlignmentMode.Left
-                && _currentOptions.VerticalAlignmentMode is VerticalAlignmentMode.Top;
-            if (isDefaultAlignmentApplied)
-                return;
-
             var height = _currentOptions.VerticalAlignmentBoundsMode is TextBoundsMode.Typographic
                 ? TypographicSize.Y
                 : GeometricSize.Y;
+
+            var positionOffset = new Vector2()
+            {
+                X = _currentOptions.VerticalAlignmentBoundsMode is TextBoundsMode.Typographic 
+                    ? _minTypographicPosition.X 
+                    : _minGeometricPosition.X,
+                Y = _currentOptions.VerticalAlignmentBoundsMode is TextBoundsMode.Typographic
+                    ? _minTypographicPosition.Y
+                    : _minGeometricPosition.Y
+            };
 
             var characterIndex = 0;
             foreach (var line in _lines)
@@ -353,6 +378,7 @@ namespace ComposableUi
                     VerticalAlignmentMode.Bottom => _currentOptions.Size.Y - height,
                     _ => throw new NotImplementedException(),
                 };
+                offset -= positionOffset;
 
                 var isJustified = line.IsJustifiable
                     && _currentOptions.HorizontalAlignmentMode is HorizontalAlignmentMode.Justified;

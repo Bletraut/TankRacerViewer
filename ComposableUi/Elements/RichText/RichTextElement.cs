@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -229,7 +228,7 @@ namespace ComposableUi
             if (useSelfSize)
                 return base.CalculatePreferredSize();
 
-            _preferredTextLayout.RebuildIfNeeded(GetRichTextLayoutOptions());
+            _preferredTextLayout.RebuildIfNeeded(GetRichTextLayoutOptions(), false);
 
             var textSize = new Vector2()
             {
@@ -252,7 +251,7 @@ namespace ComposableUi
         {
             Size = size;
 
-            _textLayout.RebuildIfNeeded(GetRichTextLayoutOptions());
+            _textLayout.RebuildIfNeeded(GetRichTextLayoutOptions(), true);
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)
@@ -262,13 +261,14 @@ namespace ComposableUi
 
             // TODO: Add draw here.
             // Test.
-            if (BuiltInSprite.TextField is ISpriteSource spriteSource)
+            //if (BuiltInSprite.TextField is ISpriteSource spriteSource)
+            if (BuiltInSprite.WhitePixel is ISpriteSource spriteSource)
             {
                 var sprite = spriteSource.Resolve(Context);
                 if (sprite != null)
                 {
                     renderer.DrawSprite(sprite, DrawMode.Sliced,
-                        BoundingRectangle, ClipMask, Color.DarkGray);
+                        BoundingRectangle, ClipMask, Color.Red);
                 }
             }
 
