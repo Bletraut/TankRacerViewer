@@ -316,7 +316,7 @@ namespace ComposableUi
             }
 
             TypographicSize = maxTypographicPosition - minTypographicPosition;
-            GeometricSize = minGeometricPosition - minTypographicPosition;
+            GeometricSize = maxGeometricPosition - minTypographicPosition;
         }
 
         private void ApplyAlignment()
