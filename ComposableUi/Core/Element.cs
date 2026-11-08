@@ -169,6 +169,8 @@ namespace ComposableUi
             Context = context;
         }
 
+        public Vector2 CalculatePreferredSize() => CalculatePreferredSize(null, null);
+
         public IEnumerable<ParentElement> GetParentsRecursively()
         {
             if (Parent is null)
@@ -236,7 +238,7 @@ namespace ComposableUi
             _globalInverseTransformationMatrix = Matrix.Invert(GlobalTransformationMatrix);
         }
 
-        public virtual Vector2 CalculatePreferredSize() => Size;
+        public virtual Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight) => Size;
 
         public virtual void Rebuild(Vector2 size)
         {

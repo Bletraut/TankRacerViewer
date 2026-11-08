@@ -214,11 +214,11 @@ namespace ComposableUi
             return (MainAxis * (activeChildCount - 1) * Spacing, totalExpandingFactor);
         }
 
-        public override Vector2 CalculatePreferredSize()
+        public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
         {
             var isSizeToContentEnabled = SizeMainAxisToContent || SizeCrossAxisToContent;
 
-            var size = base.CalculatePreferredSize();
+            var size = base.CalculatePreferredSize(exactWidth, exactHeight);
             if (ChildCount == 0)
                 return isSizeToContentEnabled ? Vector2.Zero : size;
 

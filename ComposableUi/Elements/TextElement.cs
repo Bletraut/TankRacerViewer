@@ -116,7 +116,7 @@ namespace ComposableUi
             return ClipMaskElement.CalculateElementSelfClipMask(this);
         }
 
-        public override Vector2 CalculatePreferredSize()
+        public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
         {
             if (SetAndChangeState(ref _currentSpriteFont, SpriteFont ?? Context?.Theme.DefaultSpriteFont))
                 OnTextChanged();

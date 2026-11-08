@@ -103,7 +103,7 @@ namespace ComposableUi
             };
         }
 
-        public override Vector2 CalculatePreferredSize()
+        public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
         {
             if (Parent is not null)
             {

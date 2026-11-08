@@ -40,12 +40,12 @@ namespace TankRacerViewer.Core
             TextOffset = textOffset ?? DefaultTextOffset;
         }
 
-        public override Vector2 CalculatePreferredSize()
+        public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
         {
             ISpriteSource spriteSource = BuiltInSprite.WhitePixel;
             _currentSprite = spriteSource.Resolve(Context);
 
-            return base.CalculatePreferredSize();
+            return base.CalculatePreferredSize(exactWidth, exactHeight);
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)

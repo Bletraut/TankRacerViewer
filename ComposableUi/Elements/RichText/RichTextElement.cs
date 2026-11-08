@@ -218,7 +218,7 @@ namespace ComposableUi
                 HorizontalAlignmentBoundsMode, VerticalAlignmentBoundsMode);
         }
 
-        public override Vector2 CalculatePreferredSize()
+        public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
         {
             if (SetAndChangeState(ref _currentSpriteFont, SpriteFont ?? Context?.Theme.DefaultSpriteFont))
                 OnTextChanged();
@@ -226,7 +226,7 @@ namespace ComposableUi
             var useSelfSize = _currentSpriteFont is null
                 || (!SizeToTextWidth && !SizeToTextHeight);
             if (useSelfSize)
-                return base.CalculatePreferredSize();
+                return base.CalculatePreferredSize(exactWidth, exactHeight);
 
             _preferredTextLayout.RebuildIfNeeded(GetRichTextLayoutOptions(), false);
 

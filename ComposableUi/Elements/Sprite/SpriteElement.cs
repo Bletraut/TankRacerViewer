@@ -45,7 +45,7 @@ namespace ComposableUi
             DrawMode = drawMode;
         }
 
-        public override Vector2 CalculatePreferredSize()
+        public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
         {
             SetAndChangeState(ref _currentSprite, SpriteSource?.Resolve(Context));
 
@@ -53,7 +53,7 @@ namespace ComposableUi
                 || DrawMode is DrawMode.Sliced
                 || !SizeToSource;
             if (useSelfSize)
-                return base.CalculatePreferredSize();
+                return base.CalculatePreferredSize(exactWidth, exactHeight);
 
             return _currentSprite.SourceRectangle.Size.ToVector2() * _currentSprite.Scale;
         }

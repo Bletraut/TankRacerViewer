@@ -56,7 +56,7 @@ namespace TankRacerViewer.Core
             _sprite.SourceRectangle = _renderTarget.Bounds;
         }
 
-        public override Vector2 CalculatePreferredSize()
+        public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
             => Resolution.ToVector2();
 
         void IDrawableElement.Draw(IUiRenderer renderer)

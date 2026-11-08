@@ -297,9 +297,9 @@ namespace ComposableUi
                 submenu.Menu.IsEnabled = false;
         }
 
-        public override Vector2 CalculatePreferredSize()
+        public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
         {
-            return _columnsRow.CalculatePreferredSize();
+            return _columnsRow.CalculatePreferredSize(exactWidth, exactHeight);
         }
 
         public override void Rebuild(Vector2 size, bool excludeChildren)
