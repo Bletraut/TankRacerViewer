@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace TankRacerViewer.Core
 {
     public sealed class LevelObjectElement : ClipMaskElement,
-        ILazyListItem<LevelObject>
+        IVirtualizedListItem<LevelObject>
     {
         public const int DefaultHeight = 30;
         public const int DefaultButtonPaddings = 6;
@@ -164,7 +164,7 @@ namespace TankRacerViewer.Core
                 : IconCollection.Get(IconName.BoundingBoxOff);
         }
 
-        void ILazyListItem<LevelObject>.SetData(LevelObject data)
+        void IVirtualizedListItem<LevelObject>.SetData(LevelObject data)
         {
             if (_data == data)
                 return;
@@ -182,7 +182,7 @@ namespace TankRacerViewer.Core
             RefreshBoundingBoxColor();
         }
 
-        void ILazyListItem<LevelObject>.ClearData()
+        void IVirtualizedListItem<LevelObject>.ClearData()
         {
             _data.IsBoundingBoxEnabled = _isBoundingBoxEnabled;
 

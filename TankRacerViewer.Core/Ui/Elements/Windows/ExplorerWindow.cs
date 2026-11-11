@@ -77,7 +77,7 @@ namespace TankRacerViewer.Core
         public event Action<AssetView> AssetViewSelected;
 
         private readonly ScrollViewElement _scrollView;
-        private readonly LazyListViewElement<HierarchyNodeData, HierarchyNodeElement> _lazyListView;
+        private readonly VirtualizedListViewElement<HierarchyNodeData, HierarchyNodeElement> _virtualizedListView;
 
         private readonly List<HierarchyNodeData> _rootNodes = [];
         private readonly List<HierarchyNodeData> _fastFileNodes = [];
@@ -111,14 +111,14 @@ namespace TankRacerViewer.Core
             //    )
             //));
 
-            _lazyListView = new LazyListViewElement<HierarchyNodeData, HierarchyNodeElement>(
+            _virtualizedListView = new VirtualizedListViewElement<HierarchyNodeData, HierarchyNodeElement>(
                 itemFactory: CreateHierarchyNode
             );
-            _lazyListView.ItemColumn.ExpandChildrenCrossAxis = true;
+            _virtualizedListView.ItemColumn.ExpandChildrenCrossAxis = true;
 
             _scrollView = new ScrollViewElement(
                 expandingContentWidthMode: ScrollViewElement.ExpandingMode.ExpandToFit,
-                content: _lazyListView
+                content: _virtualizedListView
             );
             ContentContainer.AddChild(new ExpandedElement(
                 topPadding: DefaultSearchFieldHeight,
@@ -160,13 +160,13 @@ namespace TankRacerViewer.Core
             foreach (var (path, file) in files)
                 AddFastFileNode(path, file);
 
-            RefreshLazyListViewItems();
+            RefreshVirtualizedListViewItems();
         }
 
         public void AddFastFile(string path, AssetViewContainer file)
         {
             AddFastFileNode(path, file);
-            RefreshLazyListViewItems();
+            RefreshVirtualizedListViewItems();
         }
 
         public void SelectNextNode() => SelectNode(1);
@@ -176,14 +176,14 @@ namespace TankRacerViewer.Core
             if (_selectedNodeData is null)
                 return;
 
-            var currentIndex = _lazyListView.IndexOf(_selectedNodeData);
+            var currentIndex = _virtualizedListView.IndexOf(_selectedNodeData);
             var nextIndex = currentIndex >= 0
-                ? int.Clamp(currentIndex + indexOffset, 0, _lazyListView.Data.Count - 1)
+                ? int.Clamp(currentIndex + indexOffset, 0, _virtualizedListView.Data.Count - 1)
                 : 0;
 
-            SelectNode(_lazyListView.Data[nextIndex]);
+            SelectNode(_virtualizedListView.Data[nextIndex]);
 
-            var itemBoundingRectangle = _lazyListView.CalculateItemBoundingRectangle(nextIndex);
+            var itemBoundingRectangle = _virtualizedListView.CalculateItemBoundingRectangle(nextIndex);
             _scrollView.ScrollVerticalToFitBounds(itemBoundingRectangle);
 
             OnStateChanged();
@@ -210,7 +210,7 @@ namespace TankRacerViewer.Core
                 AddAssetViewGroup(ExtraGroupName, fileNode, assetViewContainer.ExtraAssetViews.Values);
             }
 
-            RefreshLazyListViewItems();
+            RefreshVirtualizedListViewItems();
         }
 
         private void AddFastFileNode(string filePath, AssetViewContainer file)
@@ -268,9 +268,9 @@ namespace TankRacerViewer.Core
             return folderNode;
         }
 
-        private void RefreshLazyListViewItems()
+        private void RefreshVirtualizedListViewItems()
         {
-            _lazyListView.ClearData();
+            _virtualizedListView.ClearData();
 
             for (var i = _rootNodes.Count - 1; i >= 0; i--)
                 _stack.Push(_rootNodes[i]);
@@ -285,7 +285,7 @@ namespace TankRacerViewer.Core
                     && node.Children[0].File is null;
                 if (!node.IsHidden)
                 {
-                    _lazyListView.AddData(node);
+                    _virtualizedListView.AddData(node);
 
                     if (node.IsFolded)
                         continue;
@@ -310,7 +310,7 @@ namespace TankRacerViewer.Core
                     _stack.Push(node.Children[i]);
             }
 
-            RefreshLazyListViewItems();
+            RefreshVirtualizedListViewItems();
         }
 
         private void FoldNode(HierarchyNodeData nodeData)
@@ -338,8 +338,8 @@ namespace TankRacerViewer.Core
                 }
             }
 
-            var dataIndex = _lazyListView.IndexOf(nodeData);
-            _lazyListView.RemoveDataRange(dataIndex + 1, childCount);
+            var dataIndex = _virtualizedListView.IndexOf(nodeData);
+            _virtualizedListView.RemoveDataRange(dataIndex + 1, childCount);
 
             nodeData.IsFolded = true;
         }
@@ -367,8 +367,8 @@ namespace TankRacerViewer.Core
                 }
             }
 
-            var dataIndex = _lazyListView.IndexOf(nodeData);
-            _lazyListView.InsertDataRange(dataIndex + 1, CollectionsMarshal.AsSpan(_list));
+            var dataIndex = _virtualizedListView.IndexOf(nodeData);
+            _virtualizedListView.InsertDataRange(dataIndex + 1, CollectionsMarshal.AsSpan(_list));
 
             nodeData.IsFolded = false;
         }
@@ -387,7 +387,7 @@ namespace TankRacerViewer.Core
             if (_selectedNodeData is not null)
             {
                 _selectedNodeData.IsSelected = false;
-                foreach (var item in _lazyListView.Items)
+                foreach (var item in _virtualizedListView.Items)
                 {
                     if (_selectedNodeData == item.Data)
                     {

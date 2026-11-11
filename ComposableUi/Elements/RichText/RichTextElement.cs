@@ -208,7 +208,7 @@ namespace ComposableUi
             RichTextTokenizer.Tokenize(Text, _tokens);
         }
 
-        private RichTextLayoutOptions GetRichTextLayoutOptions()
+        private RichTextLayoutOptions GetRichTextLayoutOptions(Vector2 size)
         {
             return new RichTextLayoutOptions(_currentSpriteFont, Tokens, Text,
                 Size, SizeToTextWidth, SizeToTextHeight,
@@ -228,7 +228,12 @@ namespace ComposableUi
             if (useSelfSize)
                 return base.CalculatePreferredSize(exactWidth, exactHeight);
 
-            _preferredTextLayout.RebuildIfNeeded(GetRichTextLayoutOptions(), false);
+            var size = new Vector2()
+            {
+                X = exactWidth ?? Size.X,
+                Y = exactHeight ?? Size.Y
+            };
+            _preferredTextLayout.RebuildIfNeeded(GetRichTextLayoutOptions(size), false);
 
             var textSize = new Vector2()
             {
@@ -251,7 +256,7 @@ namespace ComposableUi
         {
             Size = size;
 
-            _textLayout.RebuildIfNeeded(GetRichTextLayoutOptions(), true);
+            _textLayout.RebuildIfNeeded(GetRichTextLayoutOptions(size), true);
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)

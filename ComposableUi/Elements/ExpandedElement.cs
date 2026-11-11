@@ -77,7 +77,9 @@ namespace ComposableUi
 
         private void ExpandChild(Element child, Vector2 size, bool skipRebuildChildren)
         {
-            var elementSize = child.CalculatePreferredSize();
+            float? exactWidth = ExpandWidth ? size.X : null;
+            float? exactHeight = ExpandHeight ? size.Y : null;
+            var elementSize = child.CalculatePreferredSize(exactWidth, exactHeight);
 
             size = new Vector2()
             {

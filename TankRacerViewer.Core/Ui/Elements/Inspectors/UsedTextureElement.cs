@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 namespace TankRacerViewer.Core
 {
     public sealed class UsedTextureElement : PointerInputHandlerElement<UsedTextureElement>,
-        ILazyListItem<UsedTextureData>
+        IVirtualizedListItem<UsedTextureData>
     {
         public const float DefaultNameHeight = 20;
         public const float DefaultSpacing = 4;
@@ -86,7 +86,7 @@ namespace TankRacerViewer.Core
             }
         }
 
-        void ILazyListItem<UsedTextureData>.SetData(UsedTextureData data)
+        void IVirtualizedListItem<UsedTextureData>.SetData(UsedTextureData data)
         {
             Data = data;
 
@@ -103,7 +103,7 @@ namespace TankRacerViewer.Core
             _aspectRatioFitter.AspectRatio = _sprite.Texture.Width / (float)_sprite.Texture.Height;
         }
 
-        void ILazyListItem<UsedTextureData>.ClearData()
+        void IVirtualizedListItem<UsedTextureData>.ClearData()
         {
             Data = default;
             _sprite.Texture = null;

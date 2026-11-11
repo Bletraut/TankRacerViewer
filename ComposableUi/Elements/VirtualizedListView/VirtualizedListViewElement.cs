@@ -5,8 +5,8 @@ using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
-    public class LazyListViewElement<TData, TItem> : ContainerElement
-        where TItem : Element, ILazyListItem<TData>
+    public class VirtualizedListViewElement<TData, TItem> : ContainerElement
+        where TItem : Element, IVirtualizedListItem<TData>
     {
         public ColumnLayout ItemColumn { get; }
 
@@ -39,7 +39,7 @@ namespace ComposableUi
 
         private Vector2 _preferredSize;
 
-        public LazyListViewElement(Func<TItem> itemFactory)
+        public VirtualizedListViewElement(Func<TItem> itemFactory)
         {
             _itemFactory = itemFactory;
 

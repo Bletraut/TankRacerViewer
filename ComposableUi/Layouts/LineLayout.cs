@@ -145,7 +145,7 @@ namespace ComposableUi
             MainAxisChildrenExpandingMode = mainAxisChildrenExpandingMode;
         }
 
-        private Vector2 CalculatePreferredChildrenSize()
+        private Vector2 CalculatePreferredChildrenSize(float? exactWidth, float? exactHeight)
         {
             var activeChildCount = 0;
             var maxChildSize = Vector2.Zero;
@@ -225,7 +225,7 @@ namespace ComposableUi
             if (!isSizeToContentEnabled)
                 return size;
 
-            var preferredChildrenSize = CalculatePreferredChildrenSize();
+            var preferredChildrenSize = CalculatePreferredChildrenSize(null, null);
             var preferredSize = (SizeMainAxisToContent ? preferredChildrenSize : size) * MainAxis
                 + (SizeCrossAxisToContent ? preferredChildrenSize : size) * CrossAxis
                 + new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
@@ -243,7 +243,7 @@ namespace ComposableUi
             var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
             var (totalSpacing, totalExpandingFactor) = CalculateMainAxisSpacingAndExpandingFactor();
             var mainAxisPreferredChildrenSize = MainAxis * (!ExpandChildrenMainAxis
-                ? CalculatePreferredChildrenSize()
+                ? CalculatePreferredChildrenSize(null, null)
                 : Size);
             var totalMainAxisLayoutOffset = MainAxis * (PivotOffset - AlignmentFactor * (Size - mainAxisPreferredChildrenSize - paddings));
 
@@ -267,12 +267,7 @@ namespace ComposableUi
                     layoutElement.Rebuild(size);
 
                     if (layoutElement.IgnoreLayout)
-                    {
-                        var innerElementSize = layoutElement.InnerElement.CalculatePreferredSize();
-                        layoutElement.InnerElement.Rebuild(innerElementSize);
-
                         continue;
-                    }
 
                     child = layoutElement.InnerElement;
                     expandingFactor = CalculateExpandingFactor(MainAxis,

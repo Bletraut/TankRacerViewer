@@ -13,7 +13,7 @@ namespace TankRacerViewer.Core
         public static readonly Color HighlightColor = new(Color.Fuchsia, 0f);
 
         // Class.
-        public readonly LazyListViewElement<UsedTextureData, UsedTextureElement> _lazyListView;
+        public readonly VirtualizedListViewElement<UsedTextureData, UsedTextureElement> _virtualizedListView;
 
         private readonly List<ModelAssetView> _modelAssetViews = [];
 
@@ -40,11 +40,11 @@ namespace TankRacerViewer.Core
             ContentLayout.BottomPadding = 0;
             ContentLayout.ExpandChildrenCrossAxis = true;
 
-            _lazyListView = new LazyListViewElement<UsedTextureData, UsedTextureElement>(
+            _virtualizedListView = new VirtualizedListViewElement<UsedTextureData, UsedTextureElement>(
                 itemFactory: CreateUsedTexture
             );
-            _lazyListView.ItemColumn.ExpandChildrenCrossAxis = true;
-            ContentLayout.AddChild(_lazyListView);
+            _virtualizedListView.ItemColumn.ExpandChildrenCrossAxis = true;
+            ContentLayout.AddChild(_virtualizedListView);
         }
 
         public void ApplyModel(ModelAssetView modelAssetView)
@@ -76,12 +76,12 @@ namespace TankRacerViewer.Core
         {
             CollectUsedTextures();
 
-            _lazyListView.ClearData();
+            _virtualizedListView.ClearData();
 
             var index = 0;
             foreach (var (name, texture) in _usedTextures)
             {
-                _lazyListView.AddData(new UsedTextureData(index, texture, name));
+                _virtualizedListView.AddData(new UsedTextureData(index, texture, name));
                 index++;
             }
         }
