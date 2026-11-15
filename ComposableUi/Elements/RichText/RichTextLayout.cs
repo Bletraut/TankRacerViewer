@@ -100,7 +100,6 @@ namespace ComposableUi
 
                         var shouldWrapWord = _currentOptions.WordWrap
                             && _currentOptions.Multiline
-                            && !_currentOptions.SizeToTextWidth
                             && _currentLine.Length > 0
                             && _currentLine.Width + additionalGlyphWidth > _currentOptions.Size.X;
                         if (shouldWrapWord)

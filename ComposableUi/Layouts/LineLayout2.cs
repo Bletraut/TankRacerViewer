@@ -164,6 +164,7 @@ namespace ComposableUi
                 if (!child.IsEnabled)
                     continue;
 
+                float expandingFactor;
                 if (child is LayoutElement layoutElement)
                 {
                     if (!layoutElement.HasEnabledInnerElement)
@@ -173,15 +174,19 @@ namespace ComposableUi
                         continue;
 
                     child = layoutElement.InnerElement;
+                    expandingFactor = CalculateExpandingFactor(MainAxis,
+                        MainAxisChildrenExpandingMode, layoutElement);
+                }
+                else
+                {
+                    expandingFactor = CalculateExpandingFactor(MainAxis,
+                        MainAxisChildrenExpandingMode, child);
                 }
 
                 var (exactWidth, exactHeight) = (exactMainAxisExtent, exactCrossAxisExtent);
                 if (exactMainAxisExtent.HasValue)
-                {
-                    var expandingFactor = CalculateExpandingFactor(MainAxis,
-                        MainAxisChildrenExpandingMode, child);
-                    exactWidth = exactMainAxisExtent.Value * (expandingFactor /  totalExpandingFactor);
-                }
+                    exactWidth = exactMainAxisExtent.Value * (expandingFactor / totalExpandingFactor);
+
                 (exactWidth, exactHeight) = SwapIf(IsMainAxisVertical, exactWidth, exactHeight);
 
                 var childSize = child.CalculatePreferredSize(exactWidth, exactHeight);
@@ -319,6 +324,82 @@ namespace ComposableUi
 
             if (excludeChildren)
                 return;
+
+            var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
+            var (totalSpacing, totalExpandingFactor) = CalculateMainAxisSpacingAndExpandingFactor();
+
+            var (mainAxisPaddings, crossAxisPaddings) = SwapIf(IsMainAxisVertical, paddings.X, paddings.Y);
+            var (mainAxisExtent, crossAxisExtent) = SwapIf(IsMainAxisVertical, Size.X, Size.Y);
+            mainAxisExtent -= totalSpacing + mainAxisPaddings;
+            crossAxisExtent -= crossAxisPaddings;
+
+            float? exactMainAxisExtent = ExpandChildrenMainAxis
+                ? mainAxisExtent
+                : null;
+            float? exactCrossAxisExtent = ExpandChildrenCrossAxis
+                ? crossAxisExtent
+                : null;
+            var preferredChildrenSize = CalculatePreferredChildrenSize(exactMainAxisExtent, exactCrossAxisExtent,
+                totalExpandingFactor);
+
+            var contentPivotOffset  = PivotOffset - new Vector2(LeftPadding, TopPadding);
+            var contentSize = Size - paddings;
+
+            var totalMainAxisLayoutOffset = contentPivotOffset - AlignmentFactor * (contentSize - preferredChildrenSize - new Vector2(totalSpacing));
+            totalMainAxisLayoutOffset *= MainAxis;
+
+            for (var i = 0; i < ChildCount; i++)
+            {
+                var child = GetChildAt(i);
+                if (!child.IsEnabled)
+                    continue;
+
+                float expandingFactor;
+                if (child is LayoutElement layoutElement)
+                {
+                    if (!layoutElement.HasEnabledInnerElement)
+                        continue;
+
+                    layoutElement.Size = size;
+                    layoutElement.LocalPosition = layoutElement.PivotOffset - PivotOffset;
+                    layoutElement.Rebuild(size);
+
+                    if (layoutElement.IgnoreLayout)
+                        continue;
+
+                    child = layoutElement.InnerElement;
+                    expandingFactor = CalculateExpandingFactor(MainAxis,
+                        MainAxisChildrenExpandingMode, layoutElement);
+                }
+                else
+                {
+                    expandingFactor = CalculateExpandingFactor(MainAxis,
+                        MainAxisChildrenExpandingMode, child);
+                }
+
+                exactMainAxisExtent = ExpandChildrenMainAxis
+                    ? mainAxisExtent * (expandingFactor / totalExpandingFactor)
+                    : null;
+                exactCrossAxisExtent = ExpandChildrenCrossAxis
+                    ? crossAxisExtent
+                    : null;
+
+                (exactMainAxisExtent, exactCrossAxisExtent) = SwapIf(IsMainAxisVertical,
+                    exactMainAxisExtent, exactCrossAxisExtent);
+                var childSize = child.CalculatePreferredSize(exactMainAxisExtent, exactCrossAxisExtent);
+                childSize.X = exactMainAxisExtent ?? childSize.X;
+                childSize.Y = exactCrossAxisExtent ?? childSize.Y;
+
+                var crossAxisLayoutOffset = CrossAxis * (contentPivotOffset  - AlignmentFactor * (contentSize - childSize));
+
+                child.Size = childSize;
+                child.LocalPosition = child.PivotOffset
+                    - (totalMainAxisLayoutOffset + crossAxisLayoutOffset);
+
+                child.Rebuild(childSize);
+
+                totalMainAxisLayoutOffset -= MainAxis * (childSize + new Vector2(Spacing));
+            }
         }
 
         public enum ExpandingMode

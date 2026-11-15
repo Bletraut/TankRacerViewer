@@ -208,11 +208,10 @@ namespace ComposableUi
             RichTextTokenizer.Tokenize(Text, _tokens);
         }
 
-        private RichTextLayoutOptions GetRichTextLayoutOptions(Vector2 size)
+        private RichTextLayoutOptions GetRichTextLayoutOptions(Vector2 size, bool wordWrap)
         {
-            return new RichTextLayoutOptions(_currentSpriteFont, Tokens, Text,
-                Size, SizeToTextWidth, SizeToTextHeight,
-                Multiline, WordWrap, PreserveWhitespace,
+            return new RichTextLayoutOptions(_currentSpriteFont, Tokens, Text, size,
+                Multiline, wordWrap, PreserveWhitespace,
                 CharacterSpacing, WordSpacing, LineSpacing,
                 HorizontalAlignmentMode, VerticalAlignmentMode,
                 HorizontalAlignmentBoundsMode, VerticalAlignmentBoundsMode);
@@ -233,7 +232,9 @@ namespace ComposableUi
                 X = exactWidth ?? Size.X,
                 Y = exactHeight ?? Size.Y
             };
-            _preferredTextLayout.RebuildIfNeeded(GetRichTextLayoutOptions(size), false);
+            var shouldMeasureTextWidth = !exactWidth.HasValue
+                && SizeToTextWidth;
+            _preferredTextLayout.RebuildIfNeeded(GetRichTextLayoutOptions(size, !shouldMeasureTextWidth), false);
 
             var textSize = new Vector2()
             {
@@ -256,7 +257,7 @@ namespace ComposableUi
         {
             Size = size;
 
-            _textLayout.RebuildIfNeeded(GetRichTextLayoutOptions(size), true);
+            _textLayout.RebuildIfNeeded(GetRichTextLayoutOptions(size, WordWrap), true);
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)
