@@ -231,44 +231,67 @@ namespace ComposableUi
 
         public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
         {
-            var size = base.CalculatePreferredSize(exactWidth, exactHeight);
-            var (mainAxisExtent, crossAxisExtent) = SwapIf(IsMainAxisVertical, size.X, size.Y);
-
-            if (ChildCount <= 0)
+            var size = new Vector2()
             {
-                if (SizeMainAxisToContent)
-                    mainAxisExtent = 0;
+                X = exactWidth ?? Size.X,
+                Y = exactHeight ?? Size.Y
+            };
+            var (mainAxisExtent, crossAxisExtent) = SwapIf(IsMainAxisVertical, size.X, size.Y);
+            var (exactMainAxisExtent, exactCrossAxisExtent) = SwapIf(IsMainAxisVertical, exactWidth, exactHeight);
 
-                if (SizeCrossAxisToContent)
-                    crossAxisExtent = 0;
-            }
-            else
+            var shouldExpandMainAxisToExactExtent = exactMainAxisExtent.HasValue && ExpandChildrenMainAxis;
+            var shouldExpandCrossAxisToExactExtent = exactCrossAxisExtent.HasValue && ExpandChildrenCrossAxis;
+
+            var shouldCalculatePreferredSize = ChildCount > 0
+                && !shouldExpandMainAxisToExactExtent
+                && !shouldExpandCrossAxisToExactExtent
+                && (SizeMainAxisToContent || SizeCrossAxisToContent);
+            if (shouldCalculatePreferredSize)
             {
                 var paddings = new Vector2(LeftPadding + RightPadding, TopPadding + BottomPadding);
                 var (mainAxisPaddings, crossAxisPaddings) = SwapIf(IsMainAxisVertical, paddings.X, paddings.Y);
-                var (exactMainAxisExtent, exactCrossAxisExtent) = SwapIf(IsMainAxisVertical, exactWidth, exactHeight);
 
                 var (totalSpacing, totalExpandingFactor) = CalculateMainAxisSpacingAndExpandingFactor();
 
                 // If the main axis extent is exact and children should expand,
                 // calculate their preferred size using the exact main axis extent.
                 // Paddings and spacings are included.
-                var shouldExpandMainAxis = exactMainAxisExtent.HasValue && ExpandChildrenMainAxis;
-                if (shouldExpandMainAxis)
+                if (shouldExpandMainAxisToExactExtent)
                     exactMainAxisExtent -= mainAxisPaddings + totalSpacing;
 
-                var shouldExpandCrossAxis = exactCrossAxisExtent.HasValue && ExpandChildrenCrossAxis;
-                if (shouldExpandCrossAxis)
+                if (shouldExpandCrossAxisToExactExtent)
                     exactCrossAxisExtent -= crossAxisPaddings;
 
                 var preferredChildrenSize = CalculatePreferredChildrenSize(exactMainAxisExtent, exactCrossAxisExtent,
                     totalExpandingFactor);
+                var (preferredMainAxisExtent, preferredCrossAxisExtent) = SwapIf(IsMainAxisVertical,
+                    preferredChildrenSize.X, preferredChildrenSize.Y);
+
+                // Recalculate again because the height may depend on the width
+                // or vice versa if the content is stretched along one of the axes.
+                var shouldRecalculateMainAxisExtent = !shouldExpandMainAxisToExactExtent
+                    && SizeMainAxisToContent && ExpandChildrenMainAxis;
+                if (shouldRecalculateMainAxisExtent)
+                    exactMainAxisExtent = preferredMainAxisExtent;
+
+                var shouldRecalculateCrossAxisExtent = !shouldExpandCrossAxisToExactExtent
+                    && SizeCrossAxisToContent && ExpandChildrenCrossAxis;
+                if (shouldRecalculateMainAxisExtent)
+                    exactCrossAxisExtent = preferredCrossAxisExtent;
+
+                var shouldRecalculatePreferredChildrenSize = shouldRecalculateMainAxisExtent
+                    || shouldRecalculateCrossAxisExtent;
+                if (shouldRecalculatePreferredChildrenSize)
+                {
+                    preferredChildrenSize = CalculatePreferredChildrenSize(exactMainAxisExtent, exactCrossAxisExtent,
+                        totalExpandingFactor);
+                }
 
                 // Add paddings and spacings if children are not expanded.
-                if (!shouldExpandMainAxis)
+                if (!shouldExpandMainAxisToExactExtent)
                     preferredChildrenSize += MainAxis * totalSpacing + MainAxis * paddings;
 
-                if (!shouldExpandCrossAxis)
+                if (!shouldExpandCrossAxisToExactExtent)
                     preferredChildrenSize += CrossAxis * paddings;
 
                 if (SizeMainAxisToContent)
@@ -276,6 +299,14 @@ namespace ComposableUi
 
                 if (SizeCrossAxisToContent)
                     crossAxisExtent = Vector2.Dot(CrossAxis, preferredChildrenSize);
+            }
+            else
+            {
+                if (SizeMainAxisToContent)
+                    mainAxisExtent = 0;
+
+                if (SizeCrossAxisToContent)
+                    crossAxisExtent = 0;
             }
 
             (size.X, size.Y) = SwapIf(IsMainAxisVertical, mainAxisExtent, crossAxisExtent);
