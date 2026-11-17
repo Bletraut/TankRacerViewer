@@ -33,60 +33,10 @@ namespace TankRacerViewer.Core
                 content: SearchField
             );
 
-            //ContentContainer.AddChild(new ExpandedElement(
-            //    leftPadding: 2,
-            //    innerElement: ScrollView
-            //));
-
-            var line = new ColumnLayout2(
-                spacing: 10,
-                alignmentFactor: Alignment.TopCenter,
-                sizeCrossAxisToContent: true,
-                expandChildrenCrossAxis: true,
-                children: [
-                    new LayoutElement(
-                        ignoreLayout: true,
-                        innerElement: new ExpandedElement(
-                            expandWidth: true,
-                            expandHeight: true,
-                            innerElement: new SpriteElement(
-                                spriteSource: BuiltInSprite.WhitePixel,
-                                color: Color.Blue
-                            )
-                        )
-                    )
-                ]
-            );
-            line.Size = new Vector2(100, 200);
-
-            AddText("This is long text");
-            AddText("IMPOSIBLE LONG MAAAAAAAAAAX HEEEEEEEEMUUUUUUUUULLLLLL OLOLOLOLOOLOLO TETXTXTX TX TX TX");
-            AddText("Short text");
-            AddText("Super very very very long text and aaaaaaaaaa bbbbbbbbbb!!!!!!!!");
-
-            //for (var i = 0; i < 5; i++)
-            //{
-            //    var child = new SpriteElement(
-            //        size: new Vector2(10 + Random.Shared.NextSingle() * 50, 10 + Random.Shared.NextSingle() * 20),
-            //        spriteSource: BuiltInSprite.WhitePixel,
-            //        color: new Color(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle())
-            //    );
-            //    line.AddChild(child);
-            //}
-
             ContentContainer.AddChild(new ExpandedElement(
-                innerElement: line
+                leftPadding: 2,
+                innerElement: ScrollView
             ));
-
-            void AddText(string text)
-            {
-                line.AddChild(new RichTextElement(
-                    text: text,
-                    sizeToTextWidth: true,
-                    sizeToTextHeight: true,
-                    horizontalAlignmentMode: HorizontalAlignmentMode.Center
-                ));
-            }
         }
     }
 }

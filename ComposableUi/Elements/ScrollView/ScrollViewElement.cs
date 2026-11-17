@@ -145,6 +145,60 @@ namespace ComposableUi
         public void ScrollVerticalToFitBounds(Rectangle bounds)
             => VerticalScrollBar.ProgressValue = CalculateFitBoundsProgressValue(bounds).Y;
 
+        public Vector2 CalculatePreferredContentSize(Vector2 size)
+        {
+            if (Content is null)
+                return Vector2.Zero;
+
+            var shouldExpandWidth = ExpandingContentWidthMode is ExpandingMode.FillParent;
+            var shouldExpandHeight = ExpandingContentHeightMode is ExpandingMode.FillParent;
+            var isContentSizeFullyConstrained = shouldExpandWidth && shouldExpandHeight;
+            if (isContentSizeFullyConstrained)
+                return size;
+
+            float? exactWidth = shouldExpandWidth ? size.X : null;
+            float? exactHeight = shouldExpandHeight ? size.Y : null;
+            var preferredContentSize = Content.CalculatePreferredSize(exactWidth, exactHeight);
+
+            var isContentSizeUnconstrained = ExpandingContentWidthMode is ExpandingMode.None
+                && ExpandingContentHeightMode is ExpandingMode.None;
+            if (isContentSizeUnconstrained)
+                return preferredContentSize;
+
+            var extraWidth = !shouldExpandWidth
+                ? VerticalScrollBar.CrossAxisSize
+                : 0;
+            var extraHeight = !shouldExpandHeight
+                ? HorizontalScrollBar.CrossAxisSize
+                : 0;
+
+            var contentWidth = preferredContentSize.X;
+            if (ExpandingContentWidthMode is ExpandingMode.ExpandToFit)
+            {
+                contentWidth = MathF.Max(preferredContentSize.X,
+                    size.X - preferredContentSize.Y > size.Y ? extraWidth : 0);
+
+                shouldExpandWidth = contentWidth > preferredContentSize.X;
+            }
+            var contentHeight = preferredContentSize.Y;
+            if (ExpandingContentHeightMode is ExpandingMode.ExpandToFit)
+            {
+                contentHeight = MathF.Max(preferredContentSize.Y,
+                    size.Y - preferredContentSize.X > size.X ? extraHeight : 0);
+
+                shouldExpandHeight = contentHeight > preferredContentSize.Y;
+            }
+
+            var shouldRecalculateContentSize = shouldExpandWidth ^ shouldExpandHeight;
+            if (shouldRecalculateContentSize)
+            {
+                // TODO: Implement recalculation.
+                return Vector2.Zero;
+            }
+
+            return new Vector2(contentWidth, contentHeight);
+        }
+
         private Vector2 CalculateFitBoundsProgressValue(Rectangle bounds)
         {
             if (Content is null)

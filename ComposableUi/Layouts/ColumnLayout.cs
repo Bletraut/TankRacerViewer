@@ -18,7 +18,7 @@ namespace ComposableUi
             bool expandChildrenMainAxis = default,
             bool expandChildrenCrossAxis = default,
             ExpandingMode mainAxisChildrenExpandingMode = default)
-            : base(Vector2.UnitY, Vector2.UnitX,
+            : base(Vector2.UnitY,
                   children,
                   alignmentFactor,
                   spacing,
