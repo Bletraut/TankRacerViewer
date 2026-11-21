@@ -12,11 +12,7 @@ namespace TankRacerViewer.Core
             && !IsResizingInternally && !IsResizing
             && _inputArea.IsFocused;
 
-        public RenderContextElement RenderContext
-        {
-            get => _viewer3d.RenderContext;
-            set => _viewer3d.RenderContext = value;
-        }
+        public RenderContextElement RenderContext => _viewer3d.RenderContext;
 
         public RenderInfoElement RenderInfo => _viewer3d.RenderInfo;
 

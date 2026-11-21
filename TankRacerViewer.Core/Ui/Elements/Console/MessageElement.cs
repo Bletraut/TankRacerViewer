@@ -62,8 +62,8 @@ namespace TankRacerViewer.Core
             _icon.SpriteSource = data.Type switch
             {
                 MessageType.Info => IconCollection.Get(IconName.MessageBig),
-                MessageType.Warning => IconCollection.Get(IconName.ErrorBig),
-                MessageType.Error => IconCollection.Get(IconName.ErrorSmall),
+                MessageType.Warning => IconCollection.Get(IconName.WarningBig),
+                MessageType.Error => IconCollection.Get(IconName.ErrorBig),
                 _ => IconCollection.Get(IconName.MessageBig)
             };
 

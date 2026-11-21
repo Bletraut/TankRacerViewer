@@ -27,7 +27,7 @@
             SplitTarget = window;
         }
 
-        public void ClearSplitTarget(WindowElement window)
+        internal void ClearSplitTarget(WindowElement window)
         {
             if (SplitTarget == window)
                 SplitTarget = null;

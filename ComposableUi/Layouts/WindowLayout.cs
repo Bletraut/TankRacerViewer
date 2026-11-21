@@ -14,7 +14,7 @@ namespace ComposableUi
         private readonly Color DefaultEmbedPreviewBackgroundColor = new(Color.DarkSlateBlue, 0.8f);
         private readonly Color DefaultEmbedPreviewIconColor = new(Color.DarkBlue, 0.8f);
 
-        public bool HadEmbeddedWindow
+        public bool HasEmbeddedWindow
         {
             get
             {
@@ -119,7 +119,7 @@ namespace ComposableUi
 
         public void EmbedWindow(WindowElement window)
         {
-            if (HadEmbeddedWindow)
+            if (HasEmbeddedWindow)
                 return;
 
             AddWindow(window, _embeddedLayout);
@@ -236,7 +236,7 @@ namespace ComposableUi
             if (_embedPreviewInputArea.IsEnabled)
                 return;
 
-            if (HadEmbeddedWindow)
+            if (HasEmbeddedWindow)
                 return;
 
             _embedPreviewInputArea.IsEnabled = true;

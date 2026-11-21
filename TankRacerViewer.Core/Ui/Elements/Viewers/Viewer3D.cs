@@ -25,9 +25,9 @@ namespace TankRacerViewer.Core
 
         private const string InfoMessage = "Controls:\nW,A,S,D: Move\nLeft Mouse Button: Look around\nR: Reset camera\nC: Speed up\nLeft Ctrl: Slow down\nHold Shift: Strafe";
 
-        public RenderContextElement RenderContext { get; set; }
+        public RenderContextElement RenderContext { get; }
 
-        public RenderInfoElement RenderInfo { get; set; }
+        public RenderInfoElement RenderInfo { get; }
 
         private readonly ContainerElement _toolPanel;
         private readonly DropDownListElement _resolutionList;

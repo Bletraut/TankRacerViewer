@@ -173,20 +173,32 @@ namespace ComposableUi
                 : 0;
 
             var contentWidth = preferredContentSize.X;
-            if (ExpandingContentWidthMode is ExpandingMode.ExpandToFit)
+            switch(ExpandingContentWidthMode)
             {
-                contentWidth = MathF.Max(preferredContentSize.X,
-                    size.X - preferredContentSize.Y > size.Y ? extraWidth : 0);
+                case ExpandingMode.FillParent:
+                    contentWidth = size.X;
+                    shouldExpandWidth = true;
+                    break;
+                case ExpandingMode.ExpandToFit:
+                    contentWidth = MathF.Max(preferredContentSize.X,
+                        size.X - preferredContentSize.Y > size.Y ? extraWidth : 0);
 
-                shouldExpandWidth = contentWidth > preferredContentSize.X;
+                    shouldExpandWidth = contentWidth > preferredContentSize.X;
+                    break;
             }
             var contentHeight = preferredContentSize.Y;
-            if (ExpandingContentHeightMode is ExpandingMode.ExpandToFit)
+            switch (ExpandingContentHeightMode)
             {
-                contentHeight = MathF.Max(preferredContentSize.Y,
-                    size.Y - preferredContentSize.X > size.X ? extraHeight : 0);
+                case ExpandingMode.FillParent:
+                    contentHeight = size.Y;
+                    shouldExpandHeight = true;
+                    break;
+                case ExpandingMode.ExpandToFit:
+                    contentHeight = MathF.Max(preferredContentSize.Y,
+                        size.Y - preferredContentSize.X > size.X ? extraHeight : 0);
 
-                shouldExpandHeight = contentHeight > preferredContentSize.Y;
+                    shouldExpandHeight = contentHeight > preferredContentSize.Y;
+                    break;
             }
 
             var shouldRecalculateContentSize = shouldExpandWidth ^ shouldExpandHeight;
