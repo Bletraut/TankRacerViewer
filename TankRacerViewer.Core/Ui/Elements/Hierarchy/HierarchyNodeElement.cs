@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 namespace TankRacerViewer.Core
 {
     public sealed class HierarchyNodeElement : SizedToContentHolderElement,
-        IVirtualizedListItem<HierarchyNodeData>
+        IVirtualizingListItem<HierarchyNodeData>
     {
         public const float DefaultSpacing = 4;
 
@@ -199,7 +199,7 @@ namespace TankRacerViewer.Core
             _foldButtonPlaceholder.Size = FoldButton.Size;
         }
 
-        void IVirtualizedListItem<HierarchyNodeData>.SetData(HierarchyNodeData data)
+        void IVirtualizingListItem<HierarchyNodeData>.SetData(HierarchyNodeData data)
         {
             Data = data;
 
@@ -212,7 +212,7 @@ namespace TankRacerViewer.Core
             RefreshBackgroundVisualState();
         }
 
-        void IVirtualizedListItem<HierarchyNodeData>.ClearData()
+        void IVirtualizingListItem<HierarchyNodeData>.ClearData()
         {
             Data = null;
         }

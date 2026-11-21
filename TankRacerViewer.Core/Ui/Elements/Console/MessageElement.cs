@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 namespace TankRacerViewer.Core
 {
     public sealed class MessageElement : ClipMaskElement,
-        IVirtualizedListItem<MessageData>
+        IVirtualizingListItem<MessageData>
     {
         public const float DefaultSpacing = 8;
         public const float DefaultPaddings = 6;
@@ -53,7 +53,7 @@ namespace TankRacerViewer.Core
             );
         }
 
-        void IVirtualizedListItem<MessageData>.SetData(MessageData data)
+        void IVirtualizingListItem<MessageData>.SetData(MessageData data)
         {
             _background.SpriteSource = data.Index % 2 == 0
                 ? BuiltInSprite.HoverSoftDarkPixel
@@ -70,7 +70,7 @@ namespace TankRacerViewer.Core
             _message.Text = $"[{data.DateTime.TimeOfDay}]\n{data.Message}";
         }
 
-        void IVirtualizedListItem<MessageData>.ClearData()
+        void IVirtualizingListItem<MessageData>.ClearData()
         {
         }
     }

@@ -27,7 +27,7 @@ namespace TankRacerViewer.Core
         private readonly ContainerElement _toolPanel;
 
         private readonly ScrollViewElement _scrollView;
-        private readonly VirtualizedListViewElement<MessageData, MessageElement> _virtualizedListView;
+        private readonly VirtualizingListViewElement<MessageData, MessageElement> _virtualizingListView;
 
         private readonly List<MessageData> _messages = [];
 
@@ -113,14 +113,14 @@ namespace TankRacerViewer.Core
                 )
             ));
 
-            _virtualizedListView = new VirtualizedListViewElement<MessageData, MessageElement>(
+            _virtualizingListView = new VirtualizingListViewElement<MessageData, MessageElement>(
                 itemFactory: CreateMessageElement
             );
-            _virtualizedListView.ItemColumn.ExpandChildrenCrossAxis = true;
+            _virtualizingListView.ItemColumn.ExpandChildrenCrossAxis = true;
 
             _scrollView = new ScrollViewElement(
                 expandingContentWidthMode: ScrollViewElement.ExpandingMode.ExpandToFit,
-                content: _virtualizedListView
+                content: _virtualizingListView
             );
             ContentContainer.AddChild(new ExpandedElement(
                 topPadding: DefaultToolPanelHeight + DefaultToolPanelBottomPadding,
@@ -147,7 +147,7 @@ namespace TankRacerViewer.Core
             _messages.Add(messageData);
 
             if (CanShowMessage(messageData))
-                _virtualizedListView.AddData(messageData with { Index = _virtualizedListView.Data.Count });
+                _virtualizingListView.AddData(messageData with { Index = _virtualizingListView.Data.Count });
 
             RefreshMessageCounters();
         }
@@ -159,7 +159,7 @@ namespace TankRacerViewer.Core
             _errorCount = 0;
 
             _messages.Clear();
-            _virtualizedListView.ClearData();
+            _virtualizingListView.ClearData();
 
             RefreshMessageCounters();
         }
@@ -171,13 +171,13 @@ namespace TankRacerViewer.Core
             _errorToggle.Text.Text = _errorCount.ToString();
         }
 
-        private void RefreshVirtualizedListViewItems()
+        private void RefreshVirtualizingListViewItems()
         {
-            _virtualizedListView.ClearData();
+            _virtualizingListView.ClearData();
             foreach (var messageData in _messages)
             {
                 if (CanShowMessage(messageData))
-                    _virtualizedListView.AddData(messageData with { Index = _virtualizedListView.Data.Count });
+                    _virtualizingListView.AddData(messageData with { Index = _virtualizingListView.Data.Count });
             }
         }
 
@@ -200,7 +200,7 @@ namespace TankRacerViewer.Core
             _isInfoEnabled = !_isInfoEnabled;
             _infoToggle.SetToggle(_isInfoEnabled);
 
-            RefreshVirtualizedListViewItems();
+            RefreshVirtualizingListViewItems();
         }
 
         private void OnWarningToggleClicked(PointerInputHandlerElement sender,
@@ -209,7 +209,7 @@ namespace TankRacerViewer.Core
             _isWarningEnabled = !_isWarningEnabled;
             _warningToggle.SetToggle(_isWarningEnabled);
 
-            RefreshVirtualizedListViewItems();
+            RefreshVirtualizingListViewItems();
         }
 
         private void OnErrorToggleClicked(PointerInputHandlerElement sender,
@@ -218,7 +218,7 @@ namespace TankRacerViewer.Core
             _isErrorEnabled = !_isErrorEnabled;
             _errorToggle.SetToggle(_isErrorEnabled);
 
-            RefreshVirtualizedListViewItems();
+            RefreshVirtualizingListViewItems();
         }
     }
 

@@ -78,7 +78,7 @@ namespace TankRacerViewer.Core
         private readonly ContentButtonElement _boundingBoxModeButton;
         private readonly RowLayout _modeButtonLayout;
 
-        private readonly VirtualizedListViewElement<LevelObject, LevelObjectElement> _virtualizedListView;
+        private readonly VirtualizingListViewElement<LevelObject, LevelObjectElement> _virtualizingListView;
 
         private LevelObjectContainer _currentContainer;
 
@@ -116,11 +116,11 @@ namespace TankRacerViewer.Core
                 ]
             );
 
-            _virtualizedListView = new VirtualizedListViewElement<LevelObject, LevelObjectElement>(
+            _virtualizingListView = new VirtualizingListViewElement<LevelObject, LevelObjectElement>(
                 itemFactory: CreateLevelObject
             );
-            _virtualizedListView.ItemColumn.Spacing = DefaultContentSpacing;
-            _virtualizedListView.ItemColumn.ExpandChildrenCrossAxis = true;
+            _virtualizingListView.ItemColumn.Spacing = DefaultContentSpacing;
+            _virtualizingListView.ItemColumn.ExpandChildrenCrossAxis = true;
 
             InnerElement = new ColumnLayout(
                 alignmentFactor: Alignment.TopLeft,
@@ -136,7 +136,7 @@ namespace TankRacerViewer.Core
                         sizeToTextHeight: true
                     ),
                     new ClipMaskElement(_modeButtonLayout),
-                    _virtualizedListView
+                    _virtualizingListView
                 ]
             );
         }
@@ -148,9 +148,9 @@ namespace TankRacerViewer.Core
 
             _currentContainer = container;
 
-            _virtualizedListView.ClearData();
+            _virtualizingListView.ClearData();
             foreach (var levelObject in _currentContainer.LevelObjects)
-                _virtualizedListView.AddData(levelObject);
+                _virtualizingListView.AddData(levelObject);
 
             RefreshVisibilityModes();
         }
@@ -158,7 +158,7 @@ namespace TankRacerViewer.Core
         public void Refresh()
         {
             RefreshVisibilityModes();
-            RefreshVirtualizedListViewItems();
+            RefreshVirtualizingListViewItems();
         }
 
         private LevelObjectElement CreateLevelObject()
@@ -232,9 +232,9 @@ namespace TankRacerViewer.Core
             };
         }
 
-        private void RefreshVirtualizedListViewItems()
+        private void RefreshVirtualizingListViewItems()
         {
-            foreach (var item in _virtualizedListView.Items)
+            foreach (var item in _virtualizingListView.Items)
                 item.RefreshButtonsVisualState();
         }
 
@@ -263,7 +263,7 @@ namespace TankRacerViewer.Core
             }
 
             RefreshVisibilityModes();
-            RefreshVirtualizedListViewItems();
+            RefreshVirtualizingListViewItems();
         }
 
         private void OnBoundingBoxModeButtonPointerClick(PointerInputHandlerElement sender,
@@ -287,7 +287,7 @@ namespace TankRacerViewer.Core
             }
 
             RefreshVisibilityModes();
-            RefreshVirtualizedListViewItems();
+            RefreshVirtualizingListViewItems();
         }
 
         private void OnLevelObjectVisibilityChanged(LevelObject levelObject)

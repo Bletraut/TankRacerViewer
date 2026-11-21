@@ -1,6 +1,6 @@
 ﻿namespace ComposableUi
 {
-    public interface IVirtualizedListItem<TData>
+    public interface IVirtualizingListItem<TData>
     {
         public void SetData(TData data);
         public void ClearData();
