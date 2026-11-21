@@ -146,69 +146,116 @@ namespace ComposableUi
             => VerticalScrollBar.ProgressValue = CalculateFitBoundsProgressValue(bounds).Y;
 
         public Vector2 CalculatePreferredContentSize(Vector2 size)
+            => CalculatePreferredContentSizing(size).Size;
+
+        private ContentSizingResult CalculatePreferredContentSizing(Vector2 size)
         {
             if (Content is null)
-                return Vector2.Zero;
+                return new ContentSizingResult();
 
             var shouldExpandWidth = ExpandingContentWidthMode is ExpandingMode.FillParent;
             var shouldExpandHeight = ExpandingContentHeightMode is ExpandingMode.FillParent;
+
             var isContentSizeFullyConstrained = shouldExpandWidth && shouldExpandHeight;
             if (isContentSizeFullyConstrained)
-                return size;
+            {
+                return new ContentSizingResult(size,
+                    true, true, false, false);
+            }
 
-            float? exactWidth = shouldExpandWidth ? size.X : null;
-            float? exactHeight = shouldExpandHeight ? size.Y : null;
+            var contentSizingResult = CalculateContentSizing(size, size,
+                shouldExpandWidth, shouldExpandHeight);
+
+            var shouldRefineContentSizing = contentSizingResult.WasWidthExpanded ^ contentSizingResult.WasHeightExpanded;
+            if (shouldRefineContentSizing)
+            {
+                var refinedContentSizingResult = CalculateContentSizing(contentSizingResult.Size, size,
+                    contentSizingResult.WasWidthExpanded, contentSizingResult.WasHeightExpanded);
+
+                var shouldRecalculateContentSizing = contentSizingResult.WasWidthExpanded ^ contentSizingResult.WasHeightExpanded
+                    && (contentSizingResult.HasHorizontalOverflow != refinedContentSizingResult.HasHorizontalOverflow
+                    || contentSizingResult.HasVerticalOverflow != refinedContentSizingResult.HasVerticalOverflow);
+                if (shouldRecalculateContentSizing)
+                {
+                    contentSizingResult = CalculateContentSizing(size, size,
+                        refinedContentSizingResult.WasWidthExpanded, refinedContentSizingResult.WasHeightExpanded);
+                }
+                else
+                {
+                    contentSizingResult = refinedContentSizingResult;
+                }
+            }
+
+            return contentSizingResult;
+        }
+
+        private ContentSizingResult CalculateContentSizing(Vector2 targetSize, Vector2 boundsSize,
+            bool shouldExpandWidth, bool shouldExpandHeight)
+        {
+            float? exactWidth = shouldExpandWidth ? targetSize.X : null;
+            float? exactHeight = shouldExpandHeight ? targetSize.Y : null;
             var preferredContentSize = Content.CalculatePreferredSize(exactWidth, exactHeight);
+
+            if (shouldExpandWidth)
+                preferredContentSize.X = targetSize.X;
+            if (shouldExpandHeight)
+                preferredContentSize.Y = targetSize.Y;
+
+            var hasHorizontalOverflow = preferredContentSize.X > boundsSize.X;
+            var hasVerticalOverflow = preferredContentSize.Y > boundsSize.Y;
+
+            var availableContentSize = boundsSize - new Vector2()
+            {
+                X = hasVerticalOverflow
+                    ? VerticalScrollBar.CrossAxisSize
+                    : 0,
+                Y = hasHorizontalOverflow
+                    ? HorizontalScrollBar.CrossAxisSize
+                    : 0
+            };
 
             var isContentSizeUnconstrained = ExpandingContentWidthMode is ExpandingMode.None
                 && ExpandingContentHeightMode is ExpandingMode.None;
             if (isContentSizeUnconstrained)
-                return preferredContentSize;
+            {
+                hasHorizontalOverflow |= preferredContentSize.X > availableContentSize.X;
+                hasVerticalOverflow |= preferredContentSize.Y > availableContentSize.Y;
 
-            var extraWidth = !shouldExpandWidth
-                ? VerticalScrollBar.CrossAxisSize
-                : 0;
-            var extraHeight = !shouldExpandHeight
-                ? HorizontalScrollBar.CrossAxisSize
-                : 0;
+                return new ContentSizingResult(preferredContentSize,
+                    false, false, hasHorizontalOverflow, hasVerticalOverflow);
+            }
+
+            var wasWidthExpanded = shouldExpandWidth;
+            var wasHeightExpanded = shouldExpandHeight;
 
             var contentWidth = preferredContentSize.X;
-            switch(ExpandingContentWidthMode)
+            switch (ExpandingContentWidthMode)
             {
                 case ExpandingMode.FillParent:
-                    contentWidth = size.X;
-                    shouldExpandWidth = true;
+                    contentWidth = availableContentSize.X;
                     break;
                 case ExpandingMode.ExpandToFit:
-                    contentWidth = MathF.Max(preferredContentSize.X,
-                        size.X - preferredContentSize.Y > size.Y ? extraWidth : 0);
-
-                    shouldExpandWidth = contentWidth > preferredContentSize.X;
+                    contentWidth = MathF.Max(preferredContentSize.X, availableContentSize.X);
+                    wasWidthExpanded |= contentWidth > preferredContentSize.X;
                     break;
             }
             var contentHeight = preferredContentSize.Y;
             switch (ExpandingContentHeightMode)
             {
                 case ExpandingMode.FillParent:
-                    contentHeight = size.Y;
-                    shouldExpandHeight = true;
+                    contentHeight = availableContentSize.Y;
                     break;
                 case ExpandingMode.ExpandToFit:
-                    contentHeight = MathF.Max(preferredContentSize.Y,
-                        size.Y - preferredContentSize.X > size.X ? extraHeight : 0);
-
-                    shouldExpandHeight = contentHeight > preferredContentSize.Y;
+                    contentHeight = MathF.Max(preferredContentSize.Y, availableContentSize.Y);
+                    wasHeightExpanded |= contentHeight > preferredContentSize.Y;
                     break;
             }
 
-            var shouldRecalculateContentSize = shouldExpandWidth ^ shouldExpandHeight;
-            if (shouldRecalculateContentSize)
-            {
-                // TODO: Implement recalculation.
-                return Vector2.Zero;
-            }
+            hasHorizontalOverflow = contentWidth > availableContentSize.X;
+            hasVerticalOverflow = contentHeight > availableContentSize.Y;
 
-            return new Vector2(contentWidth, contentHeight);
+            return new ContentSizingResult(new Vector2(contentWidth, contentHeight),
+                wasWidthExpanded, wasHeightExpanded, hasHorizontalOverflow, hasVerticalOverflow);
         }
 
         private Vector2 CalculateFitBoundsProgressValue(Rectangle bounds)
@@ -242,61 +289,14 @@ namespace ComposableUi
                 return;
             }
 
-            var preferredContentSize = Content.CalculatePreferredSize();
+            var contentSizingResult = CalculatePreferredContentSizing(Size);
+            var deltaSize = contentSizingResult.Size - Size;
 
-            var extraWidth = ExpandingContentWidthMode is not ExpandingMode.FillParent
-                ? VerticalScrollBar.CrossAxisSize
-                : 0;
-            var extraHeight = ExpandingContentHeightMode is not ExpandingMode.FillParent
-                ? HorizontalScrollBar.CrossAxisSize
-                : 0;
+            HorizontalScrollBar.IsEnabled = contentSizingResult.HasHorizontalOverflow;
+            VerticalScrollBar.IsEnabled = contentSizingResult.HasVerticalOverflow;
 
-            var contentWidth = preferredContentSize.X;
-            switch (ExpandingContentWidthMode)
-            {
-                case ExpandingMode.FillParent:
-                    contentWidth = Size.X;
-                    break;
-                case ExpandingMode.ExpandToFit:
-                    contentWidth = MathF.Max(preferredContentSize.X,
-                        Size.X - preferredContentSize.Y > Size.Y ? extraWidth : 0);
-                    break;
-            }
-            var contentHeight = preferredContentSize.Y;
-            switch (ExpandingContentHeightMode)
-            {
-                case ExpandingMode.FillParent:
-                    contentHeight = Size.Y;
-                    break;
-                case ExpandingMode.ExpandToFit:
-                    contentHeight = MathF.Max(preferredContentSize.Y,
-                        Size.Y - preferredContentSize.X > Size.X ? extraHeight : 0);
-                    break;
-            }
-            var contentSize = new Vector2(contentWidth, contentHeight);
-
-            var deltaSize = contentSize - Size;
-            var extraDeltaSize = deltaSize + new Vector2(extraWidth, extraHeight);
-
-            HorizontalScrollBar.IsEnabled = deltaSize.X > 0
-                || (extraDeltaSize.X > 0 && deltaSize.Y > 0);
-            VerticalScrollBar.IsEnabled = deltaSize.Y > 0
-                || (extraDeltaSize.Y > 0 && deltaSize.X > 0);
-
-            _contentExpanded.ExpandWidth = ExpandingContentWidthMode switch
-            {
-                ExpandingMode.None => false,
-                ExpandingMode.FillParent => true,
-                ExpandingMode.ExpandToFit => !HorizontalScrollBar.IsEnabled,
-                _ => false
-            };
-            _contentExpanded.ExpandHeight = ExpandingContentHeightMode switch
-            {
-                ExpandingMode.None => false,
-                ExpandingMode.FillParent => true,
-                ExpandingMode.ExpandToFit => !VerticalScrollBar.IsEnabled,
-                _ => false
-            };
+            _contentExpanded.ExpandWidth = contentSizingResult.WasWidthExpanded;
+            _contentExpanded.ExpandHeight = contentSizingResult.WasHeightExpanded;
 
             _bottomRightPlug.IsEnabled = HorizontalScrollBar.IsEnabled
                 && VerticalScrollBar.IsEnabled;
@@ -429,6 +429,10 @@ namespace ComposableUi
         {
             WheelScrollContentIfPossible(Vector2.UnitX, pointerEvent.Delta);
         }
+
+        private readonly record struct ContentSizingResult(Vector2 Size,
+            bool WasWidthExpanded, bool WasHeightExpanded,
+            bool HasHorizontalOverflow, bool HasVerticalOverflow);
 
         public enum ExpandingMode
         {
