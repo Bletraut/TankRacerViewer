@@ -331,21 +331,7 @@ namespace ComposableUi
             if (_currentSpriteFont is null)
                 return;
 
-            // TODO: Add draw here.
-            // Test.
-            //if (BuiltInSprite.TextField is ISpriteSource spriteSource)
-            if (BuiltInSprite.WhitePixel is ISpriteSource spriteSource)
-            {
-                var sprite = spriteSource.Resolve(Context);
-                if (sprite != null)
-                {
-                    renderer.DrawSprite(sprite, DrawMode.Sliced,
-                        BoundingRectangle, ClipMask, Color.Red);
-                }
-            }
-
             RebuildSpriteDrawCommandsIfDirty();
-
             renderer.DrawSpriteGroup(_spriteDrawCommands, ClipMask);
         }
 
