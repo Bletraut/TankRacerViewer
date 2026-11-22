@@ -41,6 +41,7 @@ namespace ComposableUi
         public static readonly ThemeSpriteSource ScrollButtonHover = new(nameof(ScrollButtonHover));
 
         public static readonly ThemeSpriteSource TextField = new(nameof(TextField));
+        public static readonly ThemeSpriteSource ActiveTextField = new(nameof(ActiveTextField));
 
         public static readonly ThemeSpriteSource RoundedButton = new(nameof(RoundedButton));
         public static readonly ThemeSpriteSource HoverRoundedButton = new(nameof(HoverRoundedButton));
