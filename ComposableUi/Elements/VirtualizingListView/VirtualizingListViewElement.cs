@@ -193,9 +193,12 @@ namespace ComposableUi
                 if (!child.IsEnabled)
                     continue;
 
-                var childSize = child.CalculatePreferredSize();
+                var isItemLayout = child == ItemColumn;
 
-                if (child == ItemColumn)
+                float? exactWidth = isItemLayout ? size.X : null;
+                var childSize = child.CalculatePreferredSize(exactWidth, null);
+
+                if (isItemLayout)
                 {
                     childSize.X = size.X;
 
