@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
@@ -30,6 +31,20 @@ namespace ComposableUi
 
         public float ScrollWheelMultiplier { get; set; }
 
+        private float? _changedHorizontalProgressValue;
+        public float NormalizedHorizontalProgressValue
+        {
+            get => _changedHorizontalProgressValue ?? _normalizedProgressValue.X;
+            set => _changedHorizontalProgressValue = float.Clamp(value, 0, 1);
+        }
+
+        private float? _changedVerticalProgressValue;
+        public float NormalizedVerticalProgressValue
+        {
+            get => _changedVerticalProgressValue ?? _normalizedProgressValue.Y;
+            set => _changedVerticalProgressValue = float.Clamp(value, 0, 1);
+        }
+
         public SpriteElement Background { get; }
         public ScrollBarElement HorizontalScrollBar { get; }
         public ScrollBarElement VerticalScrollBar { get; }
@@ -47,7 +62,7 @@ namespace ComposableUi
         private readonly PointerInputHandlerElement _scrollInputHandler;
 
         private Vector2 _minContentPosition;
-        private Vector2 _progressValue;
+        private Vector2 _normalizedProgressValue;
 
         private HierarchyWheelScrollSolver _hierarchyWheelScrollSolver;
         private readonly Action<Vector2, int> _wheelScrollAction;
@@ -140,15 +155,12 @@ namespace ComposableUi
         }
 
         public void ScrollHorizontalToFitBounds(Rectangle bounds)
-            => HorizontalScrollBar.ProgressValue = CalculateFitBoundsProgressValue(bounds).X;
+            => HorizontalScrollBar.NormalizedProgressValue = CalculateFitBoundsProgressValue(bounds).X;
 
         public void ScrollVerticalToFitBounds(Rectangle bounds)
-            => VerticalScrollBar.ProgressValue = CalculateFitBoundsProgressValue(bounds).Y;
+            => VerticalScrollBar.NormalizedProgressValue = CalculateFitBoundsProgressValue(bounds).Y;
 
-        public Vector2 CalculatePreferredContentSize(Vector2 size)
-            => CalculatePreferredContentSizing(size).Size;
-
-        private ContentSizingResult CalculatePreferredContentSizing(Vector2 size)
+        public ContentSizingResult CalculatePreferredContentSizing(Vector2 size)
         {
             if (Content is null)
                 return new ContentSizingResult();
@@ -261,7 +273,7 @@ namespace ComposableUi
         private Vector2 CalculateFitBoundsProgressValue(Rectangle bounds)
         {
             if (Content is null)
-                return _progressValue;
+                return _normalizedProgressValue;
 
             var localPosition = Vector2.Transform(bounds.Location.ToVector2(),
                 Content.GlobalInverseTransformationMatrix);
@@ -269,7 +281,7 @@ namespace ComposableUi
             var minProgressValue = localPosition / -_minContentPosition;
             var maxProgressValue = (localPosition + bounds.Size.ToVector2() - _view.Size) / -_minContentPosition;
 
-            var progressValue = Vector2.Min(minProgressValue, _progressValue);
+            var progressValue = Vector2.Min(minProgressValue, _normalizedProgressValue);
             progressValue = Vector2.Max(maxProgressValue, progressValue);
 
             return progressValue;
@@ -315,16 +327,33 @@ namespace ComposableUi
 
             _minContentPosition = deltaSize + new Vector2(rightPadding, bottomPadding);
             _minContentPosition = -Vector2.Max(_minContentPosition, Vector2.Zero);
+
+            ApplyChangedNormalizedProgressValues();
             ApplyContentOffset(_contentParent.Offset);
+        }
+
+        private void ApplyChangedNormalizedProgressValues()
+        {
+            _contentParent.Offset = _contentParent.Offset with
+            {
+                X = _changedHorizontalProgressValue.HasValue
+                    ? _minContentPosition.X * _changedHorizontalProgressValue.Value
+                    : _contentParent.Offset.X,
+                Y = _changedVerticalProgressValue.HasValue
+                    ? _minContentPosition.Y * _changedVerticalProgressValue.Value
+                    : _contentParent.Offset.Y
+            };
+            _changedHorizontalProgressValue = null;
+            _changedVerticalProgressValue = null;
         }
 
         private void ApplyContentOffset(Vector2 offset)
         {
             _contentParent.Offset = Vector2.Clamp(offset, _minContentPosition, Vector2.Zero);
-            _progressValue.X = HorizontalScrollBar.IsEnabled
+            _normalizedProgressValue.X = HorizontalScrollBar.IsEnabled
                 ? _contentParent.Offset.X / _minContentPosition.X
                 : 0;
-            _progressValue.Y = VerticalScrollBar.IsEnabled
+            _normalizedProgressValue.Y = VerticalScrollBar.IsEnabled
                 ? _contentParent.Offset.Y / _minContentPosition.Y
                 : 0;
         }
@@ -341,21 +370,23 @@ namespace ComposableUi
                 return;
 
             var fillFactor = _view.Size / (_view.Size - _minContentPosition);
-            var mainAxisFillFactor = Vector2.Dot(scrollBar.MainAxis, fillFactor * scrollBar.MainAxis);
+            var mainAxisFillFactor = Vector2.Dot(scrollBar.MainAxis, fillFactor);
 
             var maxButtonSize = scrollBar.Button.Parent.Size;
-            var maxButtonMainAxisSize = Vector2.Dot(scrollBar.MainAxis, maxButtonSize * scrollBar.MainAxis);
+            var maxButtonMainAxisSize = Vector2.Dot(scrollBar.MainAxis, maxButtonSize);
 
             var targetButtonMainAxisSize = MathF.Max(ScrollBarElement.DefaultCrossAxisSize,
                 maxButtonMainAxisSize * mainAxisFillFactor);
 
             scrollBar.Button.Size = targetButtonMainAxisSize * scrollBar.MainAxis + maxButtonSize * scrollBar.CrossAxis;
-            scrollBar.ProgressValue = Vector2.Dot(scrollBar.MainAxis, _progressValue * scrollBar.MainAxis);
+            scrollBar.NormalizedProgressValue = Vector2.Dot(scrollBar.MainAxis, _normalizedProgressValue);
         }
 
         private void ScrollContent(Vector2 axis, int delta)
         {
+            ApplyChangedNormalizedProgressValues();
             ApplyContentOffset(_contentParent.Offset + axis * delta);
+
             RefreshScrollBarsButtons();
         }
 
@@ -366,7 +397,7 @@ namespace ComposableUi
             if (isAnyScrollButtonPressed)
                 return;
 
-            var axisProgress = Vector2.Dot(_progressValue, _progressValue * axis);
+            var axisProgress = Vector2.Dot(axis, _normalizedProgressValue);
             var limit = delta < 0 ? 1 : 0;
             if (axisProgress == limit)
                 return;
@@ -430,7 +461,7 @@ namespace ComposableUi
             WheelScrollContentIfPossible(Vector2.UnitX, pointerEvent.Delta);
         }
 
-        private readonly record struct ContentSizingResult(Vector2 Size,
+        public readonly record struct ContentSizingResult(Vector2 Size,
             bool WasWidthExpanded, bool WasHeightExpanded,
             bool HasHorizontalOverflow, bool HasVerticalOverflow);
 

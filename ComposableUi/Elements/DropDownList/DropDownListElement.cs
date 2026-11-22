@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using ComposableUi.Elements.DropDownList;
 
@@ -133,8 +134,6 @@ namespace ComposableUi
             _overlayInputInterceptor.HorizontalScrollWheel += OnOverlayInputInterceptorScrollWheel;
 
             _itemLayout = new ColumnLayout(
-                topPadding: DefaultPaddings,
-                bottomPadding: DefaultPaddings,
                 sizeMainAxisToContent: true,
                 sizeCrossAxisToContent: true,
                 expandChildrenCrossAxis: true
@@ -146,6 +145,8 @@ namespace ComposableUi
             _itemScrollViewParent = new ExpandedElement(
                 leftPadding: DefaultPaddings,
                 rightPadding: DefaultPaddings,
+                topPadding: DefaultPaddings,
+                bottomPadding: DefaultPaddings,
                 innerElement: _itemScrollView
             );
             _itemContainer = new ContainerElement(
@@ -251,19 +252,35 @@ namespace ComposableUi
             if (_items.Count <= 0)
                 return;
 
-            _itemLayout.ApplyContext(Context);
+            _itemContainer.ApplyContext(Context);
 
             var visibleRectangle = ClipMask ?? BoundingRectangle;
 
-            var contentSize = _itemLayout.CalculatePreferredSize();
-            var contentWidth = contentSize.X + _itemScrollViewParent.TotalHorizontalPaddings;
-            var extraHeight = contentWidth > visibleRectangle.Size.X
-                ? _itemScrollView.HorizontalScrollBar.CrossAxisSize
+            var scrollViewSize = new Vector2()
+            {
+                X = visibleRectangle.Width - _itemScrollViewParent.TotalHorizontalPaddings,
+                Y = MaxListHeight - _itemScrollViewParent.TotalVerticalPaddings
+            };
+            var contentSizingResult = _itemScrollView.CalculatePreferredContentSizing(scrollViewSize);
+            var contentHeight = contentSizingResult.Size.Y + _itemScrollViewParent.TotalVerticalPaddings;
+
+            if (contentSizingResult.HasHorizontalOverflow)
+            {
+                _itemScrollViewParent.BottomPadding = 0;
+                contentHeight += _itemScrollView.HorizontalScrollBar.CrossAxisSize - DefaultPaddings;
+            }
+            else
+            {
+                _itemScrollViewParent.BottomPadding = DefaultPaddings;
+            }
+            _itemScrollViewParent.RightPadding = !contentSizingResult.HasVerticalOverflow
+                ? DefaultPaddings
                 : 0;
+
             var size = new Vector2()
             {
                 X = visibleRectangle.Size.X,
-                Y = MathF.Min(MaxListHeight, contentSize.Y + extraHeight)
+                Y = MathF.Min(MaxListHeight, contentHeight)
             };
             _itemContainer.Size = size;
 
@@ -280,12 +297,27 @@ namespace ComposableUi
             Context.Root.ShowInOverlay(_overlayInputInterceptorParent,
                 Vector2.Zero, Vector2.Zero, false, false);
             Context.Root.ShowInOverlay(_itemContainer, position, fallbackPosition);
+
+            if (CurrentItem is null)
+                return;
+
+            if (contentSizingResult.HasHorizontalOverflow)
+                _itemScrollView.NormalizedHorizontalProgressValue = 0;
+
+            if (contentSizingResult.HasVerticalOverflow)
+            {
+                var progress = (float)CurrentItemIndex / (Items.Count - 1);
+                _itemScrollView.NormalizedVerticalProgressValue = progress;
+            }
         }
 
         private void HideItemList()
         {
             _itemContainer.IsEnabled = false;
             _overlayInputInterceptorParent.IsEnabled = false;
+
+            _itemScrollViewParent.RightPadding = DefaultPaddings;
+            _itemScrollViewParent.BottomPadding = DefaultPaddings;
 
             Layer = BuiltInLayer.Main;
         }

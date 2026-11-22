@@ -10,19 +10,21 @@ namespace ComposableUi
         public const float DefaultMainAxisPadding = 2;
         public const float DefaultCrossAxisPadding = 2;
 
-        private float _progressValue;
-        public float ProgressValue
+        private float _normalizedProgressValue;
+        public float NormalizedProgressValue
         {
-            get => _progressValue;
+            get => _normalizedProgressValue;
             set
             {
-                if (_progressValue != value)
+                value = float.Clamp(value, 0, 1);
+
+                if (_normalizedProgressValue != value)
                     OnStateChanged();
 
-                _progressValue = value;
+                _normalizedProgressValue = value;
 
                 var (min, max) = CalculateScrollBounds();
-                Button.LocalPosition = min + (max - min) * _progressValue;
+                Button.LocalPosition = min + (max - min) * _normalizedProgressValue;
 
                 OnProgressValueChanged();
             }
@@ -85,7 +87,7 @@ namespace ComposableUi
 
             var currentValue = Vector2.Dot(Button.LocalPosition - min, MainAxis);
             var maxValue = Vector2.Dot(max - min, MainAxis);
-            _progressValue = maxValue != 0
+            _normalizedProgressValue = maxValue != 0
                 ? currentValue / maxValue
                 : 0;
             OnProgressValueChanged();
@@ -93,10 +95,10 @@ namespace ComposableUi
 
         private (Vector2 Min, Vector2 Max) CalculateScrollBounds()
         {
-            var buttonTopLeft = -Button.Size * Button.Pivot;
+            var buttonTopLeft = -Button.PivotOffset;
             var buttonBottomRight = buttonTopLeft + Button.Size;
 
-            var parentTopLeft = -_buttonExpanded.Size * _buttonExpanded.Pivot;
+            var parentTopLeft = -_buttonExpanded.PivotOffset;
             var parentBottomRight = parentTopLeft + _buttonExpanded.Size;
 
             var min = parentTopLeft - buttonTopLeft;
@@ -107,7 +109,7 @@ namespace ComposableUi
 
         private void OnProgressValueChanged()
         {
-            ProgressValueChanged?.Invoke(this, _progressValue);
+            ProgressValueChanged?.Invoke(this, _normalizedProgressValue);
         }
 
         private void OnButtonPointerFixedDrag(Element sender, PointerDragEvent pointerEvent)

@@ -133,21 +133,21 @@ namespace TankRacerViewer.Core
             _uiComponent.RefreshRecentPaths();
 
             // For debug only.
-            //if (_applicationData.RecentPaths.Count > 0)
-            //{
-            //    OpenGameFolder(_applicationData.RecentPaths[0]);
-            //    foreach (var assetViewContainer in _loadedAssetViewContainers)
-            //    {
-            //        foreach (var (key, value) in assetViewContainer.AssetViewContainer.ExtraAssetViews)
-            //        {
-            //            if (key.Equals("england.bsm", StringComparison.OrdinalIgnoreCase))
-            //            {
-            //                OnAssetViewSelected(value);
-            //                return;
-            //            }
-            //        }
-            //    }
-            //}
+            if (_applicationData.RecentPaths.Count > 0)
+            {
+                OpenGameFolder(_applicationData.RecentPaths[0]);
+                foreach (var assetViewContainer in _loadedAssetViewContainers)
+                {
+                    foreach (var (key, value) in assetViewContainer.AssetViewContainer.ExtraAssetViews)
+                    {
+                        if (key.Equals("england.bsm", StringComparison.OrdinalIgnoreCase))
+                        {
+                            OnAssetViewSelected(value);
+                            return;
+                        }
+                    }
+                }
+            }
             // End.
         }
 
