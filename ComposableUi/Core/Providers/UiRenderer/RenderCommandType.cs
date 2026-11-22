@@ -3,7 +3,6 @@
     internal enum RenderCommandType
     {
         Sprite,
-        Text,
-        Geometry
+        Text
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ComposableUi
 {
-    internal readonly record struct RenderCommand(int Id, RenderCommandType Type,
+    internal readonly record struct RenderCommand(int StartIndex, int Length, RenderCommandType Type,
         Rectangle BoundingRectangle, Rectangle? ClipMask, Texture Texture)
         : IRenderCommand<RenderCommand>
     {

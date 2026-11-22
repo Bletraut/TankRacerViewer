@@ -38,17 +38,17 @@ namespace ComposableUi
         private Vector2 _minGeometricPosition;
         private Vector2 _maxGeometricPosition;
 
-        public void RebuildIfNeeded(in RichTextLayoutOptions options,
+        public bool RebuildIfNeeded(in RichTextLayoutOptions options,
             bool applyAlignment)
         {
             if (_currentOptions.Equals(options))
-                return;
+                return false;
 
             _currentOptions = options;
 
             var spriteFont = _currentOptions.SpriteFont;
             if (spriteFont is null)
-                return;
+                return false;
 
             var isNewParagraph = true;
 
@@ -185,6 +185,8 @@ namespace ComposableUi
 
             if (applyAlignment)
                 ApplyAlignment();
+
+            return true;
         }
 
         private bool TryGetGlyph(Dictionary<char, SpriteFont.Glyph> glyphs, char character,

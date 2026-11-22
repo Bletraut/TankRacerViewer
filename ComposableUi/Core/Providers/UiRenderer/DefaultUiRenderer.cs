@@ -38,7 +38,7 @@ namespace ComposableUi
         };
 
         private readonly SpriteBatch _spriteBatch;
-        private readonly UiBatcher<RenderCommand> _uiBatcher = new();
+        private readonly RenderCommandBatcher<RenderCommand> _renderCommandBatcher = new();
         private readonly List<RenderSpriteData> _renderSpriteDataList = [];
         private readonly List<RenderTextData> _renderTextDataList = [];
 
@@ -78,18 +78,21 @@ namespace ComposableUi
         {
             ApplyDrawState(command.ClipMask);
 
-            var data = _renderSpriteDataList[command.Id];
-            switch (data.DrawMode)
+            for (var i = 0; i < command.Length; i++)
             {
-                case DrawMode.Simple:
-                    DrawSimpleSprite(data.Sprite, data.DestinationRectangle, data.Color);
-                    break;
-                case DrawMode.Sliced:
-                    DrawSlicedSprite(data.Sprite, data.DestinationRectangle, data.Color);
-                    break;
-                default:
-                    DrawSimpleSprite(data.Sprite, data.DestinationRectangle, data.Color);
-                    break;
+                var data = _renderSpriteDataList[command.StartIndex + i];
+                switch (data.DrawMode)
+                {
+                    case DrawMode.Simple:
+                        DrawSimpleSprite(data.Sprite, data.DestinationRectangle, data.Color);
+                        break;
+                    case DrawMode.Sliced:
+                        DrawSlicedSprite(data.Sprite, data.DestinationRectangle, data.Color);
+                        break;
+                    default:
+                        DrawSimpleSprite(data.Sprite, data.DestinationRectangle, data.Color);
+                        break;
+                }
             }
         }
 
@@ -97,19 +100,16 @@ namespace ComposableUi
         {
             ApplyDrawState(command.ClipMask);
 
-            var data = _renderTextDataList[command.Id];
+            var data = _renderTextDataList[command.StartIndex];
             _spriteBatch.DrawString(data.SpriteFont, data.Text, data.Position, data.Color);
-        }
-
-        private void RunDrawGeometryCommand(in RenderCommand command)
-        {
-            // TODO: Implement draw logic.
         }
 
         private void DrawSimpleSprite(Sprite sprite,
             Rectangle destinationRectangle, Color color)
         {
-            _spriteBatch.Draw(sprite.Texture, destinationRectangle,
+            var texture = sprite.Texture ?? FallbackTexture;
+
+            _spriteBatch.Draw(texture, destinationRectangle,
                 sprite.SourceRectangle, color);
         }
 
@@ -121,6 +121,8 @@ namespace ComposableUi
                 DrawSimpleSprite(sprite, destinationRectangle, color);
                 return;
             }
+
+            var texture = sprite.Texture ?? FallbackTexture;
 
             var scale = sprite.Scale;
             var sourceRectangle = sprite.SourceRectangle;
@@ -145,7 +147,7 @@ namespace ComposableUi
                 destinationRectangle.Top,
                 sliceSourceRectangle.Width * scale,
                 sliceSourceRectangle.Height * scale);
-            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+            _spriteBatch.Draw(texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
             // Top right.
@@ -157,7 +159,7 @@ namespace ComposableUi
                 destinationRectangle.Top,
                 sliceSourceRectangle.Width * scale,
                 sliceSourceRectangle.Height * scale);
-            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+            _spriteBatch.Draw(texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
             // Bottom left.
@@ -169,7 +171,7 @@ namespace ComposableUi
                 destinationRectangle.Bottom - sliceSourceRectangle.Height * scale,
                 sliceSourceRectangle.Width * scale,
                 sliceSourceRectangle.Height * scale);
-            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+            _spriteBatch.Draw(texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
             // Bottom right.
@@ -181,7 +183,7 @@ namespace ComposableUi
                 destinationRectangle.Bottom - sliceSourceRectangle.Height * scale,
                 sliceSourceRectangle.Width * scale,
                 sliceSourceRectangle.Height * scale);
-            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+            _spriteBatch.Draw(texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
             // Left.
@@ -193,7 +195,7 @@ namespace ComposableUi
                 destinationRectangle.Top + topBorder * scale,
                 sliceSourceRectangle.Width * scale,
                 destinationRectangle.Height - (topBorder + bottomBorder) * scale);
-            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+            _spriteBatch.Draw(texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
             // Right.
@@ -205,7 +207,7 @@ namespace ComposableUi
                 destinationRectangle.Top + topBorder * scale,
                 sliceSourceRectangle.Width * scale,
                 destinationRectangle.Height - (topBorder + bottomBorder) * scale);
-            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+            _spriteBatch.Draw(texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
             // Top.
@@ -217,7 +219,7 @@ namespace ComposableUi
                 destinationRectangle.Top,
                 destinationRectangle.Width - (leftBorder + rightBorder) * scale,
                 topBorder * scale);
-            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+            _spriteBatch.Draw(texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
             // Bottom.
@@ -229,7 +231,7 @@ namespace ComposableUi
                 destinationRectangle.Bottom - bottomBorder * scale,
                 destinationRectangle.Width - (leftBorder + rightBorder) * scale,
                 bottomBorder * scale);
-            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+            _spriteBatch.Draw(texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
 
             // Center.
@@ -241,7 +243,7 @@ namespace ComposableUi
                 destinationRectangle.Top + topBorder * scale,
                 destinationRectangle.Width - (leftBorder + rightBorder) * scale,
                 destinationRectangle.Height - (topBorder + bottomBorder) * scale);
-            _spriteBatch.Draw(sprite.Texture, sliceDestinationRectangle,
+            _spriteBatch.Draw(texture, sliceDestinationRectangle,
                 sliceSourceRectangle, color);
         }
 
@@ -292,8 +294,8 @@ namespace ComposableUi
 
         void IUiRenderer.End()
         {
-            _uiBatcher.Batch();
-            foreach (ref readonly var renderCommand in _uiBatcher.BatchedCommands)
+            _renderCommandBatcher.Batch();
+            foreach (ref readonly var renderCommand in _renderCommandBatcher.BatchedCommands)
             {
                 switch(renderCommand.Type)
                 {
@@ -302,9 +304,6 @@ namespace ComposableUi
                         break;
                     case RenderCommandType.Text:
                         RunDrawTextCommand(renderCommand);
-                        break;
-                    case RenderCommandType.Geometry:
-                        RunDrawGeometryCommand(renderCommand);
                         break;
                 }
             }
@@ -320,21 +319,73 @@ namespace ComposableUi
             if (sprite == Sprite.Empty)
                 return;
 
-            if (sprite.Texture is null)
-                sprite = FallbackSprite;
-
             var data = new RenderSpriteData(sprite, drawMode, destinationRectangle, color);
             _renderSpriteDataList.Add(data);
 
             SkipClipMaskIfContainsOrCropDestination(ref clipMask, ref destinationRectangle);
 
-            _uiBatcher.AddRenderCommand(new RenderCommand()
+            _renderCommandBatcher.AddRenderCommand(new RenderCommand()
             {
-                Id = _renderSpriteDataList.Count - 1,
+                StartIndex = _renderSpriteDataList.Count - 1,
+                Length = 1,
                 Type = RenderCommandType.Sprite,
                 BoundingRectangle = destinationRectangle,
                 ClipMask = clipMask,
                 Texture = sprite.Texture,
+            });
+        }
+
+        void IUiRenderer.DrawSpriteGroup(IReadOnlyList<SpriteDrawCommand> commands,
+            Rectangle? clipMask)
+        {
+            if (commands.Count <= 0)
+                return;
+
+            var index = _renderSpriteDataList.Count;
+            var length = 0;
+
+            Rectangle destinationRectangle = default;
+            Texture2D texture = default;
+
+            for (var i = 0; i < commands.Count; i++)
+            {
+                var command = commands[i];
+
+                var sprite = command.Sprite;
+                if (sprite == Sprite.Empty)
+                    continue;
+
+                texture = sprite.Texture;
+
+                if (length <= 0)
+                {
+                    destinationRectangle = command.DestinationRectangle;
+                }
+                else
+                {
+                    destinationRectangle = Rectangle.Union(destinationRectangle, command.DestinationRectangle);
+                }
+
+                var data = new RenderSpriteData(command.Sprite, command.DrawMode,
+                    command.DestinationRectangle, command.Color);
+                _renderSpriteDataList.Add(data);
+
+                length++;
+            }
+
+            if (length <= 0)
+                return;
+
+            SkipClipMaskIfContainsOrCropDestination(ref clipMask, ref destinationRectangle);
+
+            _renderCommandBatcher.AddRenderCommand(new RenderCommand()
+            {
+                StartIndex = index,
+                Length = length,
+                Type = RenderCommandType.Sprite,
+                BoundingRectangle = destinationRectangle,
+                ClipMask = clipMask,
+                Texture = texture,
             });
         }
 
@@ -349,21 +400,15 @@ namespace ComposableUi
 
             SkipClipMaskIfContainsOrCropDestination(ref clipMask, ref destinationRectangle);
 
-            _uiBatcher.AddRenderCommand(new RenderCommand()
+            _renderCommandBatcher.AddRenderCommand(new RenderCommand()
             {
-                Id = _renderTextDataList.Count - 1,
+                StartIndex = _renderTextDataList.Count - 1,
+                Length = 1,
                 Type = RenderCommandType.Text,
                 BoundingRectangle = destinationRectangle,
                 ClipMask = clipMask,
                 Texture = spriteFont.Texture,
             });
-        }
-
-        void IUiRenderer.DrawGeometry(Geometry geometry,
-            Vector2 position, Rectangle? clipMask, Color color)
-        {
-            // TODO: Implement draw geometry logic.
-            throw new System.NotImplementedException();
         }
 
         private readonly record struct RenderSpriteData(Sprite Sprite,

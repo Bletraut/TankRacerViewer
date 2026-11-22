@@ -148,9 +148,16 @@ namespace ComposableUi
         private readonly RichTextLayout _preferredTextLayout = new();
         private readonly RichTextLayout _textLayout = new();
 
+        private readonly List<Sprite> _spritePool = new();
+        private readonly List<SpriteDrawCommand> _spriteDrawCommands = new();
+
         private SpriteFont _currentSpriteFont;
 
         private bool _isTextDirty;
+
+        private bool _isSpriteDrawCommandsDirty;
+        private Rectangle? _lastClipMask;
+        private Rectangle _lastBoundingRectangle;
 
         public RichTextElement(string text = default,
             Color? color = default,
@@ -217,6 +224,64 @@ namespace ComposableUi
                 HorizontalAlignmentBoundsMode, VerticalAlignmentBoundsMode);
         }
 
+        private void RebuildSpriteDrawCommandsIfDirty()
+        {
+            var clipMask = ClipMask;
+            var boundingRectangle = BoundingRectangle;
+
+            if (!_isSpriteDrawCommandsDirty)
+            {
+                var isChanged = _lastClipMask != clipMask
+                    || _lastBoundingRectangle != boundingRectangle;
+                if (!isChanged)
+                    return;
+            }
+
+            _isSpriteDrawCommandsDirty = false;
+
+            _lastClipMask = clipMask;
+            _lastBoundingRectangle = boundingRectangle;
+
+            var spriteIndex = 0;
+            _spriteDrawCommands.Clear();
+
+            var position = _lastBoundingRectangle.Location.ToVector2();
+            foreach (ref readonly var character in _textLayout.Characters)
+            {
+                var destinationRectangle = new Rectangle()
+                {
+                    Location = (character.Position + position).ToPoint(),
+                    Size = character.Glyph.BoundsInTexture.Size
+                };
+                var isClipped = _lastClipMask.HasValue
+                    && !_lastClipMask.Value.Intersects(destinationRectangle);
+                if (isClipped)
+                    continue;
+
+                Sprite sprite;
+                if (spriteIndex < _spritePool.Count)
+                {
+                    sprite = _spritePool[spriteIndex];
+                }
+                else
+                {
+                    sprite = new Sprite();
+                    _spritePool.Add(sprite);
+                }
+
+                sprite.Texture = character.FontTexture;
+                sprite.SourceRectangle = character.Glyph.BoundsInTexture;
+
+                _spriteDrawCommands.Add(new SpriteDrawCommand(sprite, DrawMode.Simple,
+                    destinationRectangle, Color));
+
+                spriteIndex++;
+            }
+
+            for (var i = spriteIndex; i < _spritePool.Count; i++)
+                _spritePool[i].Texture = null;
+        }
+
         public override Vector2 CalculatePreferredSize(float? exactWidth, float? exactHeight)
         {
             if (SetAndChangeState(ref _currentSpriteFont, SpriteFont ?? Context?.Theme.DefaultSpriteFont))
@@ -257,7 +322,8 @@ namespace ComposableUi
         {
             Size = size;
 
-            _textLayout.RebuildIfNeeded(GetRichTextLayoutOptions(size, WordWrap), true);
+            if (_textLayout.RebuildIfNeeded(GetRichTextLayoutOptions(size, WordWrap), true))
+                _isSpriteDrawCommandsDirty = true;
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)
@@ -278,18 +344,9 @@ namespace ComposableUi
                 }
             }
 
-            var position = Position + Size * Alignment.TopLeft - PivotOffset;
-            foreach (ref readonly var character in _textLayout.Characters)
-            {
-                var sprite = new Sprite()
-                {
-                    Texture = character.FontTexture,
-                    SourceRectangle = character.Glyph.BoundsInTexture
-                };
-                renderer.DrawSprite(sprite, DrawMode.Simple,
-                    new Rectangle((character.Position + position).ToPoint(), character.Glyph.BoundsInTexture.Size),
-                    ClipMask, Color);
-            }
+            RebuildSpriteDrawCommandsIfDirty();
+
+            renderer.DrawSpriteGroup(_spriteDrawCommands, ClipMask);
         }
 
         private void OnTextChanged()

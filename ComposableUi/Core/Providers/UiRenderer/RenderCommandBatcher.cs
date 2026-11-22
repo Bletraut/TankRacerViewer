@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace ComposableUi
 {
-    public sealed class UiBatcher<T> where T : struct, IRenderCommand<T>
+    public sealed class RenderCommandBatcher<T> where T : struct, IRenderCommand<T>
     {
         // Static.
         private static bool IsBoundingRectangleIntersects(Rectangle boundingRectangle, List<T> commands)

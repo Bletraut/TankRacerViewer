@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace ComposableUi
@@ -11,10 +13,10 @@ namespace ComposableUi
         public void DrawSprite(Sprite sprite, DrawMode drawMode,
             Rectangle destinationRectangle, Rectangle? clipMask, Color color);
 
-        public void DrawString(SpriteFont spriteFont, string text,
-            Vector2 position, Rectangle? clipMask, Color color);
+        public void DrawSpriteGroup(IReadOnlyList<SpriteDrawCommand> commands,
+            Rectangle? clipMask);
 
-        public void DrawGeometry(Geometry geometry,
+        public void DrawString(SpriteFont spriteFont, string text,
             Vector2 position, Rectangle? clipMask, Color color);
     }
 }
