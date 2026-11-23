@@ -12,8 +12,10 @@ namespace TankRacerViewer.Core
         public RenderSettingsWindow() : base("Render Settings")
         {
             // FOR DEBUG
-            var searchField = TestTextWindow.Instance.SearchField;
-            var scrollView = TestTextWindow.Instance.ScrollView;
+            var textInput = TestTextWindow.Instance.TextInput;
+
+            var richText = textInput.TextElement;
+            var scrollView = new ScrollViewElement();
 
             var horizontalAlignmentMode = new DropDownListElement(
                 items: Enum.GetNames<HorizontalAlignmentMode>()
@@ -21,7 +23,7 @@ namespace TankRacerViewer.Core
             );
             horizontalAlignmentMode.ItemSelected += (_, i) =>
             {
-                searchField.HorizontalAlignmentMode = (HorizontalAlignmentMode)i;
+                richText.HorizontalAlignmentMode = (HorizontalAlignmentMode)i;
             };
             horizontalAlignmentMode.SelectItem(0);
 
@@ -31,7 +33,7 @@ namespace TankRacerViewer.Core
             );
             verticalAlignmentMode.ItemSelected += (_, i) =>
             {
-                searchField.VerticalAlignmentMode = (VerticalAlignmentMode)i;
+                richText.VerticalAlignmentMode = (VerticalAlignmentMode)i;
             };
             verticalAlignmentMode.SelectItem(0);
 
@@ -41,7 +43,7 @@ namespace TankRacerViewer.Core
             );
             horizontalAlignmentBoundsMode.ItemSelected += (_, i) =>
             {
-                searchField.HorizontalAlignmentBoundsMode = (TextBoundsMode)i;
+                richText.HorizontalAlignmentBoundsMode = (TextBoundsMode)i;
             };
             horizontalAlignmentBoundsMode.SelectItem(0);
 
@@ -51,60 +53,60 @@ namespace TankRacerViewer.Core
             );
             verticalAlignmentBoundsMode.ItemSelected += (_, i) =>
             {
-                searchField.VerticalAlignmentBoundsMode = (TextBoundsMode)i;
+                richText.VerticalAlignmentBoundsMode = (TextBoundsMode)i;
             };
             verticalAlignmentBoundsMode.SelectItem(0);
 
             var multilineToggle = UiElementFactory.CreateToggleButton("Multiline");
-            RefreshToggle(multilineToggle, searchField.Multiline);
+            RefreshToggle(multilineToggle, richText.Multiline);
             multilineToggle.PointerClick += (_, _) =>
             {
-                searchField.Multiline = !searchField.Multiline;
-                RefreshToggle(multilineToggle, searchField.Multiline);
+                richText.Multiline = !richText.Multiline;
+                RefreshToggle(multilineToggle, richText.Multiline);
             };
 
             var wordWrapToggle = UiElementFactory.CreateToggleButton("Wrap Mode");
-            RefreshToggle(wordWrapToggle, searchField.WordWrap);
+            RefreshToggle(wordWrapToggle, richText.WordWrap);
             wordWrapToggle.PointerClick += (_, _) =>
             {
-                searchField.WordWrap = !searchField.WordWrap;
-                RefreshToggle(wordWrapToggle, searchField.WordWrap);
+                richText.WordWrap = !richText.WordWrap;
+                RefreshToggle(wordWrapToggle, richText.WordWrap);
             };
 
             var preserveWhitespaceToggle = UiElementFactory.CreateToggleButton("Preserve Whitespace");
-            RefreshToggle(preserveWhitespaceToggle, searchField.PreserveWhitespace);
+            RefreshToggle(preserveWhitespaceToggle, richText.PreserveWhitespace);
             preserveWhitespaceToggle.PointerClick += (_, _) =>
             {
-                searchField.PreserveWhitespace = !searchField.PreserveWhitespace;
-                RefreshToggle(preserveWhitespaceToggle, searchField.PreserveWhitespace);
+                richText.PreserveWhitespace = !richText.PreserveWhitespace;
+                RefreshToggle(preserveWhitespaceToggle, richText.PreserveWhitespace);
             };
 
             var sizeToTextWidthToggle = UiElementFactory.CreateToggleButton("Size To Text Width");
-            RefreshToggle(sizeToTextWidthToggle, searchField.SizeToTextWidth);
-            scrollView.ExpandingContentWidthMode = searchField.SizeToTextWidth
+            RefreshToggle(sizeToTextWidthToggle, richText.SizeToTextWidth);
+            scrollView.ExpandingContentWidthMode = richText.SizeToTextWidth
                 ? ScrollViewElement.ExpandingMode.None
                 : ScrollViewElement.ExpandingMode.FillParent;
             sizeToTextWidthToggle.PointerClick += (_, _) =>
             {
-                searchField.SizeToTextWidth = !searchField.SizeToTextWidth;
-                RefreshToggle(sizeToTextWidthToggle, searchField.SizeToTextWidth);
+                richText.SizeToTextWidth = !richText.SizeToTextWidth;
+                RefreshToggle(sizeToTextWidthToggle, richText.SizeToTextWidth);
 
-                scrollView.ExpandingContentWidthMode = searchField.SizeToTextWidth
+                scrollView.ExpandingContentWidthMode = richText.SizeToTextWidth
                     ? ScrollViewElement.ExpandingMode.None
                     : ScrollViewElement.ExpandingMode.FillParent;
             };
 
             var sizeToTextHeightToggle = UiElementFactory.CreateToggleButton("Size To Text Height");
-            RefreshToggle(sizeToTextHeightToggle, searchField.SizeToTextHeight);
-            scrollView.ExpandingContentHeightMode = searchField.SizeToTextHeight
+            RefreshToggle(sizeToTextHeightToggle, richText.SizeToTextHeight);
+            scrollView.ExpandingContentHeightMode = richText.SizeToTextHeight
                 ? ScrollViewElement.ExpandingMode.None
                 : ScrollViewElement.ExpandingMode.FillParent;
             sizeToTextHeightToggle.PointerClick += (_, _) =>
             {
-                searchField.SizeToTextHeight = !searchField.SizeToTextHeight;
-                RefreshToggle(sizeToTextHeightToggle, searchField.SizeToTextHeight);
+                richText.SizeToTextHeight = !richText.SizeToTextHeight;
+                RefreshToggle(sizeToTextHeightToggle, richText.SizeToTextHeight);
 
-                scrollView.ExpandingContentHeightMode = searchField.SizeToTextHeight
+                scrollView.ExpandingContentHeightMode = richText.SizeToTextHeight
                     ? ScrollViewElement.ExpandingMode.None
                     : ScrollViewElement.ExpandingMode.FillParent;
             };
@@ -115,7 +117,7 @@ namespace TankRacerViewer.Core
             );
             horizontalSizingMode.ItemSelected += (_, i) =>
             {
-                searchField.HorizontalSizingMode = (TextBoundsMode)i;
+                richText.HorizontalSizingMode = (TextBoundsMode)i;
             };
             horizontalSizingMode.SelectItem(0);
 
@@ -125,7 +127,7 @@ namespace TankRacerViewer.Core
             );
             verticalSizingMode.ItemSelected += (_, i) =>
             {
-                searchField.VerticalSizingMode = (TextBoundsMode)i;
+                richText.VerticalSizingMode = (TextBoundsMode)i;
             };
             verticalSizingMode.SelectItem(0);
 

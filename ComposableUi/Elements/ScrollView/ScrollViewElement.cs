@@ -49,7 +49,8 @@ namespace ComposableUi
         public ScrollBarElement HorizontalScrollBar { get; }
         public ScrollBarElement VerticalScrollBar { get; }
 
-        private readonly Element _view;
+        public ClipMaskElement ContentClipMask { get; }
+
         private readonly ExpandedElement _viewExpanded;
         private readonly AlignmentElement _contentParent;
         private readonly ExpandedElement _contentExpanded;
@@ -94,12 +95,12 @@ namespace ComposableUi
                 innerElement: _contentParent
             );
 
-            _view = new ClipMaskElement(
+            ContentClipMask = new ClipMaskElement(
                 innerElement: new HolderElement(
                     innerElement: _contentExpanded
                 )
             );
-            _viewExpanded = new ExpandedElement(_view);
+            _viewExpanded = new ExpandedElement(ContentClipMask);
             AddChild(_viewExpanded);
 
             HorizontalScrollBar = new HorizontalScrollBarElement();
@@ -279,7 +280,7 @@ namespace ComposableUi
                 Content.GlobalInverseTransformationMatrix);
 
             var minProgressValue = localPosition / -_minContentPosition;
-            var maxProgressValue = (localPosition + bounds.Size.ToVector2() - _view.Size) / -_minContentPosition;
+            var maxProgressValue = (localPosition + bounds.Size.ToVector2() - ContentClipMask.Size) / -_minContentPosition;
 
             var progressValue = Vector2.Min(minProgressValue, _normalizedProgressValue);
             progressValue = Vector2.Max(maxProgressValue, progressValue);
@@ -369,7 +370,7 @@ namespace ComposableUi
             if (!scrollBar.IsEnabled)
                 return;
 
-            var fillFactor = _view.Size / (_view.Size - _minContentPosition);
+            var fillFactor = ContentClipMask.Size / (ContentClipMask.Size - _minContentPosition);
             var mainAxisFillFactor = Vector2.Dot(scrollBar.MainAxis, fillFactor);
 
             var maxButtonSize = scrollBar.Button.Parent.Size;

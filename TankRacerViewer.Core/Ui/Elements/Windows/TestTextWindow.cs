@@ -14,28 +14,23 @@ namespace TankRacerViewer.Core
         public static TestTextWindow Instance { get; private set; }
 
         // Class.
-        public RichTextElement SearchField { get; private set; }
-
-        public ScrollViewElement ScrollView { get; private set; }
+        public TextInputElement TextInput { get; private set; }
 
         public TestTextWindow() 
             : base("Test Text", minSize: Vector2.Zero)
         {
             Instance = this;
 
-            SearchField = new RichTextElement(
-                text: "How areeeeeee you.\nThis chapter describes a method for fast, stable fluid simulation A                     simulation A that runs entirely on the GPU.\nIt introduces fluid dynamics and the associated mathematics, and it describes in detail the techniques to perform the simulation on the GPU.",
-                //text: "How areeeeeee you.\nThis chapter describes a method for fast, stable fluid simulation simulation A that runs entirely on the GPU.\nIt introduces fluid dynamics and the associated mathematics, and it describes in detail the techniques to perform the simulation on the GPU.",
-                size: new Vector2(DefaultSearchFieldHeight)
-            );
-
-            ScrollView = new ScrollViewElement(
-                content: SearchField
+            TextInput = new TextInputElement(
+                text: "This chapter describes a method for fast, stable fluid simulation that runs entirely on the GPU. It introduces fluid dynamics and the associated mathematics, and it describes in detail the techniques to perform the simulation on the GPU. After reading this chapter, you should have a basic understanding of fluid dynamics and know how to simulate fluids using the GPU. The source code accompanying this book demonstrates the techniques described in this chapter.\nFluids are everywhere: water passing between riverbanks, smoke curling from a glowing cigarette, steam rushing from a teapot, water vapor forming into clouds, and paint being mixed in a can. Underlying all of them is the flow of fluids. All are phenomena that we would like to portray realistically in interactive graphics applications. Figure 38-1 shows examples of fluids simulated using the source code provided with this book."
             );
 
             ContentContainer.AddChild(new ExpandedElement(
-                leftPadding: 2,
-                innerElement: ScrollView
+                leftPadding: 10,
+                rightPadding: 10,
+                topPadding: 10,
+                bottomPadding: 10,
+                innerElement: TextInput
             ));
         }
     }
