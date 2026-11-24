@@ -5,7 +5,8 @@ using Microsoft.Xna.Framework;
 namespace ComposableUi
 {
     public sealed class TextInputElement : ContainerElement,
-        ITextInputHandler
+        ITextInputHandler,
+        IKeyboardInputHandler
     {
         public const float DefaultTextPaddings = 4;
         public const float DefaultMaskPaddings = 2;
@@ -29,8 +30,6 @@ namespace ComposableUi
 
         public string PlaceholderText { get; set; }
 
-        public SpriteElement Background { get; }
-
         public ScrollViewElement ScrollView { get; }
 
         public RichTextElement TextElement { get; }
@@ -48,18 +47,9 @@ namespace ComposableUi
             Text = text;
             PlaceholderText = placeholderText;
 
-            Background = new SpriteElement(
-                spriteSource: BuiltInSprite.TextField,
-                drawMode: DrawMode.Sliced
-            );
-
-            AddChild(new ExpandedElement(
-                innerElement: Background
-            ));
-
             TextElement = new RichTextElement(
                 text: Text,
-                color: textColor ?? Color.Black,
+                textColor: textColor ?? Color.Black,
                 sizeToTextHeight: true
             );
 
@@ -77,6 +67,8 @@ namespace ComposableUi
                     ]
                 )
             );
+
+            ScrollView.Background.SpriteSource = BuiltInSprite.TextField;
 
             ScrollView.ContentClipMask.LeftPadding = DefaultMaskPaddings;
             ScrollView.ContentClipMask.RightPadding = DefaultMaskPaddings;
@@ -97,6 +89,26 @@ namespace ComposableUi
             _pointeInputHandler.FocusChanged += OnFocusChanged;
         }
 
+        void IKeyboardInputHandler.Handle(IKeyboardInputProvider keyboardInputProvider)
+        {
+        }
+
+        private void OnFocusChanged(PointerInputHandlerElement sender,
+            PointerFocusEvent pointerEvent)
+        {
+            ScrollView.Background.SpriteSource = pointerEvent.IsFocused
+                ? BuiltInSprite.ActiveTextField
+                : BuiltInSprite.TextField;
+        }
+
+        void IKeyboardInputHandler.OnKeyDown()
+        {
+        }
+
+        void IKeyboardInputHandler.OnKeyUp()
+        {
+        }
+
         void ITextInputHandler.OnTextInput(string text)
         {
             if (!_pointeInputHandler.IsFocused)
@@ -105,14 +117,6 @@ namespace ComposableUi
             _stringBuilder.Append(text);
 
             TextElement.Text = _stringBuilder.ToString();
-        }
-
-        private void OnFocusChanged(PointerInputHandlerElement sender,
-            PointerFocusEvent pointerEvent)
-        {
-            Background.SpriteSource = pointerEvent.IsFocused
-                ? BuiltInSprite.ActiveTextField
-                : BuiltInSprite.TextField;
         }
     }
 }

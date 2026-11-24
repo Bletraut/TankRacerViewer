@@ -5,8 +5,11 @@ namespace ComposableUi
 {
     public sealed class Sprite : ISpriteSource
     {
+        // Static.
         public static readonly Sprite Empty = new();
+        public static readonly Sprite WhitePixel = new();
 
+        // Class.
         public Texture2D Texture { get; set; }
         public Rectangle SourceRectangle { get; set; }
 

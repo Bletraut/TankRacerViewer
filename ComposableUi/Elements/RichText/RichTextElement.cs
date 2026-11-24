@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -19,7 +20,10 @@ namespace ComposableUi
             }
         }
 
-        public Color Color { get; set; }
+        public Color TextColor { get; set; }
+        public Color? SelectedTextColor { get; set; }
+
+        public Color SelectionColor { get; set; }
 
         private SpriteFont _spriteFont;
         public SpriteFont SpriteFont
@@ -134,6 +138,28 @@ namespace ComposableUi
             set => SetAndChangeState(ref _verticalAlignmentBoundsMode, value);
         }
 
+        private int _selectionStart;
+        public int SelectionStart
+        {
+            get => _selectionStart;
+            set
+            {
+                if (SetAndChangeState(ref _selectionStart, Math.Max(0, value)))
+                    MarkSpriteDrawCommandsDirty();
+            }
+        }
+
+        private int _selectionLength;
+        public int SelectionLength
+        {
+            get => _selectionLength;
+            set
+            {
+                if (SetAndChangeState(ref _selectionLength, Math.Max(0, value)))
+                    MarkSpriteDrawCommandsDirty();
+            }
+        }
+
         private readonly List<RichTextToken> _tokens = [];
         private readonly IReadOnlyList<RichTextToken> _readOnlyTokens;
         public IReadOnlyList<RichTextToken> Tokens
@@ -150,6 +176,7 @@ namespace ComposableUi
 
         private readonly List<Sprite> _spritePool = new();
         private readonly List<SpriteDrawCommand> _spriteDrawCommands = new();
+        private readonly List<SpriteDrawCommand> _selectionDrawCommands = new();
 
         private SpriteFont _currentSpriteFont;
 
@@ -160,7 +187,9 @@ namespace ComposableUi
         private Rectangle _lastBoundingRectangle;
 
         public RichTextElement(string text = default,
-            Color? color = default,
+            Color? textColor = default,
+            Color? selectedTextColor = default,
+            Color? selectionColor = default,
             SpriteFont spriteFont = default,
             Vector2? size = default,
             bool sizeToTextWidth = default,
@@ -181,7 +210,9 @@ namespace ComposableUi
             _readOnlyTokens = _tokens.AsReadOnly();
 
             Text = text ?? string.Empty;
-            Color = color ?? Color.White;
+            TextColor = textColor ?? Color.White;
+            SelectedTextColor = selectedTextColor;
+            SelectionColor = selectionColor ?? Color.Blue;
             SpriteFont = spriteFont;
 
             Size = size ?? TextElement.DefaultSize;
@@ -224,6 +255,8 @@ namespace ComposableUi
                 HorizontalAlignmentBoundsMode, VerticalAlignmentBoundsMode);
         }
 
+        private void MarkSpriteDrawCommandsDirty() => _isSpriteDrawCommandsDirty = true;
+
         private void RebuildSpriteDrawCommandsIfDirty()
         {
             var clipMask = ClipMask;
@@ -244,38 +277,75 @@ namespace ComposableUi
 
             var spriteIndex = 0;
             _spriteDrawCommands.Clear();
+            _selectionDrawCommands.Clear();
 
             var position = _lastBoundingRectangle.Location.ToVector2();
-            foreach (ref readonly var character in _textLayout.Characters)
+
+            var characterIndex = 0;
+            var characters = _textLayout.Characters;
+
+            foreach (ref readonly var line in _textLayout.Lines)
             {
-                var destinationRectangle = new Rectangle()
-                {
-                    Location = (character.Position + position).ToPoint(),
-                    Size = character.Glyph.BoundsInTexture.Size
-                };
-                var isClipped = _lastClipMask.HasValue
-                    && !_lastClipMask.Value.Intersects(destinationRectangle);
-                if (isClipped)
-                    continue;
+                Rectangle? selectionRectangle = null;
 
-                Sprite sprite;
-                if (spriteIndex < _spritePool.Count)
+                for (var i = 0; i < line.Length; i++, characterIndex++)
                 {
-                    sprite = _spritePool[spriteIndex];
+                    ref readonly var character = ref characters[characterIndex];
+
+                    var destinationRectangle = new Rectangle()
+                    {
+                        Location = (character.Position + position).ToPoint(),
+                        Size = character.Glyph.BoundsInTexture.Size
+                    };
+                    var isClipped = _lastClipMask.HasValue
+                        && !_lastClipMask.Value.Intersects(destinationRectangle);
+                    if (isClipped)
+                        continue;
+
+                    Sprite sprite;
+                    if (spriteIndex < _spritePool.Count)
+                    {
+                        sprite = _spritePool[spriteIndex];
+                    }
+                    else
+                    {
+                        sprite = new Sprite();
+                        _spritePool.Add(sprite);
+                    }
+
+                    sprite.Texture = character.FontTexture;
+                    sprite.SourceRectangle = character.Glyph.BoundsInTexture;
+
+                    var index = _tokens[character.TokenIndex].StartIndex;
+                    var isSelected = index >= SelectionStart
+                        && index < SelectionStart + SelectionLength;
+
+                    if (isSelected)
+                    {
+                        var characterLineBounds = destinationRectangle;
+                        characterLineBounds.Location -= character.Glyph.Cropping.Location;
+                        characterLineBounds.Height = character.Glyph.Cropping.Height;
+
+                        selectionRectangle = selectionRectangle.HasValue
+                            ? Rectangle.Union(selectionRectangle.Value, characterLineBounds)
+                            : characterLineBounds;
+                    }
+
+                    var color = isSelected && SelectedTextColor.HasValue
+                        ? SelectedTextColor.Value
+                        : TextColor;
+
+                    _spriteDrawCommands.Add(new SpriteDrawCommand(sprite, DrawMode.Simple,
+                        destinationRectangle, color));
+
+                    spriteIndex++;
                 }
-                else
+
+                if (selectionRectangle.HasValue)
                 {
-                    sprite = new Sprite();
-                    _spritePool.Add(sprite);
+                    _selectionDrawCommands.Add(new SpriteDrawCommand(Sprite.WhitePixel, DrawMode.Simple,
+                        selectionRectangle.Value, SelectionColor));
                 }
-
-                sprite.Texture = character.FontTexture;
-                sprite.SourceRectangle = character.Glyph.BoundsInTexture;
-
-                _spriteDrawCommands.Add(new SpriteDrawCommand(sprite, DrawMode.Simple,
-                    destinationRectangle, Color));
-
-                spriteIndex++;
             }
 
             for (var i = spriteIndex; i < _spritePool.Count; i++)
@@ -323,7 +393,7 @@ namespace ComposableUi
             Size = size;
 
             if (_textLayout.RebuildIfNeeded(GetRichTextLayoutOptions(size, WordWrap), true))
-                _isSpriteDrawCommandsDirty = true;
+                MarkSpriteDrawCommandsDirty();
         }
 
         void IDrawableElement.Draw(IUiRenderer renderer)
@@ -332,7 +402,10 @@ namespace ComposableUi
                 return;
 
             RebuildSpriteDrawCommandsIfDirty();
-            renderer.DrawSpriteGroup(_spriteDrawCommands, ClipMask);
+
+            var clipMask = ClipMask;
+            renderer.DrawSpriteGroup(_selectionDrawCommands, clipMask);
+            renderer.DrawSpriteGroup(_spriteDrawCommands, clipMask);
         }
 
         private void OnTextChanged()

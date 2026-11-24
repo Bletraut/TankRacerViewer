@@ -82,7 +82,6 @@ namespace ComposableUi
             Background = new SpriteElement(
                 drawMode: DrawMode.Sliced
             );
-            AddChild(new ExpandedElement(Background));
 
             _contentParent = new AlignmentElement(
                 alignmentFactor: Alignment.TopLeft,
@@ -100,7 +99,15 @@ namespace ComposableUi
                     innerElement: _contentExpanded
                 )
             );
-            _viewExpanded = new ExpandedElement(ContentClipMask);
+            _viewExpanded = new ExpandedElement(
+                propagateToInnerElementChildren: true,
+                innerElement: new ContainerElement(
+                    children: [
+                        Background,
+                        ContentClipMask
+                    ]
+                )
+            );
             AddChild(_viewExpanded);
 
             HorizontalScrollBar = new HorizontalScrollBarElement();

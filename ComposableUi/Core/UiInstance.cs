@@ -106,7 +106,7 @@ namespace ComposableUi
             : this(graphicsDevice,
                   GetOrCreateDefaultTheme(contentManager),
                   new DefaultPointerInputProvider(),
-                  new DefaultKeyboardInputProvider(),
+                  new DefaultKeyboardInputProvider(gameWindow),
                   new DefaultTextInputProvider(gameWindow),
                   new DefaultClipboardProvider(),
                   new DefaultUiRenderer(spriteBatch))

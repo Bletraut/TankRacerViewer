@@ -27,6 +27,7 @@ namespace ComposableUi
         // Class.
         public static Texture2D FallbackTexture { get; private set; }
         public static Sprite FallbackSprite { get; private set; }
+        public static Sprite WhitePixelSprite { get; private set; }
 
         public RenderTarget2D RenderTarget { get; set; }
 
@@ -70,6 +71,15 @@ namespace ComposableUi
                     RightBorder = 1,
                     TopBorder = 1,
                     BottomBorder = 1
+                };
+
+                var whitePixelTexture = new Texture2D(spriteBatch.GraphicsDevice, 1, 1);
+                whitePixelTexture.SetData([Color.White]);
+
+                WhitePixelSprite = new Sprite()
+                {
+                    Texture = whitePixelTexture,
+                    SourceRectangle = new Rectangle(0, 0, whitePixelTexture.Width, whitePixelTexture.Height)
                 };
             }
         }
@@ -319,6 +329,9 @@ namespace ComposableUi
             if (sprite == Sprite.Empty)
                 return;
 
+            if (sprite == Sprite.WhitePixel)
+                sprite = WhitePixelSprite;
+
             var data = new RenderSpriteData(sprite, drawMode, destinationRectangle, color);
             _renderSpriteDataList.Add(data);
 
@@ -354,6 +367,9 @@ namespace ComposableUi
                 var sprite = command.Sprite;
                 if (sprite == Sprite.Empty)
                     continue;
+
+                if (sprite == Sprite.WhitePixel)
+                    sprite = WhitePixelSprite;
 
                 texture = sprite.Texture;
 

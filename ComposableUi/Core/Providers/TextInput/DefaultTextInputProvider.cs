@@ -21,16 +21,6 @@ namespace ComposableUi
             _gameWindow = gameWindow;
         }
 
-        void IProviderLifecycle.OnAdded()
-        {
-            _gameWindow.TextInput += OnTextInput;
-        }
-
-        void IProviderLifecycle.OnRemoved()
-        {
-            _gameWindow.TextInput -= OnTextInput;
-        }
-
         void IUpdateable.Update(GameTime gameTime)
         {
             (_lastBuffer, _currentBuffer) = (_currentBuffer, _lastBuffer);
@@ -40,6 +30,16 @@ namespace ComposableUi
         private void OnTextInput(object sender, TextInputEventArgs arguments)
         {
             _currentBuffer.Append(arguments.Character);
+        }
+
+        void IProviderLifecycle.OnAdded()
+        {
+            _gameWindow.TextInput += OnTextInput;
+        }
+
+        void IProviderLifecycle.OnRemoved()
+        {
+            _gameWindow.TextInput -= OnTextInput;
         }
     }
 }
