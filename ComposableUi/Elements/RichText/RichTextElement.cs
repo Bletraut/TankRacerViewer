@@ -235,6 +235,13 @@ namespace ComposableUi
             VerticalAlignmentBoundsMode = verticalAlignmentBoundsMode;
         }
 
+        private bool TryGetNearestCharacterUnderPoint(Point point, out RichTextCharacter character)
+        {
+            character = default;
+
+            return false;
+        }
+
         private void TokenizeIfDirty()
         {
             if (!_isTextDirty)
@@ -286,6 +293,7 @@ namespace ComposableUi
 
             foreach (ref readonly var line in _textLayout.Lines)
             {
+                Rectangle? boundsRectangle;
                 Rectangle? selectionRectangle = null;
 
                 for (var i = 0; i < line.Length; i++, characterIndex++)
@@ -297,6 +305,31 @@ namespace ComposableUi
                         Location = (character.Position + position).ToPoint(),
                         Size = character.Glyph.BoundsInTexture.Size
                     };
+
+                    var index = _tokens[character.TokenIndex].StartIndex;
+                    var isSelected = index >= SelectionStart
+                        && index < SelectionStart + SelectionLength;
+
+                    var characterLineBounds = destinationRectangle;
+                    characterLineBounds.Location -= character.Glyph.Cropping.Location;
+                    characterLineBounds.Height = (int)line.TypographicSize.Y;
+
+                    var isSelectionClipped = _lastClipMask.HasValue
+                        && !_lastClipMask.Value.Intersects(characterLineBounds);
+                    if (isSelectionClipped)
+                        continue;
+
+                    boundsRectangle = selectionRectangle.HasValue
+                        ? Rectangle.Union(selectionRectangle.Value, characterLineBounds)
+                        : characterLineBounds;
+
+                    if (isSelected)
+                    {
+                        selectionRectangle = selectionRectangle.HasValue
+                            ? Rectangle.Union(selectionRectangle.Value, characterLineBounds)
+                            : characterLineBounds;
+                    }
+
                     var isClipped = _lastClipMask.HasValue
                         && !_lastClipMask.Value.Intersects(destinationRectangle);
                     if (isClipped)
@@ -315,21 +348,6 @@ namespace ComposableUi
 
                     sprite.Texture = character.FontTexture;
                     sprite.SourceRectangle = character.Glyph.BoundsInTexture;
-
-                    var index = _tokens[character.TokenIndex].StartIndex;
-                    var isSelected = index >= SelectionStart
-                        && index < SelectionStart + SelectionLength;
-
-                    if (isSelected)
-                    {
-                        var characterLineBounds = destinationRectangle;
-                        characterLineBounds.Location -= character.Glyph.Cropping.Location;
-                        characterLineBounds.Height = character.Glyph.Cropping.Height;
-
-                        selectionRectangle = selectionRectangle.HasValue
-                            ? Rectangle.Union(selectionRectangle.Value, characterLineBounds)
-                            : characterLineBounds;
-                    }
 
                     var color = isSelected && SelectedTextColor.HasValue
                         ? SelectedTextColor.Value

@@ -9,11 +9,18 @@ namespace ComposableUi
             var mouseCursor = cursor switch
             {
                 PointerCursor.Arrow => MouseCursor.Arrow,
+                PointerCursor.Crosshair => MouseCursor.Crosshair,
+                PointerCursor.Hand => MouseCursor.Hand,
+                PointerCursor.IBeam => MouseCursor.IBeam,
+                PointerCursor.No => MouseCursor.No,
                 PointerCursor.SizeNS => MouseCursor.SizeNS,
                 PointerCursor.SizeWE => MouseCursor.SizeWE,
                 PointerCursor.SizeNWSE => MouseCursor.SizeNWSE,
                 PointerCursor.SizeNESW => MouseCursor.SizeNESW,
-                _ => MouseCursor.Arrow,
+                PointerCursor.SizeAll => MouseCursor.SizeAll,
+                PointerCursor.Wait => MouseCursor.Wait,
+                PointerCursor.WaitArrow => MouseCursor.WaitArrow,
+                _ => MouseCursor.Arrow
             };
 
             Mouse.SetCursor(mouseCursor);

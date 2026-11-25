@@ -35,7 +35,8 @@ namespace ComposableUi
         public RichTextElement TextElement { get; }
         public RichTextElement PlaceholderTextElement { get; }
 
-        private PointerInputHandlerElement _pointeInputHandler;
+        private Element _textInputBoundsElement;
+        private PointerInputHandlerElement _pointerInputHandler;
 
         private readonly StringBuilder _stringBuilder = new();
 
@@ -68,6 +69,7 @@ namespace ComposableUi
                 )
             );
 
+            _textInputBoundsElement = ScrollView.Background;
             ScrollView.Background.SpriteSource = BuiltInSprite.TextField;
 
             ScrollView.ContentClipMask.LeftPadding = DefaultMaskPaddings;
@@ -79,17 +81,57 @@ namespace ComposableUi
                 innerElement: ScrollView
             ));
 
-            _pointeInputHandler = new PointerInputHandlerElement(
+            _pointerInputHandler = new PointerInputHandlerElement(
                 blockInput: false
             );
             AddChild(new ExpandedElement(
-                innerElement: _pointeInputHandler
+                innerElement: _pointerInputHandler
             ));
 
-            _pointeInputHandler.FocusChanged += OnFocusChanged;
+            _pointerInputHandler.PointerMove += OnPointerMove;
+            _pointerInputHandler.PointerLeave += OnPointerLeave;
+
+            _pointerInputHandler.PointerDown += OnPointerDown;
+
+            _pointerInputHandler.FocusChanged += OnFocusChanged;
+        }
+
+        private bool IsPointInsideTextInputBounds(Point point)
+            => _textInputBoundsElement.BoundingRectangle.Contains(point);
+
+        private void ResolvePointerCursor(Point position, IPointer pointer)
+        {
+            var cursor = IsPointInsideTextInputBounds(position)
+                ? PointerCursor.IBeam
+                : PointerCursor.Arrow;
+
+            pointer.SetCursor(cursor);
         }
 
         void IKeyboardInputHandler.Handle(IKeyboardInputProvider keyboardInputProvider)
+        {
+        }
+
+        private void OnPointerMove(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            if (pointerEvent.IsPrimaryButtonPressed)
+                return;
+
+            ResolvePointerCursor(pointerEvent.Position, pointerEvent.Pointer);
+        }
+
+        private void OnPointerLeave(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
+        {
+            if (pointerEvent.IsPrimaryButtonPressed)
+                return;
+
+            ResolvePointerCursor(pointerEvent.Position, pointerEvent.Pointer);
+        }
+
+        private void OnPointerDown(PointerInputHandlerElement sender,
+            PointerEvent pointerEvent)
         {
         }
 
@@ -111,7 +153,7 @@ namespace ComposableUi
 
         void ITextInputHandler.OnTextInput(string text)
         {
-            if (!_pointeInputHandler.IsFocused)
+            if (!_pointerInputHandler.IsFocused)
                 return;
 
             _stringBuilder.Append(text);
