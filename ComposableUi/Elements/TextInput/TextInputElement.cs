@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Diagnostics;
+using System.Text;
 
 using Microsoft.Xna.Framework;
 
@@ -35,10 +37,15 @@ namespace ComposableUi
         public RichTextElement TextElement { get; }
         public RichTextElement PlaceholderTextElement { get; }
 
-        private Element _textInputBoundsElement;
-        private PointerInputHandlerElement _pointerInputHandler;
+        private readonly Element _textInputBoundsElement;
+        private readonly PointerInputHandlerElement _pointerInputHandler;
 
         private readonly StringBuilder _stringBuilder = new();
+
+        private int _selectionAnchorIndex;
+        private int _selectedFocusIndex;
+
+        private bool _isTextInputBoundsActive;
 
         public TextInputElement(string text = default,
             string placeholderText = default,
@@ -92,6 +99,7 @@ namespace ComposableUi
             _pointerInputHandler.PointerLeave += OnPointerLeave;
 
             _pointerInputHandler.PointerDown += OnPointerDown;
+            _pointerInputHandler.PointerUp += OnPointerUp;
 
             _pointerInputHandler.FocusChanged += OnFocusChanged;
         }
@@ -108,6 +116,15 @@ namespace ComposableUi
             pointer.SetCursor(cursor);
         }
 
+        private void RefreshTextSelection()
+        {
+            var min = Math.Min(_selectionAnchorIndex, _selectedFocusIndex);
+            var max = Math.Max(_selectionAnchorIndex, _selectedFocusIndex);
+
+            TextElement.SelectionStart = min;
+            TextElement.SelectionLength = max - min;
+        }
+
         void IKeyboardInputHandler.Handle(IKeyboardInputProvider keyboardInputProvider)
         {
         }
@@ -116,7 +133,16 @@ namespace ComposableUi
             PointerEvent pointerEvent)
         {
             if (pointerEvent.IsPrimaryButtonPressed)
+            {
+                if (_isTextInputBoundsActive)
+                {
+                    _selectedFocusIndex = TextElement.FindNearestTextIndexUnderPoint(pointerEvent.Position);
+
+                    RefreshTextSelection();
+                }
+
                 return;
+            }
 
             ResolvePointerCursor(pointerEvent.Position, pointerEvent.Pointer);
         }
@@ -133,6 +159,20 @@ namespace ComposableUi
         private void OnPointerDown(PointerInputHandlerElement sender,
             PointerEvent pointerEvent)
         {
+            if (!IsPointInsideTextInputBounds(pointerEvent.Position))
+                return;
+
+            _isTextInputBoundsActive = true;
+
+            _selectionAnchorIndex = TextElement.FindNearestTextIndexUnderPoint(pointerEvent.Position);
+            _selectedFocusIndex = _selectionAnchorIndex;
+
+            RefreshTextSelection();
+        }
+
+        private void OnPointerUp(PointerInputHandlerElement sender, PointerEvent arguments)
+        {
+            _isTextInputBoundsActive = false;
         }
 
         private void OnFocusChanged(PointerInputHandlerElement sender,

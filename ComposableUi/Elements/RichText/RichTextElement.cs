@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -174,6 +175,9 @@ namespace ComposableUi
         private readonly RichTextLayout _preferredTextLayout = new();
         private readonly RichTextLayout _textLayout = new();
 
+        private readonly List<Line> _visibleLines = new();
+        private readonly List<Character> _visibleLineCharacters = new();
+
         private readonly List<Sprite> _spritePool = new();
         private readonly List<SpriteDrawCommand> _spriteDrawCommands = new();
         private readonly List<SpriteDrawCommand> _selectionDrawCommands = new();
@@ -235,11 +239,51 @@ namespace ComposableUi
             VerticalAlignmentBoundsMode = verticalAlignmentBoundsMode;
         }
 
-        private bool TryGetNearestCharacterUnderPoint(Point point, out RichTextCharacter character)
+        public int FindNearestTextIndexUnderPoint(Point point)
         {
-            character = default;
+            if (_visibleLines.Count <= 0)
+                return 0;
 
-            return false;
+            var previousLineTop = int.MinValue;
+            Line currentLine = _visibleLines[0];
+
+            for (int i = 0; i < _visibleLines.Count; i++)
+            {
+                var nextLine = _visibleLines[i];
+
+                var isPointWithinLine = point.Y > previousLineTop 
+                    && point.Y <= nextLine.Top;
+                if (isPointWithinLine)
+                    break;
+
+                currentLine = nextLine;
+                previousLineTop = currentLine.Top;
+            }
+
+            var previousCharacterCenter = int.MinValue;
+            Character currentCharacter = _visibleLineCharacters[currentLine.StartIndex];
+
+            for (var i = 0; i < currentLine.Length; i++)
+            {
+                currentCharacter = _visibleLineCharacters[currentLine.StartIndex + i];
+
+                var isPointWithinCharacter = point.X > previousCharacterCenter 
+                    && point.X <= currentCharacter.Center;
+                if (isPointWithinCharacter)
+                {
+                    var tokenIndex = _textLayout.Characters[currentCharacter.Index].TokenIndex;
+                    return _tokens[tokenIndex].StartIndex;
+                }
+
+                previousCharacterCenter = currentCharacter.Center;
+            }
+
+            var lastTokenIndex = _textLayout.Characters[currentCharacter.Index].TokenIndex + 1;
+            var textIndex = lastTokenIndex < _tokens.Count
+                ? _tokens[lastTokenIndex].StartIndex
+                : _text.Length;
+
+            return textIndex;
         }
 
         private void TokenizeIfDirty()
@@ -282,6 +326,9 @@ namespace ComposableUi
             _lastClipMask = clipMask;
             _lastBoundingRectangle = boundingRectangle;
 
+            _visibleLines.Clear();
+            _visibleLineCharacters.Clear();
+
             var spriteIndex = 0;
             _spriteDrawCommands.Clear();
             _selectionDrawCommands.Clear();
@@ -293,8 +340,10 @@ namespace ComposableUi
 
             foreach (ref readonly var line in _textLayout.Lines)
             {
-                Rectangle? boundsRectangle;
+                Rectangle? lineBoundsRectangle = null;
                 Rectangle? selectionRectangle = null;
+
+                var characterCount = 0;
 
                 for (var i = 0; i < line.Length; i++, characterIndex++)
                 {
@@ -319,9 +368,12 @@ namespace ComposableUi
                     if (isSelectionClipped)
                         continue;
 
-                    boundsRectangle = selectionRectangle.HasValue
-                        ? Rectangle.Union(selectionRectangle.Value, characterLineBounds)
+                    lineBoundsRectangle = lineBoundsRectangle.HasValue
+                        ? Rectangle.Union(lineBoundsRectangle.Value, characterLineBounds)
                         : characterLineBounds;
+
+                    characterCount++;
+                    _visibleLineCharacters.Add(new Character(destinationRectangle.Center.X, characterIndex));
 
                     if (isSelected)
                     {
@@ -357,6 +409,12 @@ namespace ComposableUi
                         destinationRectangle, color));
 
                     spriteIndex++;
+                }
+
+                if (lineBoundsRectangle.HasValue)
+                {
+                    _visibleLines.Add(new Line(lineBoundsRectangle.Value.Top,
+                        _visibleLineCharacters.Count - characterCount, characterCount));
                 }
 
                 if (selectionRectangle.HasValue)
@@ -430,6 +488,10 @@ namespace ComposableUi
         {
             _isTextDirty = true;
         }
+
+        private readonly record struct Line(int Top, int StartIndex, int Length);
+
+        private readonly record struct Character(int Center, int Index);
     }
 
     public enum HorizontalAlignmentMode
